@@ -1421,14 +1421,17 @@ const AdminSpace = () => {
                   variants,
                 };
 
-                // Calculate total stock
-                newProduct.stock = newProduct.variants.reduce(
+                // Calculate total stock and price
+                const totalStock = newProduct.variants.reduce(
                   (sum, v) => sum + (v.stock || 0),
                   0,
                 );
-                newProduct.price =
+                const defaultPrice =
                   newProduct.variants.find((v) => v.size === "30ml")?.price ||
                   29.9;
+
+                newProduct.stock = totalStock;
+                newProduct.price = defaultPrice;
 
                 console.log(`Processed product:`, newProduct);
                 importedProducts.push(newProduct);
@@ -4052,22 +4055,27 @@ const AdminSpace = () => {
                           famille_olfactive: String(
                             formData.get("familleOlfactive") || "Oriental",
                           ),
-                          note_tete: String(formData.get("notesTete") || "")
+                          note_tete: (
+                            (formData.get("notesTete") as string) || ""
+                          )
                             .split(",")
                             .map((n) => n.trim())
                             .filter((n) => n.length > 0),
-                          note_coeur: String(formData.get("notesCoeur") || "")
+                          note_coeur: (
+                            (formData.get("notesCoeur") as string) || ""
+                          )
                             .split(",")
                             .map((n) => n.trim())
                             .filter((n) => n.length > 0),
-                          note_fond: String(formData.get("notesFond") || "")
+                          note_fond: (
+                            (formData.get("notesFond") as string) || ""
+                          )
                             .split(",")
                             .map((n) => n.trim())
                             .filter((n) => n.length > 0),
-                          description: String(
-                            formData.get("description") ||
-                              "Description du produit",
-                          ),
+                          description:
+                            (formData.get("description") as string) ||
+                            "Description du produit",
                           image_url:
                             "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
                           active: true,
@@ -4087,31 +4095,34 @@ const AdminSpace = () => {
                         size: "15ml",
                         price:
                           parseFloat(
-                            String(formData.get("prix15ml") || "19.9"),
+                            (formData.get("prix15ml") as string) || "19.9",
                           ) || 19.9,
                         stock:
-                          parseInt(String(formData.get("stock15ml") || "0")) ||
-                          0,
+                          parseInt(
+                            (formData.get("stock15ml") as string) || "0",
+                          ) || 0,
                       },
                       {
                         size: "30ml",
                         price:
                           parseFloat(
-                            String(formData.get("prix30ml") || "29.9"),
+                            (formData.get("prix30ml") as string) || "29.9",
                           ) || 29.9,
                         stock:
-                          parseInt(String(formData.get("stock30ml") || "0")) ||
-                          0,
+                          parseInt(
+                            (formData.get("stock30ml") as string) || "0",
+                          ) || 0,
                       },
                       {
                         size: "50ml",
                         price:
                           parseFloat(
-                            String(formData.get("prix50ml") || "39.9"),
+                            (formData.get("prix50ml") as string) || "39.9",
                           ) || 39.9,
                         stock:
-                          parseInt(String(formData.get("stock50ml") || "0")) ||
-                          0,
+                          parseInt(
+                            (formData.get("stock50ml") as string) || "0",
+                          ) || 0,
                       },
                     ];
 
@@ -4808,22 +4819,22 @@ const AdminSpace = () => {
                       );
 
                       const updateData = {
-                        prenom: String(formData.get("prenom") || ""),
-                        nom: String(formData.get("nom") || ""),
-                        email: String(formData.get("email") || ""),
+                        prenom: (formData.get("prenom") as string) || "",
+                        nom: (formData.get("nom") as string) || "",
+                        email: (formData.get("email") as string) || "",
                         telephone: formData.get("telephone")
-                          ? String(formData.get("telephone"))
+                          ? (formData.get("telephone") as string)
                           : null,
                         whatsapp: formData.get("whatsapp")
-                          ? String(formData.get("whatsapp"))
+                          ? (formData.get("whatsapp") as string)
                           : null,
                         date_naissance: formData.get("dateNaissance")
-                          ? String(formData.get("dateNaissance"))
+                          ? (formData.get("dateNaissance") as string)
                           : null,
                         adresse: formData.get("adresse")
-                          ? String(formData.get("adresse"))
+                          ? (formData.get("adresse") as string)
                           : null,
-                        role: String(formData.get("role") || "client"),
+                        role: (formData.get("role") as string) || "client",
                       };
 
                       const { error } = await supabase
@@ -4838,9 +4849,8 @@ const AdminSpace = () => {
                       }
 
                       // Handle password update if provided
-                      const newPassword = String(
-                        formData.get("newPassword") || "",
-                      );
+                      const newPassword =
+                        (formData.get("newPassword") as string) || "";
                       if (newPassword && newPassword.trim()) {
                         // Note: In a real app, you'd need to handle password updates through Supabase Auth
                         console.log(
@@ -4943,22 +4953,20 @@ const AdminSpace = () => {
                     );
 
                     const { error } = await supabase.from("promotions").insert({
-                      nom: String(formData.get("nom") || "Nouvelle Promotion"),
-                      description: String(
-                        formData.get("description") ||
-                          `Réduction de ${String(formData.get("pourcentage") || "0")}%`,
-                      ),
+                      nom:
+                        (formData.get("nom") as string) || "Nouvelle Promotion",
+                      description:
+                        (formData.get("description") as string) ||
+                        `Réduction de ${(formData.get("pourcentage") as string) || "0"}%`,
                       pourcentage_reduction: parseFloat(
-                        String(formData.get("pourcentage") || "0"),
+                        (formData.get("pourcentage") as string) || "0",
                       ),
-                      date_debut: String(
-                        formData.get("dateDebut") ||
-                          new Date().toISOString().split("T")[0],
-                      ),
-                      date_fin: String(
-                        formData.get("dateFin") ||
-                          new Date().toISOString().split("T")[0],
-                      ),
+                      date_debut:
+                        (formData.get("dateDebut") as string) ||
+                        new Date().toISOString().split("T")[0],
+                      date_fin:
+                        (formData.get("dateFin") as string) ||
+                        new Date().toISOString().split("T")[0],
                       active: true,
                     });
 
@@ -4976,7 +4984,10 @@ const AdminSpace = () => {
                     const formElement = document.querySelector(
                       "#new-promotion-form",
                     ) as HTMLFormElement;
-                    if (formElement && formElement.reset) {
+                    if (
+                      formElement &&
+                      typeof formElement.reset === "function"
+                    ) {
                       formElement.reset();
                     }
                   } catch (error) {
@@ -5076,25 +5087,22 @@ const AdminSpace = () => {
                       const { error } = await supabase
                         .from("promotions")
                         .update({
-                          nom: String(
-                            formData.get("nom") || selectedPromotion.nom,
-                          ),
-                          description: String(
-                            formData.get("description") ||
-                              selectedPromotion.description,
-                          ),
+                          nom:
+                            (formData.get("nom") as string) ||
+                            selectedPromotion.nom,
+                          description:
+                            (formData.get("description") as string) ||
+                            selectedPromotion.description,
                           pourcentage_reduction:
                             parseFloat(
-                              String(formData.get("pourcentage") || "0"),
+                              (formData.get("pourcentage") as string) || "0",
                             ) || selectedPromotion.pourcentage_reduction,
-                          date_debut: String(
-                            formData.get("dateDebut") ||
-                              selectedPromotion.date_debut,
-                          ),
-                          date_fin: String(
-                            formData.get("dateFin") ||
-                              selectedPromotion.date_fin,
-                          ),
+                          date_debut:
+                            (formData.get("dateDebut") as string) ||
+                            selectedPromotion.date_debut,
+                          date_fin:
+                            (formData.get("dateFin") as string) ||
+                            selectedPromotion.date_fin,
                         })
                         .eq("id", selectedPromotion.id);
 
