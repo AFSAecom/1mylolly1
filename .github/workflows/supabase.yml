@@ -19,6 +19,7 @@ jobs:
           version: latest
 
       - name: Deploy database migrations
-        run: supabase db push --project-ref=zukvnxxxrkmlbdtdltal --debug
+        working-directory: ./supabase
+        run: supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
