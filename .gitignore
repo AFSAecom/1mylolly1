@@ -32,3 +32,6 @@ core
 
 .github/
 
+.env
+lo/
+package-lock.json
