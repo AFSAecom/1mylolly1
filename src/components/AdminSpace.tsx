@@ -4033,13 +4033,29 @@ const AdminSpace = () => {
                     );
 
                     // Create product in Supabase
+                    const codeArticle =
+                      (formData.get("codeArticle") as string) ||
+                      `L${Date.now()}`;
+
+                    // Prevent duplicate code_produit which would cause an error
+                    const { data: existingProduct } = await supabase
+                      .from("products")
+                      .select("id")
+                      .eq("code_produit", codeArticle)
+                      .maybeSingle();
+
+                    if (existingProduct) {
+                      alert(
+                        "Un produit avec ce code existe déjà. Veuillez choisir un autre code.",
+                      );
+                      return;
+                    }
+
                     const { data: newProduct, error: productError } =
                       await supabase
                         .from("products")
                         .insert({
-                          code_produit: String(
-                            formData.get("codeArticle") || `L${Date.now()}`,
-                          ),
+                          code_produit: String(codeArticle),
                           nom_lolly: String(
                             formData.get("nomLolly") || "Nouveau Produit",
                           ),
@@ -4146,7 +4162,9 @@ const AdminSpace = () => {
                     setShowNewProduct(false);
                   } catch (error) {
                     console.error("Error creating product:", error);
-                    alert("Erreur lors de la création du produit");
+                    alert(
+                      `Erreur lors de la création du produit: ${(error as Error).message}`,
+                    );
                   }
                 }}
               >
