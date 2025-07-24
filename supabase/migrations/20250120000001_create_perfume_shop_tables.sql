@@ -105,6 +105,12 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Grant permissions for product-related tables
+GRANT ALL ON public.products TO authenticated;
+GRANT ALL ON public.product_variants TO authenticated;
+GRANT ALL ON public.products TO service_role;
+GRANT ALL ON public.product_variants TO service_role;
+
 -- Insert sample data
 INSERT INTO public.products (code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive, note_tete, note_coeur, note_fond, description, image_url) VALUES
 ('L001', 'Élégance Nocturne', 'Black Opium', 'Yves Saint Laurent', 'femme', 'toutes saisons', 'Oriental Vanillé', ARRAY['Café', 'Poire', 'Mandarine'], ARRAY['Jasmin', 'Fleur d''oranger', 'Vanille'], ARRAY['Patchouli', 'Cèdre', 'Musc'], 'Une fragrance envoûtante qui mêle l''intensité du café à la douceur de la vanille, créant une signature olfactive addictive et mystérieuse.', 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80'),
