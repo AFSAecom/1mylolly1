@@ -3256,7 +3256,7 @@ const AdminSpace = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form id="new-promotion-form" className="space-y-4">
+                    <form id="promotion-export-form" className="space-y-4">
                       <Button
                         onClick={() => handleExportExcel("clients")}
                         className="w-full bg-[#805050] hover:bg-[#704040] text-white"
