@@ -24,16 +24,30 @@ export default {
   },
 }
 ```
-> Test pour déclencher le déploiement Vercel
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
-> Deuxième test pour déclencher déploiement
-> Deuxième test pour déclencher déploiement
-> Deuxième test pour déclencher déploiement
-quatre test pour déclencher déploiement
-Déploiement Vercel test
-> teste
-> test vert
-> TESTE 10
+## Local Development
+
+Install dependencies and start the dev server:
+
+```bash
+npm install
+npm run dev
+```
+
+## Environment Variables
+
+Create a `.env` file at the project root with the following variables:
+
+```bash
+VITE_SUPABASE_URL=<your-supabase-url>
+VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+```
+
+## Deploying to Vercel
+
+Ensure `vercel.json` is committed. Deploy using the Vercel CLI:
+
+```bash
+npx vercel --prod
+```
+
