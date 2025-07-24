@@ -32,10 +32,12 @@ export default {
 
 ## Déploiement sur Vercel
 
-Assurez-vous de définir les variables d'environnement suivantes dans les paramètres du projet Vercel :
+Configurez votre projet Vercel avant de lancer le déploiement :
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+1. Utilisez **Node.js 18** ou une version plus récente. Vous pouvez l'indiquer dans `package.json` via le champ `engines`.
+2. Définissez les variables d'environnement suivantes dans l'onglet **Environment Variables** du projet :
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
 
-Ces variables sont nécessaires pour que la connexion à Supabase fonctionne lors du build et à l'exécution. Configurez-les dans l'onglet **Environment Variables** de votre projet Vercel.
-Veillez également à utiliser Node.js 18 ou une version supérieure pour éviter les erreurs de build.
+Ces variables permettent de se connecter à Supabase lors du build et à l'exécution.
+Une fois la configuration terminée, lancez le déploiement depuis le tableau de bord Vercel ou avec la CLI `vercel`.
