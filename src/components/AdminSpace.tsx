@@ -4019,11 +4019,13 @@ const AdminSpace = () => {
                 variant="outline"
                 onClick={() => setShowNewProduct(false)}
                 className="flex-1"
+                type="button"
               >
                 Annuler
               </Button>
               <Button
                 className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
+                type="button"
                 onClick={async () => {
                   try {
                     // Get form data
