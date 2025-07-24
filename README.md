@@ -7,6 +7,13 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
+## Mobile app
+
+The `lo` directory contains an [Expo](https://expo.dev/) project that powers the
+mobile version of this application. See [`lo/README.md`](lo/README.md) for
+instructions on installing dependencies and running the app. If you are only
+working on the web front-end, you can safely ignore this folder.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
