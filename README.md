@@ -37,3 +37,16 @@ Déploiement Vercel test
 > teste
 > test vert
 > TESTE 10
+Ajout test de déploiement Vercel
+
+## Déploiement sur Vercel
+
+Assurez-vous de définir les variables d'environnement suivantes dans les paramètres
+du projet Vercel :
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Ces variables sont nécessaires pour que la connexion à Supabase fonctionne lors du
+build et à l'exécution. Elles peuvent être configurées dans l'onglet **Environment
+Variables** de votre projet Vercel.
