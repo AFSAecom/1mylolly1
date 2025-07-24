@@ -32,12 +32,11 @@ export default {
 
 ## Déploiement sur Vercel
 
-Avant de déployer l'application, préparez votre projet dans Vercel :
+Avant le déploiement :
 
-1. Utilisez **Node.js 18** ou une version ultérieure. Indiquez cette version dans le champ `engines` de `package.json` pour que Vercel l'applique.
-2. Dans l'onglet **Environment Variables** de Vercel, ajoutez les variables suivantes :
+1. Utilisez **Node.js 18** ou une version ultérieure et indiquez cette version dans la clé `engines` du `package.json`.
+2. Dans Vercel, déclarez les variables d’environnement suivantes :
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
 
-Ces variables sont nécessaires pour que l'application puisse accéder à Supabase.
-Une fois la configuration terminée, déclenchez le déploiement depuis l'interface Vercel ou via la commande `vercel`.
+Une fois ces paramètres configurés, lancez le déploiement depuis l’interface Vercel ou via la commande `vercel`.
