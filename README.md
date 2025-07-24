@@ -24,6 +24,10 @@ export default {
   },
 }
 ```
+Vercel deployments expect secrets named `vite_supabase_url` and
+`vite_supabase_anon_key`. Create them from the Vercel dashboard or with
+`vercel secrets add` so that `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY` are available during build and runtime.
 > Test pour déclencher le déploiement Vercel
 
 - Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
