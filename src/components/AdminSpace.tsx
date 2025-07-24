@@ -3180,7 +3180,7 @@ const AdminSpace = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form id="new-product-form" className="space-y-4">
+                    <form id="sales-report-form" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>Date de début</Label>
@@ -3852,7 +3852,7 @@ const AdminSpace = () => {
               Ajouter un nouveau produit au catalogue
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <form id="new-product-form" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Code Article</Label>
@@ -4023,6 +4023,7 @@ const AdminSpace = () => {
                 Annuler
               </Button>
               <Button
+                type="button"
                 className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
                 onClick={async () => {
                   try {
@@ -4152,7 +4153,7 @@ const AdminSpace = () => {
                 Ajouter
               </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
 

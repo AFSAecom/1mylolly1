@@ -1,6 +1,8 @@
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Requirements
+- Node.js 18 or later
 
 Currently, two official plugins are available:
 
@@ -37,3 +39,17 @@ Déploiement Vercel test
 > teste
 > test vert
 > TESTE 10
+Ajout test de déploiement Vercel
+
+## Déploiement sur Vercel
+
+Assurez-vous de définir les variables d'environnement suivantes dans les paramètres
+du projet Vercel :
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Ces variables sont nécessaires pour que la connexion à Supabase fonctionne lors du
+build et à l'exécution. Elles peuvent être configurées dans l'onglet **Environment
+Variables** de votre projet Vercel.
+Assurez-vous également que Vercel utilise Node.js 18 ou une version supérieure pour éviter les erreurs de build.
