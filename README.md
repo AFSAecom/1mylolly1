@@ -1,39 +1,29 @@
-# React + TypeScript + Vite
+# MyLolly
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is built with **React**, **TypeScript**, **Vite** and **Tailwind CSS**. Data is stored in **Supabase**.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Create a `.env` file at the project root containing:
+   ```bash
+   VITE_SUPABASE_URL=your-supabase-url
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
+3. Start the dev server:
+   ```bash
+   npm run dev
+   ```
 
-## Expanding the ESLint configuration
+## Deployment on Vercel
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+The repository includes a `vercel.json` file so deployments on Vercel run `npm run build` automatically.  In the Vercel dashboard, define the environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to match your `.env` file.
 
-- Configure the top-level `parserOptions` property like this:
+Run the following to create an optimized production build locally:
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```bash
+npm run build
 ```
-> Test pour déclencher le déploiement Vercel
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
-> Deuxième test pour déclencher déploiement
-> Deuxième test pour déclencher déploiement
-> Deuxième test pour déclencher déploiement
-quatre test pour déclencher déploiement
-Déploiement Vercel test
-> teste
-> test vert
-> TESTE 10

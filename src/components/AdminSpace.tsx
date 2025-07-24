@@ -60,6 +60,14 @@ import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase } from "../lib/supabase";
 
+interface EditFormData {
+  codeArticle?: string;
+  name?: string;
+  nomParfumInspire?: string;
+  marqueInspire?: string;
+  imageURL?: string;
+}
+
 const AdminSpace = () => {
   const { register } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,7 +87,7 @@ const AdminSpace = () => {
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [selectedProductForRestock, setSelectedProductForRestock] =
     useState(null);
-  const [editFormData, setEditFormData] = useState({});
+  const [editFormData, setEditFormData] = useState<EditFormData>({});
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [newUserFormData, setNewUserFormData] = useState({
@@ -1402,7 +1410,7 @@ const AdminSpace = () => {
                 ];
 
                 // Create product with properly encoded data
-                const newProduct = {
+                const newProduct: any = {
                   id: Date.now() + i,
                   codeArticle: fixEncoding(codeArticle),
                   name: fixEncoding(nomLolly),
