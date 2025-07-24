@@ -4102,7 +4102,9 @@ const AdminSpace = () => {
 
                     if (productError) {
                       console.error("Error creating product:", productError);
-                      alert("Erreur lors de la création du produit");
+                      alert(
+                        `Erreur lors de la création du produit: ${productError.message}`,
+                      );
                       return;
                     }
 
