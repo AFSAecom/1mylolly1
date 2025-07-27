@@ -2,7 +2,7 @@
 
 insert into products (id, name, description, prix, famille_olfactive)
 values
-    ('ed4313c9-e64c-4831-ad06-ad2b5eba47f7', 'Bois d'Ambre', 'Un parfum chaud et mystérieux', 85.000, 'oriental'),
+    ('ed4313c9-e64c-4831-ad06-ad2b5eba47f7', 'Bois d''Ambre', 'Un parfum chaud et mystérieux', 85.000, 'oriental'),
     ('e5953c54-3eea-4289-9459-e77bb5d94749', 'Fleur de Lune', 'Un floral léger et élégant', 78.000, 'floral');
 
 insert into promotions (id, nom, pourcentage, date_debut, date_fin)
