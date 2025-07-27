@@ -1,13 +1,8 @@
-
--- Désactivation des politiques RLS pour toutes les tables (pour le développement)
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE products DISABLE ROW LEVEL SECURITY;
-ALTER TABLE product_variants DISABLE ROW LEVEL SECURITY;
-ALTER TABLE promotions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
-ALTER TABLE order_items DISABLE ROW LEVEL SECURITY;
-ALTER TABLE favorites DISABLE ROW LEVEL SECURITY;
-
--- Index supplémentaires (si nécessaires)
-CREATE INDEX IF NOT EXISTS idx_products_code ON products(code_produit);
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+INSERT INTO favorites (user_id, product_id, created_at) VALUES ('test', 'test', 'test');
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price, created_at) VALUES ('test', 'test', 'test', 'test', 'test', 'test');
+INSERT INTO orders (user_id, code_client, total_amount, status, conseillere_id, created_at, updated_at) VALUES ('test', 'test', 'test', 'test', 'test', 'test', 'test');
+INSERT INTO product_variants (product_id, ref_complete, contenance, unite, prix, stock_actuel, actif, created_at, updated_at) VALUES ('test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test');
+INSERT INTO products (code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive, note_tete, note_coeur, note_fond, description, image_url, active, created_at, updated_at, prix_15ml, stock_15ml, prix_30ml, stock_30ml, prix_50ml, stock_50ml) VALUES ('test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test');
+INSERT INTO promotions (nom, description, pourcentage_reduction, date_debut, date_fin, active, created_at, updated_at) VALUES ('test', 'test', 'test', 'test', 'test', 'test', 'test', 'test');
+INSERT INTO stock_movements (product_variant_id, type, quantity, reason, reference_document, created_by, created_at) VALUES ('test', 'test', 'test', 'test', 'test', 'test', 'test');
+INSERT INTO users (email, nom, prenom, telephone, whatsapp, date_naissance, adresse, role, code_client, created_at, updated_at) VALUES ('test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test', 'test');
