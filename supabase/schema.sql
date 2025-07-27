@@ -108,3 +108,5 @@ CREATE TABLE IF NOT EXISTS public.promotions (
     date_fin DATE
 );
 
+);
+
