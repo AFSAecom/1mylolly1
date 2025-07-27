@@ -11,16 +11,27 @@ CREATE TABLE IF NOT EXISTS public.users (
 
 CREATE TABLE IF NOT EXISTS public.products (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    code_article TEXT NOT NULL UNIQUE,
+    code_produit TEXT NOT NULL UNIQUE,
     nom_lolly TEXT NOT NULL,
-    parfum_inspire TEXT,
-    marque_inspiree TEXT,
-    genre TEXT,
-    saison TEXT,
-    famille_olfactive TEXT,
+    nom_parfum_inspire TEXT NOT NULL,
+    marque_inspire TEXT NOT NULL,
+    genre TEXT NOT NULL,
+    saison TEXT NOT NULL,
+    famille_olfactive TEXT NOT NULL,
+    note_tete TEXT[],
+    note_coeur TEXT[],
+    note_fond TEXT[],
     description TEXT,
     image_url TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+    active BOOLEAN DEFAULT TRUE,
+    prix_15ml DECIMAL(10,2),
+    stock_15ml INTEGER DEFAULT 0,
+    prix_30ml DECIMAL(10,2),
+    stock_30ml INTEGER DEFAULT 0,
+    prix_50ml DECIMAL(10,2),
+    stock_50ml INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS public.product_variants (
