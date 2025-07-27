@@ -1,85 +1,104 @@
-
--- Extension pour UUID
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Table : users
-CREATE TABLE IF NOT EXISTS users (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  full_name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password TEXT,
-  role TEXT CHECK (role IN ('admin', 'client', 'conseillère')) NOT NULL,
-  phone TEXT,
-  created_at TIMESTAMP DEFAULT now()
+CREATE TABLE favorites (
+  id UUID,
+  user_id UUID,
+  product_id UUID,
+  created_at TIMESTAMPTZ
 );
 
--- Table : products
-CREATE TABLE IF NOT EXISTS products (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  inspiration TEXT,
-  brand TEXT,
-  family TEXT,
-  top_notes TEXT,
-  heart_notes TEXT,
-  base_notes TEXT,
+CREATE TABLE order_items (
+  id UUID,
+  order_id UUID,
+  product_variant_id UUID,
+  quantity INTEGER,
+  unit_price NUMERIC,
+  total_price NUMERIC,
+  created_at TIMESTAMPTZ
+);
+
+CREATE TABLE orders (
+  id UUID,
+  user_id UUID,
+  code_client TEXT,
+  total_amount NUMERIC,
+  status TEXT,
+  conseillere_id UUID,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE product_variants (
+  id UUID,
+  product_id UUID,
+  ref_complete TEXT,
+  contenance INTEGER,
+  unite TEXT,
+  prix NUMERIC,
+  stock_actuel INTEGER,
+  actif BOOLEAN,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE products (
+  id UUID,
+  code_produit TEXT,
+  nom_lolly TEXT,
+  nom_parfum_inspire TEXT,
+  marque_inspire TEXT,
+  genre TEXT,
+  saison TEXT,
+  famille_olfactive TEXT,
+  note_tete ARRAY,
+  note_coeur ARRAY,
+  note_fond ARRAY,
   description TEXT,
-  created_at TIMESTAMP DEFAULT now()
+  image_url TEXT,
+  active BOOLEAN,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ,
+  prix_15ml NUMERIC,
+  stock_15ml INTEGER,
+  prix_30ml NUMERIC,
+  stock_30ml INTEGER,
+  prix_50ml NUMERIC,
+  stock_50ml INTEGER
 );
 
--- Table : product_variants
-CREATE TABLE IF NOT EXISTS product_variants (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  product_id uuid REFERENCES products(id) ON DELETE CASCADE,
-  size TEXT NOT NULL,
-  price DECIMAL(10,2) NOT NULL,
-  stock INT DEFAULT 0,
-  reference_code TEXT,
-  is_active BOOLEAN DEFAULT TRUE
+CREATE TABLE promotions (
+  id UUID,
+  nom TEXT,
+  description TEXT,
+  pourcentage_reduction NUMERIC,
+  date_debut DATE,
+  date_fin DATE,
+  active BOOLEAN,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
 );
 
--- Table : orders
-CREATE TABLE IF NOT EXISTS orders (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  client_id uuid REFERENCES users(id),
-  advisor_id uuid REFERENCES users(id),
-  total_amount DECIMAL(10,2),
-  created_at TIMESTAMP DEFAULT now()
-);
-
--- Table : order_items
-CREATE TABLE IF NOT EXISTS order_items (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  order_id uuid REFERENCES orders(id) ON DELETE CASCADE,
-  product_variant_id uuid REFERENCES product_variants(id),
-  quantity INT,
-  unit_price DECIMAL(10,2)
-);
-
--- Table : favorites
-CREATE TABLE IF NOT EXISTS favorites (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id uuid REFERENCES users(id),
-  product_id uuid REFERENCES products(id),
-  created_at TIMESTAMP DEFAULT now()
-);
-
--- Table : promotions
-CREATE TABLE IF NOT EXISTS promotions (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  discount_percent INT NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  start_date DATE,
-  end_date DATE
-);
-
--- Table : stock_movements
-CREATE TABLE IF NOT EXISTS stock_movements (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  variant_id uuid REFERENCES product_variants(id),
-  quantity INT,
-  movement_type TEXT CHECK (movement_type IN ('entrée', 'sortie')) NOT NULL,
+CREATE TABLE stock_movements (
+  id UUID,
+  product_variant_id UUID,
+  type TEXT,
+  quantity INTEGER,
   reason TEXT,
-  created_at TIMESTAMP DEFAULT now()
+  reference_document TEXT,
+  created_by UUID,
+  created_at TIMESTAMPTZ
 );
+
+CREATE TABLE users (
+  id UUID,
+  email TEXT,
+  nom TEXT,
+  prenom TEXT,
+  telephone TEXT,
+  whatsapp TEXT,
+  date_naissance DATE,
+  adresse TEXT,
+  role TEXT,
+  code_client TEXT,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+
