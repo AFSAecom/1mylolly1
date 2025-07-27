@@ -1,36 +1,36 @@
--- Création des tables
+-- SCHEMA.SQL : Création des tables
 
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY,
-    nom TEXT NOT NULL,
-    prenom TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    role TEXT CHECK (role IN ('admin', 'client', 'conseillere')) NOT NULL,
-    code_client TEXT UNIQUE NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+drop table if exists commandes, promotions, products, users cascade;
+
+create table users (
+    id uuid primary key,
+    nom text not null,
+    prenom text not null,
+    email text not null unique,
+    role text check (role in ('admin', 'conseillere', 'client')) not null,
+    code_client text unique
 );
 
-CREATE TABLE IF NOT EXISTS products (
-    id UUID PRIMARY KEY,
-    nom TEXT NOT NULL,
-    description TEXT,
-    prix DECIMAL(10,3),
-    famille_olfactive TEXT
+create table products (
+    id uuid primary key,
+    name text not null,
+    description text,
+    prix numeric not null,
+    famille_olfactive text
 );
 
-CREATE TABLE IF NOT EXISTS promotions (
-    id UUID PRIMARY KEY,
-    nom TEXT NOT NULL,
-    pourcentage INTEGER,
-    date_debut DATE,
-    date_fin DATE
+create table promotions (
+    id uuid primary key,
+    nom text not null,
+    pourcentage int not null,
+    date_debut date,
+    date_fin date
 );
 
-CREATE TABLE IF NOT EXISTS commandes (
-    id UUID PRIMARY KEY,
-    utilisateur_id UUID REFERENCES users(id),
-    produit_id UUID REFERENCES products(id),
-    quantite INTEGER,
-    date_commande DATE
+create table commandes (
+    id uuid primary key,
+    utilisateur_id uuid references users(id),
+    produit_id uuid references products(id),
+    quantite int,
+    date_commande date
 );
