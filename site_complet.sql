@@ -1,24 +1,14 @@
+-- INSERT de test pour produits + variants
 
--- Exemple de produit avec variantes
-INSERT INTO public.products (
-    id, code_article, nom_lolly, parfum_inspire, marque_inspiree, genre, saison, famille_olfactive, description, image_url
-) VALUES (
-    '11111111-1111-1111-1111-111111111111',
-    'L001',
-    'Nom Lolly Exemple',
-    'Parfum Inspiré',
-    'Marque Inspirée',
-    'Homme',
-    'Été',
-    'Fougère',
-    'Description du parfum exemple.',
-    'https://exemple.com/image.png'
-);
+INSERT INTO public.products (code_article, nom_lolly, parfum_inspire, marque_inspiree, genre, saison, famille_olfactive, description, image_url)
+VALUES
+('P001', 'Lune Noire', 'La Nuit Trésor', 'Lancôme', 'femme', 'hiver', 'oriental', 'Une explosion de mystère et de sensualité', 'https://cdn.exemple.com/img/p001.jpg');
 
--- Variantes associées
-INSERT INTO public.product_variants (
-    id, product_id, ref_complete, contenance, prix, stock_initial, stock_actuel
-) VALUES 
-    ('22222222-2222-2222-2222-222222222211', '11111111-1111-1111-1111-111111111111', 'L001-15ml', 15, 50, 100, 100),
-    ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'L001-30ml', 30, 90, 100, 100),
-    ('22222222-2222-2222-2222-222222222233', '11111111-1111-1111-1111-111111111111', 'L001-50ml', 50, 120, 100, 100);
+INSERT INTO public.product_variants (product_id, ref_complete, contenance, prix)
+SELECT id, 'P001-15ML', 15, 29.900 FROM public.products WHERE code_article = 'P001';
+
+INSERT INTO public.product_variants (product_id, ref_complete, contenance, prix)
+SELECT id, 'P001-30ML', 30, 49.900 FROM public.products WHERE code_article = 'P001';
+
+INSERT INTO public.product_variants (product_id, ref_complete, contenance, prix)
+SELECT id, 'P001-50ML', 50, 69.900 FROM public.products WHERE code_article = 'P001';
