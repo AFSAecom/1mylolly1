@@ -1,36 +1,78 @@
--- SCHEMA.SQL : Création des tables
 
-drop table if exists commandes, promotions, products, users cascade;
-
-create table users (
-    id uuid primary key,
-    nom text not null,
-    prenom text not null,
-    email text not null unique,
-    role text check (role in ('admin', 'conseillere', 'client')) not null,
-    code_client text unique
+-- TABLE: users
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY,
+    nom TEXT,
+    prenom TEXT,
+    email TEXT UNIQUE,
+    mot_de_passe TEXT,
+    date_naissance DATE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
-create table products (
-    id uuid primary key,
-    name text not null,
-    description text,
-    prix numeric not null,
-    famille_olfactive text
+-- TABLE: products
+CREATE TABLE IF NOT EXISTS products (
+    id UUID PRIMARY KEY,
+    code_produit TEXT,
+    nom_lolly TEXT,
+    nom_parfum_inspire TEXT,
+    marque_inspiree TEXT,
+    description TEXT,
+    genre TEXT,
+    saison TEXT,
+    famille_olfactive TEXT,
+    image_url TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
-create table promotions (
-    id uuid primary key,
-    nom text not null,
-    pourcentage int not null,
-    date_debut date,
-    date_fin date
+-- TABLE: product_variants
+CREATE TABLE IF NOT EXISTS product_variants (
+    id UUID PRIMARY KEY,
+    product_id UUID REFERENCES products(id),
+    ref_complete TEXT,
+    contenance INTEGER,
+    unite TEXT,
+    prix NUMERIC,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
-create table commandes (
-    id uuid primary key,
-    utilisateur_id uuid references users(id),
-    produit_id uuid references products(id),
-    quantite int,
-    date_commande date
+-- TABLE: promotions
+CREATE TABLE IF NOT EXISTS promotions (
+    id UUID PRIMARY KEY,
+    nom TEXT,
+    description TEXT,
+    date_debut DATE,
+    date_fin DATE,
+    pourcentage NUMERIC,
+    seuil_livraison_gratuite NUMERIC,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- TABLE: orders
+CREATE TABLE IF NOT EXISTS orders (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    code_client TEXT,
+    total_amount NUMERIC,
+    statut TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- TABLE: order_items
+CREATE TABLE IF NOT EXISTS order_items (
+    id UUID PRIMARY KEY,
+    order_id UUID REFERENCES orders(id),
+    product_variant_id UUID REFERENCES product_variants(id),
+    quantity INTEGER,
+    unit_price NUMERIC,
+    total_price NUMERIC,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- TABLE: favorites
+CREATE TABLE IF NOT EXISTS favorites (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    product_id UUID REFERENCES products(id),
+    created_at TIMESTAMP DEFAULT NOW()
 );
