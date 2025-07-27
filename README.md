@@ -1,26 +1,59 @@
 # 🌸 Lolly Web App – Gestion de vente de parfums et réseau de conseillères
 
-Application web pour la gestion des ventes de parfums inspirés, avec accès client, conseillère, et administrateur. Inclut un système de catalogue, panier, commandes, parrainage et réseau.
-
----
+Application web pour la vente de parfums inspirés. Les utilisateurs peuvent consulter le catalogue, passer commande et gérer leurs favoris. Les conseillères disposent d'un espace dédié et les administrateurs ont accès à des outils de gestion.
 
 ## ⚙️ Stack technique
 
-- **Frontend** : React (généré initialement via TempoAI)
-- **Backend** : Supabase (PostgreSQL + Auth)
-- **Déploiement** : Vercel
-- **Versioning** : GitHub
-- **Langage** : JavaScript / TypeScript
-- **Authentification** : Supabase Auth (JWT)
-- **Base de données** : Supabase SQL (relations, contraintes)
+- **Frontend** : React (Vite)
+- **Backend** : Supabase (PostgreSQL + Auth)
+- **Déploiement** : Vercel
+- **Langage** : TypeScript
 
 ---
 
-## 🚀 Déploiement local
+## 🚀 Démarrage rapide
 
-### 1. Cloner le projet
+### 1. Cloner le dépôt
 
 ```bash
-git clone https://github.com/ton-utilisateur/ton-repo.git
-cd ton-repo
+git clone <url-du-depot>
+cd <nom-du-dossier>
+```
+
+### 2. Configurer les variables d'environnement
+
+Copiez le fichier `.env.example` vers `.env` et renseignez vos clés Supabase.
+
+```bash
+cp .env.example .env
+# éditer .env et ajouter vos clés
+```
+
+### 3. Installer les dépendances
+
+```bash
+npm install
+```
+
+### 4. Lancer le serveur de développement
+
+```bash
+npm run dev
+```
+
+### 5. Construire pour la production
+
+```bash
+npm run build
+```
+
+## 📁 Principaux dossiers
+
+- `src/` : code source React
+- `supabase/` : scripts SQL pour la base
+- `lo/` : application mobile Expo indépendante
+
+## 🤝 Contribuer
+
+Les contributions sont bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
 
