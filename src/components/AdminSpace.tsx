@@ -226,10 +226,10 @@ const AdminSpace = () => {
         } else {
           const formattedProducts = (productsData || []).map((product) => ({
             id: product.id,
-            codeArticle: product.code_produit,
+            codeArticle: product.code_article,
             name: product.nom_lolly,
-            nomParfumInspire: product.nom_parfum_inspire,
-            marqueInspire: product.marque_inspire,
+            nomParfumInspire: product.parfum_inspire,
+            marqueInspire: product.marque_inspiree,
             brand: "Lolly",
             price: product.product_variants?.[0]?.prix || 0,
             stock:
@@ -2490,14 +2490,14 @@ const AdminSpace = () => {
       const { data: newProduct, error: productError } = await supabase
         .from("products")
         .insert({
-          code_produit: String(
+          code_article: String(
             formData.get("codeArticle") || `L${Date.now()}`,
           ),
           nom_lolly: String(formData.get("nomLolly") || "Nouveau Produit"),
-          nom_parfum_inspire: String(
+          parfum_inspire: String(
             formData.get("parfumInspire") || "Parfum Inspiré",
           ),
-          marque_inspire: String(
+          marque_inspiree: String(
             formData.get("marqueInspire") || "Marque Inspirée",
           ),
           genre: String(formData.get("genre") || "mixte"),
@@ -2505,23 +2505,22 @@ const AdminSpace = () => {
           famille_olfactive: String(
             formData.get("familleOlfactive") || "Oriental",
           ),
-          note_tete: ((formData.get("notesTete") as string) || "")
-            .split(",")
-            .map((n) => n.trim())
-            .filter((n) => n.length > 0),
-          note_coeur: ((formData.get("notesCoeur") as string) || "")
-            .split(",")
-            .map((n) => n.trim())
-            .filter((n) => n.length > 0),
-          note_fond: ((formData.get("notesFond") as string) || "")
-            .split(",")
-            .map((n) => n.trim())
-            .filter((n) => n.length > 0),
           description:
             (formData.get("description") as string) || "Description du produit",
           image_url:
             "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
-          active: true,
+          prix_15ml:
+            parseFloat((formData.get("prix15ml") as string) || "19.9") || 19.9,
+          stock_15ml:
+            parseInt((formData.get("stock15ml") as string) || "0") || 0,
+          prix_30ml:
+            parseFloat((formData.get("prix30ml") as string) || "29.9") || 29.9,
+          stock_30ml:
+            parseInt((formData.get("stock30ml") as string) || "0") || 0,
+          prix_50ml:
+            parseFloat((formData.get("prix50ml") as string) || "39.9") || 39.9,
+          stock_50ml:
+            parseInt((formData.get("stock50ml") as string) || "0") || 0,
         })
         .select()
         .single();
@@ -2556,7 +2555,7 @@ const AdminSpace = () => {
       for (const variant of variants) {
         await supabase.from("product_variants").insert({
           product_id: newProduct.id,
-          ref_complete: `${newProduct.code_produit}-${variant.size}`,
+          ref_complete: `${newProduct.code_article}-${variant.size}`,
           contenance: parseInt(variant.size),
           unite: "ml",
           prix: variant.price,
