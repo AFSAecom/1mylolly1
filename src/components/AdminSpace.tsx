@@ -2479,6 +2479,102 @@ const AdminSpace = () => {
     input.click();
   };
 
+  const handleCreateProduct = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ) => {
+    e.preventDefault();
+    try {
+      const formElement = e.currentTarget;
+      const formData = new FormData(formElement);
+
+      const { data: newProduct, error: productError } = await supabase
+        .from("products")
+        .insert({
+          code_produit: String(
+            formData.get("codeArticle") || `L${Date.now()}`,
+          ),
+          nom_lolly: String(formData.get("nomLolly") || "Nouveau Produit"),
+          nom_parfum_inspire: String(
+            formData.get("parfumInspire") || "Parfum Inspiré",
+          ),
+          marque_inspire: String(
+            formData.get("marqueInspire") || "Marque Inspirée",
+          ),
+          genre: String(formData.get("genre") || "mixte"),
+          saison: String(formData.get("saison") || "toutes saisons"),
+          famille_olfactive: String(
+            formData.get("familleOlfactive") || "Oriental",
+          ),
+          note_tete: ((formData.get("notesTete") as string) || "")
+            .split(",")
+            .map((n) => n.trim())
+            .filter((n) => n.length > 0),
+          note_coeur: ((formData.get("notesCoeur") as string) || "")
+            .split(",")
+            .map((n) => n.trim())
+            .filter((n) => n.length > 0),
+          note_fond: ((formData.get("notesFond") as string) || "")
+            .split(",")
+            .map((n) => n.trim())
+            .filter((n) => n.length > 0),
+          description:
+            (formData.get("description") as string) || "Description du produit",
+          image_url:
+            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+          active: true,
+        })
+        .select()
+        .single();
+
+      if (productError) {
+        console.error("Error creating product:", productError);
+        alert("Erreur lors de la création du produit");
+        return;
+      }
+
+      const variants = [
+        {
+          size: "15ml",
+          price:
+            parseFloat((formData.get("prix15ml") as string) || "19.9") || 19.9,
+          stock: parseInt((formData.get("stock15ml") as string) || "0") || 0,
+        },
+        {
+          size: "30ml",
+          price:
+            parseFloat((formData.get("prix30ml") as string) || "29.9") || 29.9,
+          stock: parseInt((formData.get("stock30ml") as string) || "0") || 0,
+        },
+        {
+          size: "50ml",
+          price:
+            parseFloat((formData.get("prix50ml") as string) || "39.9") || 39.9,
+          stock: parseInt((formData.get("stock50ml") as string) || "0") || 0,
+        },
+      ];
+
+      for (const variant of variants) {
+        await supabase.from("product_variants").insert({
+          product_id: newProduct.id,
+          ref_complete: `${newProduct.code_produit}-${variant.size}`,
+          contenance: parseInt(variant.size),
+          unite: "ml",
+          prix: variant.price,
+          stock_actuel: variant.stock,
+          actif: true,
+        });
+      }
+
+      await loadData();
+
+      alert("Produit créé avec succès dans Supabase!");
+      setShowNewProduct(false);
+    } catch (error) {
+      console.error("Error creating product:", error);
+      alert("Erreur lors de la création du produit");
+    }
+  };
+
   // Show login dialog if not authenticated
   if (!authIsAuthenticated || showLogin) {
     return (
@@ -3180,7 +3276,7 @@ const AdminSpace = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form id="new-product-form" className="space-y-4">
+                    <form id="sales-report-form" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>Date de début</Label>
@@ -3852,7 +3948,11 @@ const AdminSpace = () => {
               Ajouter un nouveau produit au catalogue
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <form
+            id="new-product-form"
+            className="space-y-4"
+            onSubmit={handleCreateProduct}
+          >
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Code Article</Label>
@@ -4015,144 +4115,22 @@ const AdminSpace = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowNewProduct(false)}
-                className="flex-1"
-              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowNewProduct(false)}
+                  className="flex-1"
+                >
                 Annuler
               </Button>
               <Button
+                type="submit"
                 className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
-                onClick={async () => {
-                  try {
-                    // Get form data
-                    const formData = new FormData(
-                      document.querySelector("#new-product-form"),
-                    );
-
-                    // Create product in Supabase
-                    const { data: newProduct, error: productError } =
-                      await supabase
-                        .from("products")
-                        .insert({
-                          code_produit: String(
-                            formData.get("codeArticle") || `L${Date.now()}`,
-                          ),
-                          nom_lolly: String(
-                            formData.get("nomLolly") || "Nouveau Produit",
-                          ),
-                          nom_parfum_inspire: String(
-                            formData.get("parfumInspire") || "Parfum Inspiré",
-                          ),
-                          marque_inspire: String(
-                            formData.get("marqueInspire") || "Marque Inspirée",
-                          ),
-                          genre: String(formData.get("genre") || "mixte"),
-                          saison: String(
-                            formData.get("saison") || "toutes saisons",
-                          ),
-                          famille_olfactive: String(
-                            formData.get("familleOlfactive") || "Oriental",
-                          ),
-                          note_tete: (
-                            (formData.get("notesTete") as string) || ""
-                          )
-                            .split(",")
-                            .map((n) => n.trim())
-                            .filter((n) => n.length > 0),
-                          note_coeur: (
-                            (formData.get("notesCoeur") as string) || ""
-                          )
-                            .split(",")
-                            .map((n) => n.trim())
-                            .filter((n) => n.length > 0),
-                          note_fond: (
-                            (formData.get("notesFond") as string) || ""
-                          )
-                            .split(",")
-                            .map((n) => n.trim())
-                            .filter((n) => n.length > 0),
-                          description:
-                            (formData.get("description") as string) ||
-                            "Description du produit",
-                          image_url:
-                            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
-                          active: true,
-                        })
-                        .select()
-                        .single();
-
-                    if (productError) {
-                      console.error("Error creating product:", productError);
-                      alert("Erreur lors de la création du produit");
-                      return;
-                    }
-
-                    // Create variants
-                    const variants = [
-                      {
-                        size: "15ml",
-                        price:
-                          parseFloat(
-                            (formData.get("prix15ml") as string) || "19.9",
-                          ) || 19.9,
-                        stock:
-                          parseInt(
-                            (formData.get("stock15ml") as string) || "0",
-                          ) || 0,
-                      },
-                      {
-                        size: "30ml",
-                        price:
-                          parseFloat(
-                            (formData.get("prix30ml") as string) || "29.9",
-                          ) || 29.9,
-                        stock:
-                          parseInt(
-                            (formData.get("stock30ml") as string) || "0",
-                          ) || 0,
-                      },
-                      {
-                        size: "50ml",
-                        price:
-                          parseFloat(
-                            (formData.get("prix50ml") as string) || "39.9",
-                          ) || 39.9,
-                        stock:
-                          parseInt(
-                            (formData.get("stock50ml") as string) || "0",
-                          ) || 0,
-                      },
-                    ];
-
-                    for (const variant of variants) {
-                      await supabase.from("product_variants").insert({
-                        product_id: newProduct.id,
-                        ref_complete: `${newProduct.code_produit}-${variant.size}`,
-                        contenance: parseInt(variant.size),
-                        unite: "ml",
-                        prix: variant.price,
-                        stock_actuel: variant.stock,
-                        actif: true,
-                      });
-                    }
-
-                    // Reload data
-                    await loadData();
-
-                    alert("Produit créé avec succès dans Supabase!");
-                    setShowNewProduct(false);
-                  } catch (error) {
-                    console.error("Error creating product:", error);
-                    alert("Erreur lors de la création du produit");
-                  }
-                }}
               >
                 Ajouter
               </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
 
