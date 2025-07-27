@@ -6,8 +6,8 @@ VALUES ('f371e933-e497-4932-b95e-b4ee72bd9337', 'Admin', 'Lolly', 'admin@lolly.t
 -- Insertion de 2 conseillers
 INSERT INTO users (id, nom, prenom, email, role)
 VALUES 
-  ('dc425a02-50ab-46a4-b45d-243068f37f2b', 'Ali', 'Ben Salah', 'ali.conseiller@lolly.tn', 'conseiller'),
-  ('36040d69-480d-4e38-b8c1-aa992267056e', 'Sana', 'Trabelsi', 'sana.conseiller@lolly.tn', 'conseiller');
+  ('dc425a02-50ab-46a4-b45d-243068f37f2b', 'Ali', 'Ben Salah', 'ali.conseiller@lolly.tn', 'conseillere'),
+  ('36040d69-480d-4e38-b8c1-aa992267056e', 'Sana', 'Trabelsi', 'sana.conseiller@lolly.tn', 'conseillere');
 
 -- Insertion de 2 clients
 INSERT INTO users (id, nom, prenom, email, role)
