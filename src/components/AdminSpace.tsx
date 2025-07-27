@@ -3954,7 +3954,7 @@ const AdminSpace = () => {
               Ajouter un nouveau produit au catalogue
             </DialogDescription>
           </DialogHeader>
-          {/* Formulaire de création de produit (new-product-form) */}
+          {/* New product creation form */}
           <form
             id="new-product-form"
             className="space-y-4"
