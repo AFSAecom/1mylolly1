@@ -1,5 +1,3 @@
--- Structure d'origine de TempoAI (extrait simplifié d'après nos discussions initiales)
-
 CREATE TABLE IF NOT EXISTS public.users (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     nom TEXT NOT NULL,
