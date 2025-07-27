@@ -4029,9 +4029,14 @@ const AdminSpace = () => {
                 onClick={async () => {
                   try {
                     // Get form data
-                    const formData = new FormData(
-                      document.querySelector("#new-product-form"),
-                    );
+                    const formElement = document.getElementById(
+                      "new-product-form",
+                    ) as HTMLFormElement | null;
+                    if (!formElement) {
+                      alert("Formulaire introuvable");
+                      return;
+                    }
+                    const formData = new FormData(formElement);
 
                     // Create product in Supabase
                     const { data: newProduct, error: productError } =
