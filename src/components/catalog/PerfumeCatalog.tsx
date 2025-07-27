@@ -73,10 +73,11 @@ const PerfumeCatalog = ({
 
       if (productsData && productsData.length > 0) {
         const formattedPerfumes = productsData.map((product) => ({
-          codeProduit: product.code_produit,
+          codeProduit: product.code_article || product.code_produit,
           nomLolly: product.nom_lolly,
-          nomParfumInspire: product.nom_parfum_inspire,
-          marqueInspire: product.marque_inspire,
+          nomParfumInspire:
+            product.parfum_inspire || product.nom_parfum_inspire,
+          marqueInspire: product.marque_inspiree || product.marque_inspire,
           genre: (product.genre as "homme" | "femme" | "mixte") || "mixte",
           saison:
             (product.saison as "été" | "hiver" | "toutes saisons") ||

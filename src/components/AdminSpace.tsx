@@ -2568,6 +2568,11 @@ const AdminSpace = () => {
 
       await loadData();
 
+      const catalogUpdateEvent = new CustomEvent("catalogUpdated", {
+        detail: { source: "supabase" },
+      });
+      window.dispatchEvent(catalogUpdateEvent);
+
       alert("Produit créé avec succès dans Supabase!");
       setShowNewProduct(false);
     } catch (error) {
