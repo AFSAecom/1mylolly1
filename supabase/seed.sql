@@ -1,25 +1,29 @@
--- Extension pour UUID
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Création de données de démonstration cohérentes
 
 -- Utilisateurs
-INSERT INTO users (id, nom, prenom, email, role) VALUES
-('2a193ca6-7ff4-4fdc-9f62-2954c0a67bd4', 'Lolly', 'Admin', 'admin@lolly.tn', 'admin'),
-('37e479fb-6253-4451-8bde-e5d2b02aeeb5', 'Ali', 'Client', 'ali@test.tn', 'client'),
-('86d73bc6-7cb3-493f-a88f-07cfacbd42dc', 'Sonia', 'Client', 'sonia@test.tn', 'client'),
-('1acfec6a-6116-4e7d-bf2e-741ea7c18ec9', 'Sami', 'Conseiller', 'sami@lolly.tn', 'conseillere'),
-('36012922-f983-446a-99e7-5476fd74ef8e', 'Amel', 'Conseillere', 'amel@lolly.tn', 'conseillere');
+INSERT INTO users (id, nom, prenom, email, role)
+VALUES 
+  ('f371e933-e497-4932-b95e-b4ee72bd9337', 'Admin', 'Lolly', 'admin@lolly.tn', 'admin'),
+  ('dc425a02-50ab-46a4-b45d-243068f37f2b', 'Ali', 'Ben Salah', 'ali.conseiller@lolly.tn', 'conseiller'),
+  ('36040d69-480d-4e38-b8c1-aa992267056e', 'Sana', 'Trabelsi', 'sana.conseiller@lolly.tn', 'conseiller'),
+  ('39b72f45-621a-4cf1-8847-3647c2281ea3', 'Mouna', 'Gharbi', 'mouna.client@lolly.tn', 'client'),
+  ('e023aeca-50a7-4093-aa36-05e67fa8759d', 'Youssef', 'Ayari', 'youssef.client@lolly.tn', 'client');
 
--- Parfums
-INSERT INTO products (id, name, family, price) VALUES
-('e988cc98-61bf-40ba-b08d-a58105497133', 'Bois d'Ambre', 'Oriental', 59.9),
-('9bf06ea9-a1bf-4e13-97c5-3e7b9a52623d', 'Fleur de Jasmin', 'Floral', 49.9);
-
--- Commandes
-INSERT INTO orders (id, client_id, total_amount) VALUES
-('258fdc6a-f07b-4751-be27-5adebc0ba60b', '37e479fb-6253-4451-8bde-e5d2b02aeeb5', 119.8),
-('975db974-0270-4499-97b5-44369fcaf390', '86d73bc6-7cb3-493f-a88f-07cfacbd42dc', 49.9);
+-- Produits
+INSERT INTO products (id, nom, description, prix, famille_olfactive)
+VALUES 
+  ('ed4313c9-e64c-4831-ad06-adb25eba47ff', 'Bois d''Ambre', 'Un parfum chaud et mystérieux', 85.000, 'Oriental'),
+  ('e5953c54-3eea-4289-9459-e77b5db97479', 'Fleur de Lune', 'Un floral léger et élégant', 78.000, 'Floral');
 
 -- Promotions
-INSERT INTO promotions (id, name, discount_percent, is_active, start_date, end_date) VALUES
-('65083a5d-8f61-429b-8507-2967072c2193', 'Promo 1', 10, true, '2025-07-01', '2025-08-01'),
-('8b751775-e784-42cb-b7de-138564202be4', 'Promo 2', 20, true, '2025-07-01', '2025-08-01');
+INSERT INTO promotions (id, nom, pourcentage, date_debut, date_fin)
+VALUES 
+  (gen_random_uuid(), 'Promo Été', 10, '2025-06-01', '2025-08-31'),
+  (gen_random_uuid(), 'Lancement Lolly', 15, '2025-07-01', '2025-07-31');
+
+-- Commandes
+INSERT INTO commandes (id, utilisateur_id, produit_id, quantite, date_commande)
+VALUES 
+  (gen_random_uuid(), '39b72f45-621a-4cf1-8847-3647c2281ea3', 'ed4313c9-e64c-4831-ad06-adb25eba47ff', 1, '2025-07-01'),
+  (gen_random_uuid(), 'e023aeca-50a7-4093-aa36-05e67fa8759d', 'e5953c54-3eea-4289-9459-e77b5db97479', 2, '2025-07-15');
