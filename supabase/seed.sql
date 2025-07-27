@@ -2,11 +2,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Utilisateurs
-INSERT INTO users (id, full_name, email, role) VALUES ('2a193ca6-7ff4-4fdc-9f62-2954c0a67bd4', 'Admin Lolly', 'admin@lolly.tn', 'admin');
-INSERT INTO users (id, full_name, email, role) VALUES ('37e479fb-6253-4451-8bde-e5d2b02abeeb', 'Client Ali', 'ali@test.tn', 'client');
-INSERT INTO users (id, full_name, email, role) VALUES ('86d73bc6-7cb3-493f-a88f-07cfacbd42dc', 'Client Sonia', 'sonia@test.tn', 'client');
-INSERT INTO users (id, full_name, email, role) VALUES ('1acfeca0-6116-4e7d-bf2e-741ea7c18ec9', 'Conseiller Sami', 'sami@lolly.tn', 'conseiller');
-INSERT INTO users (id, full_name, email, role) VALUES ('36012922-f983-446a-99e7-5476fd74ef8e', 'Conseillère Amel', 'amel@lolly.tn', 'conseiller');
+INSERT INTO users (id, name, email, role) VALUES ('2a193ca6-7ff4-4fdc-9f62-2954c0a67bd4', 'Admin Lolly', 'admin@lolly.tn', 'admin');
+INSERT INTO users (id, name, email, role) VALUES ('37e479fb-6253-4451-8bde-e5d2b02abeeb', 'Client Ali', 'ali@test.tn', 'client');
+INSERT INTO users (id, name, email, role) VALUES ('86d73bc6-7cb3-493f-a88f-07cfacbd42dc', 'Client Sonia', 'sonia@test.tn', 'client');
+INSERT INTO users (id, name, email, role) VALUES ('1acfeca0-6116-4e7d-bf2e-741ea7c18ec9', 'Conseiller Sami', 'sami@lolly.tn', 'conseiller');
+INSERT INTO users (id, name, email, role) VALUES ('36012922-f983-446a-99e7-5476fd74ef8e', 'Conseillère Amel', 'amel@lolly.tn', 'conseiller');
 
 -- Parfums
 INSERT INTO products (id, name, family, price) VALUES ('e988cc98-61bf-40ba-b08d-a58105497133', 'Bois d''Ambre', 'Oriental', 59.9);
