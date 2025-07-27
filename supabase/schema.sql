@@ -3,7 +3,11 @@ CREATE TABLE IF NOT EXISTS public.users (
     nom TEXT NOT NULL,
     prenom TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    telephone TEXT,
+    whatsapp TEXT,
+    date_naissance DATE,
     role TEXT NOT NULL CHECK (role IN ('admin', 'client', 'conseillere')),
+    mot_de_passe_temporaire TEXT,
     code_client TEXT UNIQUE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
