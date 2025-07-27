@@ -57,3 +57,5 @@ npm run build
 
 Les contributions sont bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
 
+
+Pour des conseils sur la montée en charge de l'application, consultez [SCALING.md](SCALING.md).
