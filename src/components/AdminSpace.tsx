@@ -3954,7 +3954,11 @@ const AdminSpace = () => {
               Ajouter un nouveau produit au catalogue
             </DialogDescription>
           </DialogHeader>
-          {/* New product creation form */}
+          {/*
+           * New product creation form.
+           * This uses a dedicated ID so we can reliably grab the form
+           * element when creating a product.
+           */}
           <form
             id="new-product-form"
             className="space-y-4"
