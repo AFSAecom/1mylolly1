@@ -428,7 +428,7 @@ const AdminSpace = () => {
   const handleDownloadTemplate = (type) => {
     const templates = {
       products:
-        "code_produit,nom_lolly,nom_parfum_inspire,marque_inspire,genre,saison,famille_olfactive,note_tete,note_coeur,note_fond,description,image_url,prix_15ml,stock_15ml,prix_30ml,stock_30ml,prix_50ml,stock_50ml\n" +
+        "code_article,nom_lolly,parfum_inspire,marque_inspiree,genre,saison,famille_olfactive,note_tete,note_coeur,note_fond,description,image_url,prix_15ml,stock_15ml,prix_30ml,stock_30ml,prix_50ml,stock_50ml\n" +
         'L001,Élégance Nocturne,Black Opium,Yves Saint Laurent,femme,toutes saisons,Oriental Vanillé,"Café,Poire,Mandarine","Jasmin,Fleur d\'oranger,Vanille","Patchouli,Cèdre,Musc",Une fragrance envoûtante qui mêle l\'intensité du café à la douceur de la vanille,https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80,19.900,10,29.900,15,39.900,8\n' +
         'L002,Mystère Oriental,La Vie Est Belle,Lancôme,femme,toutes saisons,Floral Fruité,"Poire,Cassis,Bergamote","Iris,Jasmin,Fleur d\'oranger","Praline,Vanille,Patchouli",Un parfum joyeux et gourmand qui célèbre la beauté de la vie,https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80,19.900,12,29.900,20,39.900,10',
       users:
@@ -438,7 +438,7 @@ const AdminSpace = () => {
         "Ben Ali,Fatma,fatma.benali@email.com,conseillere,+216 22 555 777,+216 22 555 777,1988-03-10,789 Avenue de la Liberté Sousse,C003\n" +
         "Trabelsi,Ahmed,ahmed.trabelsi@email.com,client,+216 98 444 333,+216 98 444 333,1992-12-05,321 Rue Ibn Khaldoun Monastir,C004",
       restock:
-        "code_produit,contenance,quantite_a_ajouter,date_reapprovisionnement,remarque\n" +
+        "code_article,contenance,quantite_a_ajouter,date_reapprovisionnement,remarque\n" +
         "L001,30,10,2024-01-20,Commande fournisseur #123\n" +
         "L002,50,5,2024-01-20,Réapprovisionnement urgent",
     };
@@ -1059,9 +1059,9 @@ const AdminSpace = () => {
                 // Enhanced field mapping with Supabase column names as priority
                 const codeArticle =
                   findValue([
+                    "code_article",
                     "code_produit",
                     "Code Article",
-                    "code_article",
                     "Code",
                     "code",
                     "Code Produit",
@@ -1461,7 +1461,7 @@ const AdminSpace = () => {
 
             // First, get all existing product codes to avoid duplicates
             const { data: existingProducts, error: existingError } =
-              await supabase.from("products").select("id, code_produit");
+              await supabase.from("products").select("id, code_article");
 
             if (existingError) {
               console.error("Error fetching existing products:", existingError);
@@ -1470,7 +1470,7 @@ const AdminSpace = () => {
             }
 
             const existingCodes = new Set(
-              existingProducts?.map((p) => p.code_produit) || [],
+              existingProducts?.map((p) => p.code_article) || [],
             );
             console.log("Existing product codes:", Array.from(existingCodes));
 
@@ -1518,10 +1518,10 @@ const AdminSpace = () => {
 
                 // Prepare data for Supabase with proper encoding
                 const productData = {
-                  code_produit: fixEncoding(newProduct.codeArticle),
+                  code_article: fixEncoding(newProduct.codeArticle),
                   nom_lolly: fixEncoding(newProduct.name),
                   nom_parfum_inspire: fixEncoding(newProduct.nomParfumInspire),
-                  marque_inspire: fixEncoding(newProduct.marqueInspire),
+                  marque_inspiree: fixEncoding(newProduct.marqueInspire),
                   genre: fixEncoding(newProduct.genre),
                   saison: fixEncoding(newProduct.saison),
                   famille_olfactive: fixEncoding(newProduct.familleOlfactive),
@@ -1553,7 +1553,7 @@ const AdminSpace = () => {
 
                   // Find the existing product
                   const existingProduct = existingProducts.find(
-                    (p) => p.code_produit === newProduct.codeArticle,
+                    (p) => p.code_article === newProduct.codeArticle,
                   );
 
                   if (existingProduct) {
@@ -1621,7 +1621,7 @@ const AdminSpace = () => {
                       const { data: existingProduct } = await supabase
                         .from("products")
                         .select("id")
-                        .eq("code_produit", newProduct.codeArticle)
+                        .eq("code_article", newProduct.codeArticle)
                         .single();
 
                       if (existingProduct) {
@@ -1698,7 +1698,7 @@ const AdminSpace = () => {
             console.log("Validating special character import...");
             const { data: validationData } = await supabase
               .from("products")
-              .select("nom_lolly, nom_parfum_inspire, marque_inspire")
+              .select("nom_lolly, nom_parfum_inspire, marque_inspiree")
               .limit(5);
 
             if (validationData) {
@@ -1708,7 +1708,7 @@ const AdminSpace = () => {
               );
               const hasSpecialChars = validationData.some((product) =>
                 /[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]/i.test(
-                  `${product.nom_lolly} ${product.nom_parfum_inspire} ${product.marque_inspire}`,
+                  `${product.nom_lolly} ${product.nom_parfum_inspire} ${product.marque_inspiree}`,
                 ),
               );
               console.log(
@@ -1751,7 +1751,7 @@ const AdminSpace = () => {
             // Log CSV format help
             console.log("Format CSV attendu (colonnes Supabase):");
             console.log(
-              "code_produit,nom_lolly,nom_parfum_inspire,marque_inspire,genre,saison,famille_olfactive,note_tete,note_coeur,note_fond,description,image_url",
+              "code_article,nom_lolly,parfum_inspire,marque_inspiree,genre,saison,famille_olfactive,note_tete,note_coeur,note_fond,description,image_url",
             );
             console.log("Exemple:");
             console.log(
@@ -2380,7 +2380,9 @@ const AdminSpace = () => {
 
               restockData.push({
                 codeArticle:
-                  stockData["code_produit"] || stockData["Code Article"],
+                  stockData["code_article"] ||
+                  stockData["code_produit"] ||
+                  stockData["Code Article"],
                 contenance:
                   parseInt(stockData["contenance"] || stockData["Variante"]) ||
                   30,
@@ -2402,7 +2404,7 @@ const AdminSpace = () => {
                 const { data: product } = await supabase
                   .from("products")
                   .select("id")
-                  .eq("code_produit", stockItem.codeArticle)
+                  .eq("code_article", stockItem.codeArticle)
                   .single();
 
                 if (product) {
@@ -4522,14 +4524,14 @@ const AdminSpace = () => {
                     const { error } = await supabase
                       .from("products")
                       .update({
-                        code_produit:
+                        code_article:
                           editFormData.codeArticle ||
                           selectedProduct.codeArticle,
                         nom_lolly: editFormData.name || selectedProduct.name,
                         nom_parfum_inspire:
                           editFormData.nomParfumInspire ||
                           selectedProduct.nomParfumInspire,
-                        marque_inspire:
+                        marque_inspiree:
                           editFormData.marqueInspire ||
                           selectedProduct.marqueInspire,
                         image_url:
