@@ -54,15 +54,15 @@ const PerfumeCatalog = ({
       setLoading(true);
       console.log("🔄 Loading products directly from Supabase...");
 
-      const { data: productsData, error } = await supabase
-        .from("products")
-        .select(
-          `
-          *,
-          product_variants(*)
-        `,
-        )
-        .eq("active", true); // Only active products
+        const { data: productsData, error } = await supabase
+          .from("products")
+          .select(
+            `
+            *,
+            product_variants(*)
+          `,
+          );
+        // Some deployments may lack the `active` column; avoid filtering by it
 
       if (error) {
         console.error("Error loading products from Supabase:", error);
