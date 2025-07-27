@@ -1,6 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Table: users
 CREATE TABLE IF NOT EXISTS public.users (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     nom TEXT NOT NULL,
