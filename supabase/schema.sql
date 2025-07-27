@@ -1,4 +1,3 @@
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Table: users
@@ -107,5 +106,3 @@ CREATE TABLE IF NOT EXISTS public.promotions (
     date_debut DATE,
     date_fin DATE
 );
-
-
