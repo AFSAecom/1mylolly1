@@ -1,37 +1,23 @@
 
--- Données de test pour la table users
-INSERT INTO users (id, nom, prenom, email, mot_de_passe, date_naissance)
-VALUES
-  ('00000000-0000-0000-0000-000000000001', 'Ben Ali', 'Ahmed', 'admin@lolly.tn', 'hashedpassword123', '1985-05-01'),
-  ('00000000-0000-0000-0000-000000000002', 'Fersi', 'Lina', 'lina@lolly.tn', 'password456', '1990-11-23');
+-- Insertion des utilisateurs
+INSERT INTO users (id, nom, prenom, email, mot_de_passe, role) VALUES
+  ('aad36f0a-1c21-4f24-9431-000000000001', 'Admin', 'Test', 'admin@test.com', 'adminpass', 'admin'),
+  ('aad36f0a-1c21-4f24-9431-000000000002', 'Client', 'Un', 'client1@test.com', 'clientpass', 'client'),
+  ('aad36f0a-1c21-4f24-9431-000000000003', 'Client', 'Deux', 'client2@test.com', 'clientpass', 'client'),
+  ('aad36f0a-1c21-4f24-9431-000000000004', 'Conseiller', 'Un', 'conseiller1@test.com', 'conseillerpass', 'conseiller'),
+  ('aad36f0a-1c21-4f24-9431-000000000005', 'Conseiller', 'Deux', 'conseiller2@test.com', 'conseillerpass', 'conseiller');
 
--- Données de test pour la table products
-INSERT INTO products (id, code_produit, nom_lolly, nom_parfum_inspire, marque_inspiree, description, genre, saison, famille_olfactive, image_url)
-VALUES
-  ('00000000-0000-0000-0000-000000000010', 'L001', 'Rose Éclatante', 'Miss Dior', 'Dior', 'Un floral lumineux', 'Femme', 'Printemps', 'Floral', 'https://example.com/img1.png');
+-- Insertion des produits
+INSERT INTO produits (id, nom, description, prix, famille_olfactive) VALUES
+  ('bcd36f0a-2b22-5f25-8542-000000000001', 'Parfum Ambre', 'Un parfum chaud et mystérieux', 120.00, 'Oriental'),
+  ('bcd36f0a-2b22-5f25-8542-000000000002', 'Parfum Floral', 'Un parfum frais et floral', 95.00, 'Floral');
 
--- Données de test pour la table product_variants
-INSERT INTO product_variants (id, product_id, ref_complete, contenance, unite, prix)
-VALUES
-  ('00000000-0000-0000-0000-000000000100', '00000000-0000-0000-0000-000000000010', 'L001-30ml', 30, 'ml', 49.9),
-  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000010', 'L001-50ml', 50, 'ml', 69.9);
+-- Insertion des promotions
+INSERT INTO promotions (id, titre, description, taux_remise, date_debut, date_fin) VALUES
+  ('cde36f0a-3c23-6f26-9653-000000000001', 'Promo Été', 'Remise estivale', 15.0, '2025-07-01', '2025-08-31'),
+  ('cde36f0a-3c23-6f26-9653-000000000002', 'Black Friday', 'Remise exceptionnelle', 30.0, '2025-11-25', '2025-11-30');
 
--- Données de test pour la table promotions
-INSERT INTO promotions (id, nom, description, date_debut, date_fin, pourcentage, seuil_livraison_gratuite)
-VALUES
-  ('00000000-0000-0000-0000-000000000200', 'Fête des Mères', 'Remise spéciale 20%', '2025-05-01', '2025-05-10', 20, 150);
-
--- Données de test pour la table orders
-INSERT INTO orders (id, user_id, code_client, total_amount, statut)
-VALUES
-  ('00000000-0000-0000-0000-000000000300', '00000000-0000-0000-0000-000000000001', 'C001', 119.8, 'Payée');
-
--- Données de test pour la table order_items
-INSERT INTO order_items (id, order_id, product_variant_id, quantity, unit_price, total_price)
-VALUES
-  ('00000000-0000-0000-0000-000000000400', '00000000-0000-0000-0000-000000000300', '00000000-0000-0000-0000-000000000100', 2, 49.9, 99.8);
-
--- Données de test pour la table favorites
-INSERT INTO favorites (id, user_id, product_id)
-VALUES
-  ('00000000-0000-0000-0000-000000000500', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000010');
+-- Insertion des commandes
+INSERT INTO commandes (id, utilisateur_id, produit_id, quantite, total, statut, date_commande) VALUES
+  ('def36f0a-4d24-7f27-a764-000000000001', 'aad36f0a-1c21-4f24-9431-000000000002', 'bcd36f0a-2b22-5f25-8542-000000000001', 2, 240.00, 'payée', '2025-07-15'),
+  ('def36f0a-4d24-7f27-a764-000000000002', 'aad36f0a-1c21-4f24-9431-000000000003', 'bcd36f0a-2b22-5f25-8542-000000000002', 1, 95.00, 'en attente', '2025-07-20');
