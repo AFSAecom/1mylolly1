@@ -79,7 +79,6 @@ const AdminSpace = () => {
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [selectedProductForRestock, setSelectedProductForRestock] =
     useState(null);
-  const [generatedProductCode, setGeneratedProductCode] = useState("");
   const [editFormData, setEditFormData] = useState({});
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -100,13 +99,6 @@ const AdminSpace = () => {
   const [previewHeaders, setPreviewHeaders] = useState([]);
   const [previewType, setPreviewType] = useState("");
 
-  const generateProductCode = () => `P-${Date.now()}`;
-
-  useEffect(() => {
-    if (showNewProduct) {
-      setGeneratedProductCode(generateProductCode());
-    }
-  }, [showNewProduct]);
 
   // State for products from Supabase
   const [products, setProducts] = useState([]);
@@ -3867,9 +3859,8 @@ const AdminSpace = () => {
                 <Label>Code Article</Label>
                 <Input
                   name="codeArticle"
-                  value={generatedProductCode}
-                  readOnly
-                  className="border-[#D4C2A1] bg-gray-100"
+                  placeholder="L001"
+                  className="border-[#D4C2A1]"
                 />
               </div>
               <div>
@@ -4049,7 +4040,7 @@ const AdminSpace = () => {
                         .from("products")
                         .insert({
                           code_produit: String(
-                            formData.get("codeArticle") || generateProductCode(),
+                            formData.get("codeArticle") || `L${Date.now()}`,
                           ),
                           nom_lolly: String(
                             formData.get("nomLolly") || "Nouveau Produit",
