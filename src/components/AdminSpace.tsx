@@ -99,6 +99,7 @@ const AdminSpace = () => {
   const [previewHeaders, setPreviewHeaders] = useState([]);
   const [previewType, setPreviewType] = useState("");
 
+
   // State for products from Supabase
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
