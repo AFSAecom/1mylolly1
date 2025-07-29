@@ -59,11 +59,12 @@ import {
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase } from "../lib/supabase";
+import type { AdminProduct, EditFormData, RestockSelection } from "../types/admin";
 
 const AdminSpace = () => {
   const { register } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null);
   const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
   const [showLogin, setShowLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -78,8 +79,8 @@ const AdminSpace = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [selectedProductForRestock, setSelectedProductForRestock] =
-    useState(null);
-  const [editFormData, setEditFormData] = useState({});
+    useState<RestockSelection | null>(null);
+  const [editFormData, setEditFormData] = useState<EditFormData>({});
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [newUserFormData, setNewUserFormData] = useState({
@@ -100,7 +101,7 @@ const AdminSpace = () => {
   const [previewType, setPreviewType] = useState("");
 
   // State for products from Supabase
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [users, setUsers] = useState([]);
@@ -224,7 +225,7 @@ const AdminSpace = () => {
         if (productsError) {
           console.error("❌ Products error:", productsError);
         } else {
-          const formattedProducts = (productsData || []).map((product) => ({
+          const formattedProducts: AdminProduct[] = (productsData || []).map((product) => ({
             id: product.id,
             codeArticle: product.code_produit,
             name: product.nom_lolly,
@@ -239,12 +240,14 @@ const AdminSpace = () => {
               ) || 0,
             active: product.active,
             imageURL: product.image_url,
-            genre: product.genre,
-            saison: product.saison,
+            genre: (product.genre as "homme" | "femme" | "mixte") || "mixte",
+            saison:
+              (product.saison as "été" | "hiver" | "toutes saisons") ||
+              "toutes saisons",
             familleOlfactive: product.famille_olfactive,
-            noteTete: product.note_tete,
-            noteCoeur: product.note_coeur,
-            noteFond: product.note_fond,
+            noteTete: product.note_tete || [],
+            noteCoeur: product.note_coeur || [],
+            noteFond: product.note_fond || [],
             description: product.description,
             variants:
               product.product_variants?.map((v) => ({
@@ -935,7 +938,7 @@ const AdminSpace = () => {
 
             const headers = rawHeaders;
 
-            const importedProducts = [];
+            const importedProducts: AdminProduct[] = [];
             let updatedCount = 0;
             let addedCount = 0;
             let errorCount = 0;
@@ -1402,15 +1405,15 @@ const AdminSpace = () => {
                 ];
 
                 // Create product with properly encoded data
-                const newProduct = {
+                const newProduct: AdminProduct = {
                   id: Date.now() + i,
                   codeArticle: fixEncoding(codeArticle),
                   name: fixEncoding(nomLolly),
                   nomParfumInspire: fixEncoding(nomParfumInspire),
                   marqueInspire: fixEncoding(marqueInspire),
                   brand: "Lolly",
-                  genre: fixEncoding(genre),
-                  saison: fixEncoding(saison),
+                  genre: fixEncoding(genre) as "homme" | "femme" | "mixte",
+                  saison: fixEncoding(saison) as "été" | "hiver" | "toutes saisons",
                   familleOlfactive: fixEncoding(familleOlfactive),
                   noteTete,
                   noteCoeur,
@@ -1419,6 +1422,8 @@ const AdminSpace = () => {
                   active: true,
                   imageURL: fixEncoding(imageUrl),
                   variants,
+                  price: 0,
+                  stock: 0,
                 };
 
                 // Calculate total stock and price
@@ -2422,7 +2427,7 @@ const AdminSpace = () => {
                         stock_actuel:
                           (variant.stock_actuel || 0) + stockItem.quantite,
                       })
-                      .eq("id", variant.id);
+                      .eq("id", String(variant.id));
 
                     if (!error) {
                       totalQuantityAdded += stockItem.quantite;
@@ -3652,7 +3657,7 @@ const AdminSpace = () => {
                         setSelectedProduct(actualProduct);
                       } else {
                         // Fallback for products not in our array
-                        const adminProduct = {
+                        const adminProduct: AdminProduct = {
                           id: Date.now(),
                           codeArticle: perfume.codeProduit,
                           name: perfume.nomLolly,
@@ -3665,9 +3670,9 @@ const AdminSpace = () => {
                           genre: perfume.genre,
                           saison: perfume.saison,
                           familleOlfactive: perfume.familleOlfactive,
-                          noteTete: perfume.noteTete,
-                          noteCoeur: perfume.noteCoeur,
-                          noteFond: perfume.noteFond,
+                          noteTete: perfume.noteTete.split(/[,;]/).map((n) => n.trim()),
+                          noteCoeur: perfume.noteCoeur.split(/[,;]/).map((n) => n.trim()),
+                          noteFond: perfume.noteFond.split(/[,;]/).map((n) => n.trim()),
                           description: perfume.description,
                           imageURL: perfume.imageURL,
                           variants: (perfume as any).contenances?.map(
@@ -4560,7 +4565,7 @@ const AdminSpace = () => {
                         image_url:
                           editFormData.imageURL || selectedProduct.imageURL,
                       })
-                      .eq("id", selectedProduct.id);
+                      .eq("id", String(selectedProduct.id));
 
                     if (error) {
                       console.error("Error updating product:", error);
@@ -4666,7 +4671,7 @@ const AdminSpace = () => {
                       .update({
                         stock_actuel: variant.stock + quantityToAdd,
                       })
-                      .eq("id", variant.id);
+                        .eq("id", String(variant.id));
 
                     if (error) {
                       console.error("Error updating stock:", error);
@@ -4675,13 +4680,13 @@ const AdminSpace = () => {
                     }
 
                     // Record stock movement
-                    await supabase.from("stock_movements").insert({
-                      product_variant_id: variant.id,
-                      type: "entree",
-                      quantity: quantityToAdd,
-                      reason: "Réapprovisionnement manuel",
-                      created_by: authUser?.id,
-                    });
+                      await supabase.from("stock_movements").insert({
+                        product_variant_id: String(variant.id),
+                        type: "entree",
+                        quantity: quantityToAdd,
+                        reason: "Réapprovisionnement manuel",
+                        created_by: authUser?.id,
+                      });
 
                     // Reload data
                     await loadData();
