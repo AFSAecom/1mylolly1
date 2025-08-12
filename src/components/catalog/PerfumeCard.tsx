@@ -92,9 +92,7 @@ const PerfumeCard = ({
     <div className="relative">
       <Card
         className={`w-full max-w-[280px] overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer bg-white ${
-          !active
-            ? `grayscale filter blur-[1px]${allowInactiveClick ? "" : " pointer-events-none"}`
-            : ""
+          !active && !allowInactiveClick ? "pointer-events-none" : ""
         }`}
         onClick={onClick}
       >
@@ -154,8 +152,10 @@ const PerfumeCard = ({
       </CardContent>
     </Card>
     {!active && (
-      <div className="pointer-events-none absolute inset-0 backdrop-blur-[1px] flex items-center justify-center text-red-600 font-bold text-sm">
-        Produit inactif
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <span className="bg-white/80 text-red-600 font-bold text-sm px-2 py-1 rounded">
+          Produit inactif
+        </span>
       </div>
     )}
   </div>
