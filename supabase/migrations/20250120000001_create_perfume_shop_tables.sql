@@ -1,3 +1,7 @@
+-- 0) Extensions nécessaires
+create extension if not exists pgcrypto;
+
+-- 1) Tables
 -- Create users table (extends auth.users)
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
@@ -93,6 +97,10 @@ CREATE TABLE IF NOT EXISTS public.promotions (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- (idempotence pour les promotions)
+ALTER TABLE public.promotions
+  ADD CONSTRAINT IF NOT EXISTS promotions_unique_nom_dates UNIQUE (nom, date_debut, date_fin);
+
 -- Create stock movements table for tracking inventory changes
 CREATE TABLE IF NOT EXISTS public.stock_movements (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -105,15 +113,37 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insert sample data
-INSERT INTO public.products (code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive, note_tete, note_coeur, note_fond, description, image_url) VALUES
-('L001', 'Élégance Nocturne', 'Black Opium', 'Yves Saint Laurent', 'femme', 'toutes saisons', 'Oriental Vanillé', ARRAY['Café', 'Poire', 'Mandarine'], ARRAY['Jasmin', 'Fleur d''oranger', 'Vanille'], ARRAY['Patchouli', 'Cèdre', 'Musc'], 'Une fragrance envoûtante qui mêle l''intensité du café à la douceur de la vanille, créant une signature olfactive addictive et mystérieuse.', 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80'),
-('L002', 'Aura Marine', 'Acqua di Gio', 'Giorgio Armani', 'homme', 'été', 'Aromatique Aquatique', ARRAY['Bergamote', 'Néroli'], ARRAY['Romarin', 'Persil', 'Jasmin'], ARRAY['Bois de cèdre', 'Musc', 'Ambre'], 'Une fragrance fraîche et marine inspirée par la mer Méditerranée.', 'https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?w=400&q=80'),
-('L003', 'Séduction Florale', 'J''adore', 'Dior', 'femme', 'toutes saisons', 'Floral Fruité', ARRAY['Bergamote', 'Poire', 'Melon'], ARRAY['Rose de Mai', 'Jasmin', 'Magnolia'], ARRAY['Musc', 'Bois de cèdre'], 'Un bouquet floral sophistiqué et élégant aux notes délicates.', 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80')) ON CONFLICT (code_produit) DO NOTHING;
+-- 2) Données d’exemple
 
+-- Products (idempotent)
+INSERT INTO public.products
+  (code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive,
+   note_tete, note_coeur, note_fond, description, image_url)
+VALUES
+  ('L001', 'Élégance Nocturne', 'Black Opium', 'Yves Saint Laurent', 'femme', 'toutes saisons', 'oriental Vanillé',
+   ARRAY['café', 'poire', 'mandarine'],
+   ARRAY['jasmin', 'fleur d''oranger', 'vanille'],
+   ARRAY['patchouli', 'cèdre', 'musc'],
+   'Une fragrance envoûtante qui mêle l’intensité du café à la douceur de la vanille, créant une signature olfactive addictive et mystérieuse.',
+   'https://images.unsplash.com/photo-1547887538-e3a2f32cbb2c?w=400&q=80'),
 
--- Insert product variants
-INSERT INTO public.product_variants (product_id, ref_complete, contenance, unite, prix, stock_actuel) 
+  ('L002', 'Aura Marine', 'Acqua di Gio', 'Giorgio Armani', 'homme', 'été', 'Aromatique Aquatique',
+   ARRAY['bergamote','néroli'],
+   ARRAY['romarin','persil','jasmin'],
+   ARRAY['bois de cèdre','musc','ambre'],
+   'Une fragrance fraîche et marine inspirée par la mer Méditerranée.',
+   'https://images.unsplash.com/photo-1559049530183-7ea47794261f?w=400&q=80'),
+
+  ('L003', 'Séduction Florale', 'J''adore', 'Dior', 'femme', 'toutes saisons', 'Floral Fruité',
+   ARRAY['bergamote','poire','melon'],
+   ARRAY['rose de mai','jasmin','magnolia'],
+   ARRAY['musc','bois de cèdre'],
+   'Un bouquet floral sophistiqué et élégant aux notes délicates.',
+   'https://images.unsplash.com/photo-15929545042344-b3fbadf7f539?w=400&q=80')
+ON CONFLICT (code_produit) DO NOTHING;
+
+-- Product variants (idempotent)
+INSERT INTO public.product_variants (product_id, ref_complete, contenance, unite, prix, stock_actuel)
 SELECT 
   p.id,
   p.code_produit || '-' || v.size,
@@ -128,24 +158,42 @@ CROSS JOIN (
     (30, 29.900, 18),
     (50, 39.900, 10)
 ) AS v(size, price, stock)
-WHERE p.code_produit IN ('L001', 'L002', 'L003');
+WHERE p.code_produit IN ('L001', 'L002', 'L003')
+ON CONFLICT (ref_complete) DO NOTHING;
 
--- Insert sample promotions
+-- Promotions (idempotent)
 INSERT INTO public.promotions (nom, description, pourcentage_reduction, date_debut, date_fin) VALUES
 ('Soldes d''Hiver', 'Promotion de fin d''année sur tous les parfums', 20.00, '2025-01-01', '2025-01-31'),
-('Nouvelle Année', 'Remise spéciale Nouvelle Année', 10.00, '2025-01-01', '2025-02-28');
+('Nouvelle Année', 'Remise spéciale Nouvelle Année', 10.00, '2025-01-01', '2025-02-28')
+ON CONFLICT (nom, date_debut, date_fin) DO NOTHING;
 
--- Enable realtime for all tables
-alter publication supabase_realtime add table public.users;
-alter publication supabase_realtime add table public.products;
-alter publication supabase_realtime add table public.product_variants;
-alter publication supabase_realtime add table public.favorites;
-alter publication supabase_realtime add table public.orders;
-alter publication supabase_realtime add table public.order_items;
-alter publication supabase_realtime add table public.promotions;
-alter publication supabase_realtime add table public.stock_movements;
+-- 3) Realtime (idempotent)
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.product_variants;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.favorites;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.order_items;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.promotions;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.stock_movements;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- Create indexes for better performance
+-- 4) Index
 CREATE INDEX IF NOT EXISTS idx_products_code_produit ON public.products(code_produit);
 CREATE INDEX IF NOT EXISTS idx_products_active ON public.products(active);
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON public.product_variants(product_id);
@@ -156,18 +204,41 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON public.order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product_variant_id ON public.stock_movements(product_variant_id);
 
--- Create functions for automatic timestamps
+-- 5) Fonction + Triggers (idempotent)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Create triggers for automatic timestamps
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_product_variants_updated_at BEFORE UPDATE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_promotions_updated_at BEFORE UPDATE ON public.promotions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  CREATE TRIGGER update_users_updated_at
+    BEFORE UPDATE ON public.users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TRIGGER update_products_updated_at
+    BEFORE UPDATE ON public.products
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TRIGGER update_product_variants_updated_at
+    BEFORE UPDATE ON public.product_variants
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TRIGGER update_orders_updated_at
+    BEFORE UPDATE ON public.orders
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TRIGGER update_promotions_updated_at
+    BEFORE UPDATE ON public.promotions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
