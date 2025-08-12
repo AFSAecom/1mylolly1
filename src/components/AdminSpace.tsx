@@ -607,6 +607,10 @@ const AdminSpace = () => {
         prev.map((p) => (p.id === productId ? { ...p, active: !p.active } : p)),
       );
 
+      window.dispatchEvent(
+        new CustomEvent("productStatusUpdated", { detail: { id: productId } }),
+      );
+
       alert("Statut du produit mis à jour avec succès!");
     } catch (error) {
       console.error("Error toggling product status:", error);
@@ -3645,6 +3649,7 @@ const AdminSpace = () => {
                     </div>
                   </div>
                   <PerfumeCatalog
+                    includeInactive
                     key={`catalog-${products.length}-${Date.now()}`}
                     onPerfumeSelect={(perfume) => {
                       // Find the actual product from our products array
