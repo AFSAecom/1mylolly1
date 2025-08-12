@@ -1,4 +1,5 @@
 -- Fix authentication issues and disable email confirmation for development
+create extension if not exists pgcrypto;
 
 -- Update existing users to mark emails as confirmed
 UPDATE auth.users 
@@ -41,16 +42,28 @@ END;
 $ LANGUAGE plpgsql;
 
 -- Create trigger to auto-confirm new users
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'on_auth_user_created'
+  ) then
+    create trigger on_auth_user_created
+      after insert on auth.users
+      for each row execute function public.handle_new_user();
+  end if;
+end $$;
 
 -- Create trigger to handle role assignment
-DROP TRIGGER IF EXISTS on_user_role_assignment ON public.users;
-CREATE TRIGGER on_user_role_assignment
-  BEFORE INSERT OR UPDATE ON public.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_user_role_assignment();
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'on_user_role_assignment'
+  ) then
+    create trigger on_user_role_assignment
+      before insert or update on public.users
+      for each row execute function public.handle_user_role_assignment();
+  end if;
+end $$;
 
 -- Ensure RLS is properly configured for users table
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -79,4 +92,10 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_code_client ON public.users(code_client);
 
 -- Enable realtime for users table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
+do $$
+begin
+  execute 'alter publication supabase_realtime add table public.users';
+exception when duplicate_object then
+  null;
+end $$;
+

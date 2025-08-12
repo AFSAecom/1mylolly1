@@ -1,4 +1,5 @@
 -- Drop and recreate users table to fix ID generation issues
+create extension if not exists pgcrypto;
 
 -- First, drop all dependent objects
 DROP TRIGGER IF EXISTS on_user_role_assignment ON public.users;
@@ -15,7 +16,7 @@ DROP POLICY IF EXISTS "Service role can manage all users" ON public.users;
 DROP TABLE IF EXISTS public.users CASCADE;
 
 -- Recreate users table with proper UUID generation
-CREATE TABLE public.users (
+  CREATE TABLE IF NOT EXISTS public.users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   nom TEXT NOT NULL,
@@ -52,10 +53,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger to handle role assignment
-CREATE TRIGGER on_user_role_assignment
-  BEFORE INSERT OR UPDATE ON public.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_user_role_assignment();
+  -- Create trigger to handle role assignment
+  do $$
+  begin
+    if not exists (
+      select 1 from pg_trigger where tgname = 'on_user_role_assignment'
+    ) then
+      create trigger on_user_role_assignment
+        before insert or update on public.users
+        for each row execute function public.handle_user_role_assignment();
+    end if;
+  end $$;
 
 -- Create function for automatic timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -66,10 +74,17 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create trigger for automatic timestamps
-CREATE TRIGGER update_users_updated_at 
-  BEFORE UPDATE ON public.users 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  -- Create trigger for automatic timestamps
+  do $$
+  begin
+    if not exists (
+      select 1 from pg_trigger where tgname = 'update_users_updated_at'
+    ) then
+      create trigger update_users_updated_at
+        before update on public.users
+        for each row execute function update_updated_at_column();
+    end if;
+  end $$;
 
 -- Enable RLS
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -93,8 +108,13 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_code_client ON public.users(code_client);
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
 
--- Enable realtime for users table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
+  -- Enable realtime for users table
+  do $$
+  begin
+    execute 'alter publication supabase_realtime add table public.users';
+  exception when duplicate_object then
+    null;
+  end $$;
 
 -- Insert default admin user
 INSERT INTO public.users (
