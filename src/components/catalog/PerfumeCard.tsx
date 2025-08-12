@@ -17,6 +17,11 @@ interface PerfumeCardProps {
   familleOlfactive?: string;
   active?: boolean;
   onClick?: () => void;
+  /**
+   * Allow clicking on inactive products. Useful in admin views where
+   * details of inactive items should remain accessible.
+   */
+  allowInactiveClick?: boolean;
 }
 
 const PerfumeCard = ({
@@ -30,6 +35,7 @@ const PerfumeCard = ({
   familleOlfactive = "Oriental Vanillé",
   active = true,
   onClick = () => {},
+  allowInactiveClick = false,
 }: PerfumeCardProps) => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { isAuthenticated } = useAuth();
@@ -86,7 +92,9 @@ const PerfumeCard = ({
     <div className="relative">
       <Card
         className={`w-full max-w-[280px] overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer bg-white ${
-          !active ? "opacity-50 grayscale pointer-events-none" : ""
+          !active
+            ? `opacity-50 grayscale${allowInactiveClick ? "" : " pointer-events-none"}`
+            : ""
         }`}
         onClick={onClick}
       >
@@ -146,7 +154,7 @@ const PerfumeCard = ({
       </CardContent>
     </Card>
     {!active && (
-      <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center text-red-600 font-bold text-sm">
+      <div className="pointer-events-none absolute inset-0 backdrop-blur-sm flex items-center justify-center text-red-600 font-bold text-sm">
         Produit inactif
       </div>
     )}

@@ -430,6 +430,7 @@ const PerfumeCatalog = ({
               saison={perfume.saison}
               familleOlfactive={perfume.familleOlfactive}
               active={perfume.active}
+              allowInactiveClick={includeInactive}
               onClick={() => onPerfumeSelect(perfume)}
             />
           ))
