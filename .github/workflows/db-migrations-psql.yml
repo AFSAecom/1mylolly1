@@ -1,0 +1,33 @@
+name: db-migrations-psql
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "supabase/**"
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify psql
+        run: psql --version
+
+      - name: Apply migrations
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          for dir in $(ls supabase/migrations | sort); do
+            version="${dir%%_*}"
+            if psql "$SUPABASE_DB_URL" -tAc "select 1 from supabase_migrations.schema_migrations where version='${version}'" | grep -q 1; then
+              echo "Skipping migration $dir (already applied)"
+            else
+              echo "Applying migration $dir"
+              psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "supabase/migrations/$dir/migration.sql"
+            fi
+          done
