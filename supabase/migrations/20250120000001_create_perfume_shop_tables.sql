@@ -109,7 +109,8 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
 INSERT INTO public.products (code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive, note_tete, note_coeur, note_fond, description, image_url) VALUES
 ('L001', 'Élégance Nocturne', 'Black Opium', 'Yves Saint Laurent', 'femme', 'toutes saisons', 'Oriental Vanillé', ARRAY['Café', 'Poire', 'Mandarine'], ARRAY['Jasmin', 'Fleur d''oranger', 'Vanille'], ARRAY['Patchouli', 'Cèdre', 'Musc'], 'Une fragrance envoûtante qui mêle l''intensité du café à la douceur de la vanille, créant une signature olfactive addictive et mystérieuse.', 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80'),
 ('L002', 'Aura Marine', 'Acqua di Gio', 'Giorgio Armani', 'homme', 'été', 'Aromatique Aquatique', ARRAY['Bergamote', 'Néroli'], ARRAY['Romarin', 'Persil', 'Jasmin'], ARRAY['Bois de cèdre', 'Musc', 'Ambre'], 'Une fragrance fraîche et marine inspirée par la mer Méditerranée.', 'https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?w=400&q=80'),
-('L003', 'Séduction Florale', 'J''adore', 'Dior', 'femme', 'toutes saisons', 'Floral Fruité', ARRAY['Bergamote', 'Poire', 'Melon'], ARRAY['Rose de Mai', 'Jasmin', 'Magnolia'], ARRAY['Musc', 'Bois de cèdre'], 'Un bouquet floral sophistiqué et élégant aux notes délicates.', 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80');
+('L003', 'Séduction Florale', 'J''adore', 'Dior', 'femme', 'toutes saisons', 'Floral Fruité', ARRAY['Bergamote', 'Poire', 'Melon'], ARRAY['Rose de Mai', 'Jasmin', 'Magnolia'], ARRAY['Musc', 'Bois de cèdre'], 'Un bouquet floral sophistiqué et élégant aux notes délicates.', 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80')) ON CONFLICT (code_produit) DO NOTHING;
+
 
 -- Insert product variants
 INSERT INTO public.product_variants (product_id, ref_complete, contenance, unite, prix, stock_actuel) 
