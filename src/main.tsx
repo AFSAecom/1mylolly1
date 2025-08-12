@@ -5,8 +5,11 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { logger } from "@/lib/logger";
 
-import { TempoDevtools } from "tempo-devtools";
-TempoDevtools.init();
+if (import.meta.env.DEV) {
+  import("tempo-devtools").then(({ TempoDevtools }) => {
+    TempoDevtools.init();
+  });
+}
 
 // Force cache busting in development
 if (import.meta.env.DEV) {
