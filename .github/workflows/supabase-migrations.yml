@@ -3,7 +3,7 @@ name: Supabase Migrations
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -32,16 +32,19 @@ jobs:
       - name: Afficher version CLI
         run: supabase --version
 
-      - name: Lier projet (optionnel mais sûr)
+      # Optionnel : on tente de lier le projet si possible (sans casser le job si ça échoue)
+      - name: Lier projet (optionnel)
         run: |
           set -e
-          REF_FROM_URL="$(echo "${{ secrets.SUPABASE_DB_URL }}" | sed -E 's#.*postgresql://postgres\.([^:]+):.*#\1#')"
+          REF_FROM_URL="$(echo "${SUPABASE_DB_URL}" | sed -E 's#.*postgresql://postgres\.([^:]+):.*#\1#')"
           echo "Ref détecté: $REF_FROM_URL"
           supabase link --project-ref "$REF_FROM_URL" --workdir ./supabase || true
 
-      - name: Pousser les migrations (idempotent)
+      - name: Appliquer les migrations (idempotent)
         run: |
           set -e
-          # Utilise le POOLER (SUPABASE_DB_URL)
-          supabase db push             --workdir ./supabase             --db-url "${SUPABASE_DB_URL}"             --non-interactive             --debug
-
+          supabase db push \
+            --db-url "${SUPABASE_DB_URL}" \
+            --workdir ./supabase \
+            --include-all \
+            --yes
