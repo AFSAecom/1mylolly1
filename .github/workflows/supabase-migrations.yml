@@ -1,46 +1,45 @@
-name: Supabase Migrations
+name: Supabase Auto Sync
 
 on:
-  workflow_dispatch:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  migrate:
+  plan:  # vérifie les PR (ne modifie rien)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: .
-
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_URL:      ${{ secrets.SUPABASE_DB_URL }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Afficher version CLI
-        run: supabase --version
-
-      # Optionnel : on tente de lier le projet si possible (sans casser le job si ça échoue)
-      - name: Lier projet (optionnel)
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Dry-run
         run: |
           set -e
-          REF_FROM_URL="$(echo "${SUPABASE_DB_URL}" | sed -E 's#.*postgresql://postgres\.([^:]+):.*#\1#')"
-          echo "Ref détecté: $REF_FROM_URL"
-          supabase link --project-ref "$REF_FROM_URL" --workdir ./supabase || true
+          supabase db push \
+            --db-url "${SUPABASE_DB_URL}" \
+            --workdir ./supabase \
+            --dry-run
 
-      - name: Appliquer les migrations (idempotent)
+  sync:  # applique en prod après merge/push/manuel
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_URL:      ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Push schema/migrations (idempotent)
         run: |
           set -e
           supabase db push \
