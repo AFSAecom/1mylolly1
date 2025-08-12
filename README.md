@@ -23,4 +23,16 @@ Application web pour la gestion des ventes de parfums inspirés, avec accès cli
 ```bash
 git clone https://github.com/ton-utilisateur/ton-repo.git
 cd ton-repo
+```
 
+### 2. Installer les dépendances
+
+```bash
+npm install
+```
+
+### 3. Lancer le serveur de développement
+
+```bash
+npm run dev
+```
