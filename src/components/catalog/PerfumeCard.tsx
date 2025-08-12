@@ -15,6 +15,7 @@ interface PerfumeCardProps {
   genre?: "homme" | "femme" | "mixte";
   saison?: "été" | "hiver" | "toutes saisons";
   familleOlfactive?: string;
+  active?: boolean;
   onClick?: () => void;
 }
 
@@ -27,6 +28,7 @@ const PerfumeCard = ({
   genre = "femme",
   saison = "toutes saisons",
   familleOlfactive = "Oriental Vanillé",
+  active = true,
   onClick = () => {},
 }: PerfumeCardProps) => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
@@ -82,7 +84,9 @@ const PerfumeCard = ({
 
   return (
     <Card
-      className="w-full max-w-[280px] overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer bg-white"
+      className={`w-full max-w-[280px] overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer bg-white ${
+        !active ? "opacity-50" : ""
+      }`}
       onClick={onClick}
     >
       <div className="relative h-[200px] overflow-hidden">
