@@ -72,6 +72,7 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
 DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
 DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON public.users;
+DROP POLICY IF EXISTS "Service role can manage all users" ON public.users;
 
 -- Create policies for users table
 CREATE POLICY "Users can view own profile" ON public.users
