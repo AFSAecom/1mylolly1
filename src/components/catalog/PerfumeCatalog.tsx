@@ -27,16 +27,19 @@ interface PerfumeType {
   noteFond: string;
   description: string;
   imageURL: string;
+  active: boolean;
 }
 
 interface PerfumeCatalogProps {
   perfumes?: PerfumeType[];
   onPerfumeSelect?: (perfume: PerfumeType) => void;
+  includeInactive?: boolean;
 }
 
 const PerfumeCatalog = ({
   perfumes,
   onPerfumeSelect = () => {},
+  includeInactive = false,
 }: PerfumeCatalogProps) => {
   // All useState hooks must be called before any early returns
   const [catalogPerfumes, setCatalogPerfumes] = useState<PerfumeType[]>([]);
@@ -54,15 +57,13 @@ const PerfumeCatalog = ({
       setLoading(true);
       console.log("🔄 Loading products directly from Supabase...");
 
-      const { data: productsData, error } = await supabase
+      let query = supabase
         .from("products")
-        .select(
-          `
-          *,
-          product_variants(*)
-        `,
-        )
-        .eq("active", true); // Only active products
+        .select("*, product_variants(*)");
+      if (!includeInactive) {
+        query = query.eq("active", true);
+      }
+      const { data: productsData, error } = await query;
 
       if (error) {
         console.error("Error loading products from Supabase:", error);
@@ -96,6 +97,7 @@ const PerfumeCatalog = ({
           imageURL:
             product.image_url ||
             "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+          active: product.active,
         }));
 
         console.log(
@@ -122,7 +124,7 @@ const PerfumeCatalog = ({
     } else {
       loadProductsFromSupabase();
     }
-  }, [perfumes]);
+  }, [perfumes, includeInactive]);
 
   // Listen for catalog updates and clear events
   useEffect(() => {
@@ -157,7 +159,10 @@ const PerfumeCatalog = ({
     };
   }, []);
 
-  const activePerfumes = perfumes || catalogPerfumes;
+  const allPerfumes = perfumes || catalogPerfumes;
+  const visiblePerfumes = includeInactive
+    ? allPerfumes
+    : allPerfumes.filter((p) => p.active);
 
   // Show loading state
   if (loading && !perfumes) {
@@ -175,7 +180,7 @@ const PerfumeCatalog = ({
 
   // Get unique olfactory families for filter
   const uniqueFamilies = [
-    ...new Set(activePerfumes.map((p) => p.familleOlfactive)),
+    ...new Set(visiblePerfumes.map((p) => p.familleOlfactive)),
   ];
 
   // Function to normalize text for search (handle accented characters)
@@ -186,7 +191,7 @@ const PerfumeCatalog = ({
       .replace(/[\u0300-\u036f]/g, ""); // Remove diacritics
   };
 
-  const filteredPerfumes = activePerfumes.filter((perfume) => {
+  const filteredPerfumes = visiblePerfumes.filter((perfume) => {
     // Search term filter with accent handling
     const normalizedSearchTerm = normalizeText(searchTerm);
     const searchMatch =
@@ -424,6 +429,7 @@ const PerfumeCatalog = ({
               genre={perfume.genre}
               saison={perfume.saison}
               familleOlfactive={perfume.familleOlfactive}
+              active={perfume.active}
               onClick={() => onPerfumeSelect(perfume)}
             />
           ))
@@ -533,6 +539,7 @@ const defaultPerfumes: PerfumeType[] = [
       "Une fragrance addictive et envoûtante avec des notes gourmandes de café et de vanille.",
     imageURL:
       "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+    active: true,
   },
   {
     codeProduit: "L002",
@@ -549,6 +556,7 @@ const defaultPerfumes: PerfumeType[] = [
       "Une fragrance fraîche et marine inspirée par la mer Méditerranée.",
     imageURL:
       "https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?w=400&q=80",
+    active: true,
   },
   {
     codeProduit: "L003",
@@ -565,6 +573,7 @@ const defaultPerfumes: PerfumeType[] = [
       "Un bouquet floral sophistiqué et élégant aux notes délicates.",
     imageURL:
       "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
+    active: true,
   },
   {
     codeProduit: "L004",
@@ -581,6 +590,7 @@ const defaultPerfumes: PerfumeType[] = [
       "Une fragrance puissante et masculine avec des notes aromatiques et boisées.",
     imageURL:
       "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
+    active: true,
   },
   {
     codeProduit: "L005",
@@ -597,6 +607,7 @@ const defaultPerfumes: PerfumeType[] = [
       "Une fragrance gourmande et féminine avec des notes sucrées de praline et de vanille.",
     imageURL:
       "https://images.unsplash.com/photo-1615529162924-f8605388461d?w=400&q=80",
+    active: true,
   },
   {
     codeProduit: "L006",
@@ -613,6 +624,7 @@ const defaultPerfumes: PerfumeType[] = [
       "Une fragrance fraîche et légère évoquant la Méditerranée en été.",
     imageURL:
       "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80",
+    active: true,
   },
 ];
 
