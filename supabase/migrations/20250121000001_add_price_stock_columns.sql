@@ -1,7 +1,10 @@
 -- Add price and stock columns to products table
-ALTER TABLE products ADD COLUMN IF NOT EXISTS prix_15ml DECIMAL(10,2);
-ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_15ml INTEGER DEFAULT 0;
-ALTER TABLE products ADD COLUMN IF NOT EXISTS prix_30ml DECIMAL(10,2);
-ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_30ml INTEGER DEFAULT 0;
-ALTER TABLE products ADD COLUMN IF NOT EXISTS prix_50ml DECIMAL(10,2);
-ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_50ml INTEGER DEFAULT 0;
+create extension if not exists pgcrypto;
+
+alter table if exists public.products add column if not exists prix_15ml DECIMAL(10,2);
+alter table if exists public.products add column if not exists stock_15ml INTEGER DEFAULT 0;
+alter table if exists public.products add column if not exists prix_30ml DECIMAL(10,2);
+alter table if exists public.products add column if not exists stock_30ml INTEGER DEFAULT 0;
+alter table if exists public.products add column if not exists prix_50ml DECIMAL(10,2);
+alter table if exists public.products add column if not exists stock_50ml INTEGER DEFAULT 0;
+

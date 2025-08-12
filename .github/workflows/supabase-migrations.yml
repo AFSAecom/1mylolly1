@@ -1,16 +1,24 @@
 name: Supabase Migrations
+
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+    paths:
+      - "supabase/**"
+
 jobs:
   migrate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      # On pousse les migrations directement sur la DB via l'URL sécurisée
-      - name: Apply migrations
-        run: supabase db push --db-url "${{ secrets.SUPABASE_DB_URL }}"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+
+      - name: Apply migrations (non-interactive)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          supabase db push --db-url "$SUPABASE_DB_URL" --non-interactive

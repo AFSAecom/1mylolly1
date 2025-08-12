@@ -1,5 +1,6 @@
 -- Create default admin user for development
 -- This should only be used in development environment
+create extension if not exists pgcrypto;
 
 -- Create admin user in auth.users first
 DO $$
