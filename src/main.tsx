@@ -3,13 +3,14 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
+import { logger } from "@/lib/logger";
 
 import { TempoDevtools } from "tempo-devtools";
 TempoDevtools.init();
 
 // Force cache busting in development
 if (import.meta.env.DEV) {
-  console.log("🔄 Development mode - Cache busting enabled");
+  logger.info("🔄 Development mode - Cache busting enabled");
   // Clear any existing caches
   if ("caches" in window) {
     caches.keys().then((names) => {
