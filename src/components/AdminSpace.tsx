@@ -68,6 +68,9 @@ const AdminSpace = () => {
   const [showLogin, setShowLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showNewProduct, setShowNewProduct] = useState(false);
+  const [noteTete, setNoteTete] = useState("");
+  const [noteCoeur, setNoteCoeur] = useState("");
+  const [noteFond, setNoteFond] = useState("");
   const [showProductPreview, setShowProductPreview] = useState(false);
   const [showEditProduct, setShowEditProduct] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
@@ -3928,6 +3931,41 @@ const AdminSpace = () => {
               </div>
             </div>
             <div>
+              <Label>Notes Olfactives</Label>
+              <div className="grid grid-cols-3 gap-4 mt-2">
+                <div>
+                  <Label className="text-sm">Notes de Tête</Label>
+                  <Input
+                    name="notesTete"
+                    placeholder="Bergamote, Citron"
+                    className="border-[#D4C2A1]"
+                    value={noteTete}
+                    onChange={(e) => setNoteTete(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Notes de Cœur</Label>
+                  <Input
+                    name="notesCoeur"
+                    placeholder="Jasmin, Rose"
+                    className="border-[#D4C2A1]"
+                    value={noteCoeur}
+                    onChange={(e) => setNoteCoeur(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Notes de Fond</Label>
+                  <Input
+                    name="notesFond"
+                    placeholder="Musc, Vanille"
+                    className="border-[#D4C2A1]"
+                    value={noteFond}
+                    onChange={(e) => setNoteFond(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div>
               <Label>Description</Label>
               <Textarea
                 name="description"
@@ -4057,21 +4095,15 @@ const AdminSpace = () => {
                           famille_olfactive: String(
                             formData.get("familleOlfactive") || "Oriental",
                           ),
-                          note_tete: (
-                            (formData.get("notesTete") as string) || ""
-                          )
+                          note_tete: noteTete
                             .split(",")
                             .map((n) => n.trim())
                             .filter((n) => n.length > 0),
-                          note_coeur: (
-                            (formData.get("notesCoeur") as string) || ""
-                          )
+                          note_coeur: noteCoeur
                             .split(",")
                             .map((n) => n.trim())
                             .filter((n) => n.length > 0),
-                          note_fond: (
-                            (formData.get("notesFond") as string) || ""
-                          )
+                          note_fond: noteFond
                             .split(",")
                             .map((n) => n.trim())
                             .filter((n) => n.length > 0),
