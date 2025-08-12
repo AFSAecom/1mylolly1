@@ -83,12 +83,13 @@ const PerfumeCard = ({
   };
 
   return (
-    <Card
-      className={`w-full max-w-[280px] overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer bg-white ${
-        !active ? "opacity-50" : ""
-      }`}
-      onClick={onClick}
-    >
+    <div className="relative">
+      <Card
+        className={`w-full max-w-[280px] overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer bg-white ${
+          !active ? "opacity-50 grayscale pointer-events-none" : ""
+        }`}
+        onClick={onClick}
+      >
       <div className="relative h-[200px] overflow-hidden">
         <img
           src={imageURL}
@@ -144,6 +145,12 @@ const PerfumeCard = ({
         </div>
       </CardContent>
     </Card>
+    {!active && (
+      <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center text-red-600 font-bold text-sm">
+        Produit inactif
+      </div>
+    )}
+  </div>
   );
 };
 
