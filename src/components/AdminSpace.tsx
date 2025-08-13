@@ -2555,7 +2555,7 @@ const AdminSpace = () => {
         >
           <div className="flex justify-between items-center mb-8">
             <div className="text-center flex-1">
-              <h2 className="text-3xl font-playfair text-[#805050] mb-4">
+              <h2 className="text-3xl font-playfair font-bold text-[#805050] mb-4">
                 Espace Administration
               </h2>
               <p className="text-[#AD9C92] font-montserrat">
