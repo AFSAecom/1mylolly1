@@ -1,0 +1,3 @@
+DO $$ BEGIN
+  PERFORM 1;
+END $$;
