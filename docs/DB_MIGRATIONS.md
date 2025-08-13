@@ -2,20 +2,26 @@
 
 ## Secrets à ajouter dans GitHub (Repo → Settings → Secrets and variables → Actions)
 - SUPABASE_ACCESS_TOKEN : créer dans Supabase (Profile → Access Tokens)
-- SUPABASE_PROJECT_REF  : identifiant du projet (ex: hxuioxxxxxx, visible dans l’URL ou Settings → General)
+- SUPABASE_DB_URL      : URL de connexion PostgreSQL (pooler 6543, `sslmode=require&pgbouncer=true&prefer_simple_protocol=true`)
 
 > Après ajout des secrets, faites un petit commit (ex: modif README) pour déclencher l’action.
 
 ## Ajouter une migration
-1. Créer un fichier dans `supabase/migrations/` nommé `YYYYMMDD_HHMM_description.sql`.
-2. Écrire du SQL **idempotent** :
-   - `create table if not exists ...`
-   - `alter table if exists ... add column if not exists ...`
-   - Policies RLS : `drop policy if exists ...` puis `create policy ...`
-3. Push sur `main` → la GitHub Action applique automatiquement sur Supabase.
+1. Créer un fichier dans `supabase/migrations/` nommé `YYYYMMDDHHMMSS__description.sql`.
+2. Écrire du SQL **idempotent** (rejouable) :
+   - `CREATE TABLE IF NOT EXISTS ...`
+   - `ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...`
+   - `DROP ... IF EXISTS`
+   - `INSERT ... ON CONFLICT DO NOTHING`
+3. Ouvrir une **pull request**.
+
+## Flow de déploiement
+1. La PR lance le check requis **Supabase Auto Sync / plan (pull_request)**.
+2. Une fois le check en vert, merger la PR vers `main`.
+3. Le job `sync` du workflow applique automatiquement la migration sur Supabase.
 
 ## Vérifier
-- GitHub → Actions → **Supabase Migrations** doit être en vert.
+- GitHub → Actions : `plan` et `sync` en vert.
 - Supabase → Table Editor : la table `_migrations_healthcheck` (ou votre changement) existe.
 
 ## Bonnes pratiques

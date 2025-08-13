@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  plan:  # vérifie les PR (ne modifie rien)
+  plan:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
@@ -19,8 +19,33 @@ jobs:
       SUPABASE_DB_URL:      ${{ secrets.SUPABASE_DB_URL }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard: DB changée => migration requise
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        run: |
+          set -e
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="origin/${{ github.base_ref }}...${{ github.sha }}"
+          else
+            RANGE="${{ github.event.before }}...${{ github.sha }}"
+          fi
+          echo "Diff range: $RANGE"
+          CHANGED="$(git diff --name-only $RANGE || true)"
+          echo "$CHANGED" | sed 's/^/ - /'
+
+          CHANGED_DB="$(echo "$CHANGED" | grep -E '^supabase/' | grep -vE '^supabase/migrations/' || true)"
+          HAS_MIG="$(echo "$CHANGED" | grep -E '^supabase/migrations/.*\\.sql$' || true)"
+
+          if [ -n "$CHANGED_DB" ] && [ -z "$HAS_MIG" ]; then
+            echo '❌ Des fichiers DB ont changé sans migration SQL (supabase/migrations/*.sql).'
+            exit 1
+          fi
+          echo '✅ Garde-fou OK : aucune infraction.'
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
+        with:
+          version: latest
       - name: Dry-run
         run: |
           set -e
@@ -29,7 +54,7 @@ jobs:
             --workdir ./supabase \
             --dry-run
 
-  sync:  # applique en prod après merge/push/manuel
+  sync:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     env:
@@ -37,8 +62,33 @@ jobs:
       SUPABASE_DB_URL:      ${{ secrets.SUPABASE_DB_URL }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard: DB changée => migration requise
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        run: |
+          set -e
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="origin/${{ github.base_ref }}...${{ github.sha }}"
+          else
+            RANGE="${{ github.event.before }}...${{ github.sha }}"
+          fi
+          echo "Diff range: $RANGE"
+          CHANGED="$(git diff --name-only $RANGE || true)"
+          echo "$CHANGED" | sed 's/^/ - /'
+
+          CHANGED_DB="$(echo "$CHANGED" | grep -E '^supabase/' | grep -vE '^supabase/migrations/' || true)"
+          HAS_MIG="$(echo "$CHANGED" | grep -E '^supabase/migrations/.*\\.sql$' || true)"
+
+          if [ -n "$CHANGED_DB" ] && [ -z "$HAS_MIG" ]; then
+            echo '❌ Des fichiers DB ont changé sans migration SQL (supabase/migrations/*.sql).'
+            exit 1
+          fi
+          echo '✅ Garde-fou OK : aucune infraction.'
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
+        with:
+          version: latest
       - name: Push schema/migrations (idempotent)
         run: |
           set -e
