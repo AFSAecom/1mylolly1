@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   plan:
-    name: plan (pull_request)
+    name: plan 
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     env:
