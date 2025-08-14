@@ -28,7 +28,7 @@ export async function handleSignUp(p: SignUpPayload) {
   } = await supabase.auth.getUser();
   if (userErr) return { ok: false, step: 'getUser', error: userErr.message };
 
-  // si confirmation e-mail = ON, il n'y a pas encore de session
+  // si confirmation e-mail = ON, user sera null ici → on créera le profil au 1er login
   if (!user) {
     return { ok: true, needEmailConfirmation: true };
   }
@@ -43,6 +43,7 @@ export async function handleSignUp(p: SignUpPayload) {
     birth_date: p.dateNaissance ?? null,
     address: p.adresse ?? null,
   });
+
   if (profileErr) {
     return { ok: false, step: 'insertProfile', error: profileErr.message };
   }
