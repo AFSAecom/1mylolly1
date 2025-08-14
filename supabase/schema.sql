@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     famille_olfactive TEXT,
     description TEXT,
     image_url TEXT,
+    origin_country TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
