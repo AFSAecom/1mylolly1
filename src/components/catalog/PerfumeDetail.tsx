@@ -401,6 +401,37 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
               </Badge>
             </div>
 
+            <div className="mb-6 text-sm text-gray-700 space-y-1">
+              <div>
+                <span className="font-medium">Code produit:&nbsp;</span>
+                {currentPerfume.codeProduit}
+              </div>
+              <div>
+                <span className="font-medium">Nom Lolly:&nbsp;</span>
+                {currentPerfume.nomLolly}
+              </div>
+              <div>
+                <span className="font-medium">Parfum inspiré:&nbsp;</span>
+                {currentPerfume.nomParfumInspire}
+              </div>
+              <div>
+                <span className="font-medium">Marque inspirée:&nbsp;</span>
+                {currentPerfume.marqueInspire}
+              </div>
+              <div>
+                <span className="font-medium">Genre:&nbsp;</span>
+                {currentPerfume.genre}
+              </div>
+              <div>
+                <span className="font-medium">Saison:&nbsp;</span>
+                {currentPerfume.saison}
+              </div>
+              <div>
+                <span className="font-medium">Famille olfactive:&nbsp;</span>
+                {currentPerfume.familleOlfactive}
+              </div>
+            </div>
+
             <Separator className="my-4" />
 
             <div className="space-y-4 mb-6">
