@@ -187,6 +187,7 @@ export type Database = {
           prix_15ml: number | null
           prix_30ml: number | null
           prix_50ml: number | null
+          promo_flag: boolean | null
           saison: string
           stock_15ml: number | null
           stock_30ml: number | null
@@ -211,6 +212,7 @@ export type Database = {
           prix_15ml?: number | null
           prix_30ml?: number | null
           prix_50ml?: number | null
+          promo_flag?: boolean | null
           saison: string
           stock_15ml?: number | null
           stock_30ml?: number | null
@@ -235,6 +237,7 @@ export type Database = {
           prix_15ml?: number | null
           prix_30ml?: number | null
           prix_50ml?: number | null
+          promo_flag?: boolean | null
           saison?: string
           stock_15ml?: number | null
           stock_30ml?: number | null
