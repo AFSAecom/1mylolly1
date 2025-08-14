@@ -1,0 +1,125 @@
+name: DB SQL Notify (Multi-file)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect DB-related changes
+        id: detect
+        run: |
+          set -e
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > /tmp/all_changed.txt
+          DB_REGEX="(^|/)(supabase/migrations/|supabase/schema\.sql$|db/|sql/|.*\.sql$)"
+          grep -E "$DB_REGEX" /tmp/all_changed.txt || true > /tmp/db_hits.txt
+          if [ -s /tmp/db_hits.txt ]; then
+            echo "db_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "db_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find MANIFEST and SQL pack
+        id: pack
+        if: steps.detect.outputs.db_changed == 'true'
+        run: |
+          set -e
+          PRNUM="${{ github.event.pull_request.number }}"
+          MANIFEST="ops/sql_to_apply/pr${PRNUM}-MANIFEST.md"
+          if [ -f "$MANIFEST" ]; then
+            echo "manifest_present=true" >> $GITHUB_OUTPUT
+            echo "$MANIFEST" > /tmp/manifest.txt
+            awk '/^[[:space:]]*[0-9]+\)/{print}' "$MANIFEST" > /tmp/manifest_list.txt || true
+          else
+            echo "manifest_present=false" >> $GITHUB_OUTPUT
+          fi
+
+          ls ops/sql_to_apply/pr${PRNUM}-*.sql 2>/dev/null || true > /tmp/sql_list.txt
+          COUNT=$(grep -c . /tmp/sql_list.txt || true)
+          echo "sql_count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Build sticky comment
+        if: steps.detect.outputs.db_changed == 'true'
+        id: comment
+        run: |
+          PRNUM="${{ github.event.pull_request.number }}"
+          {
+            echo "<!-- DB_SQL_NOTIFY_STICKY -->"
+            echo "### 🔔 Changement lié à la **Base de Données** détecté"
+            echo ""
+            echo "**Fichiers DB touchés (extrait):**"
+            head -n 50 /tmp/db_hits.txt | sed 's/^/- `/' | sed 's/$/`/'
+            echo ""
+            if [ "${{ steps.pack.outputs.manifest_present }}" = "true" ]; then
+              echo "#### 📜 MANIFEST trouvé"
+              echo "\`ops/sql_to_apply/pr${PRNUM}-MANIFEST.md\`"
+              echo ""
+              if [ -s /tmp/manifest_list.txt ]; then
+                echo "**Ordre attendu :**"
+                cat /tmp/manifest_list.txt | sed 's/^/- /'
+              else
+                echo "_(Le MANIFEST est présent mais la liste ordonnée est vide.)_"
+              fi
+            else
+              echo "#### 📜 MANIFEST manquant"
+              echo "Attendu : \`ops/sql_to_apply/pr${PRNUM}-MANIFEST.md\`"
+            fi
+            echo ""
+            echo "#### 🧾 SQL fournis dans cette PR"
+            if [ "${{ steps.pack.outputs.sql_count }}" -gt 0 ]; then
+              while read f; do
+                [ -z "$f" ] && continue
+                echo ""
+                echo "<details><summary>\`$f\`</summary>"
+                echo ""
+                echo '```sql'
+                head -n 200 "$f" || true
+                echo '```'
+                echo ""
+                echo "</details>"
+              done < /tmp/sql_list.txt
+            else
+              echo "_Aucun fichier_ \`ops/sql_to_apply/pr${PRNUM}-*.sql\` _détecté pour l’instant._"
+            fi
+            echo ""
+            echo "#### ✅ À faire"
+            echo "- [ ] Créer/compléter le **MANIFEST** (ordre d’exécution)"
+            echo "- [ ] Ajouter les SQL numérotés: \`pr${PRNUM}-01_core.sql\`, \`-02_backfill.sql\`, \`-03_constraints.sql\`, \`-04_indexes.sql\`, \`-05_cleanup.sql\` (si utile)"
+            echo "- [ ] Ahmed exécute le SQL dans **Supabase** (SQL Editor), puis Merge"
+          } > /tmp/comment.md
+          echo "COMMENT_PATH=/tmp/comment.md" >> $GITHUB_OUTPUT
+
+      - name: Add/Update sticky comment + apply label
+        if: steps.detect.outputs.db_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync(process.env.COMMENT_PATH, 'utf8');
+            const { owner, repo, number } = context.issue;
+            const marker = "<!-- DB_SQL_NOTIFY_STICKY -->";
+            const comments = await github.rest.issues.listComments({owner, repo, issue_number: number, per_page: 100});
+            const existing = comments.data.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({owner, repo, comment_id: existing.id, body});
+            } else {
+              await github.rest.issues.createComment({owner, repo, issue_number: number, body});
+            }
+            try {
+              await github.rest.issues.addLabels({owner, repo, issue_number: number, labels: ["DB: Heads-up"]});
+            } catch (e) {}
+        env:
+          COMMENT_PATH: ${{ steps.comment.outputs.COMMENT_PATH }}
