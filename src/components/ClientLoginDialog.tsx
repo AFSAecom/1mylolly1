@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ClientLoginDialogProps {
@@ -29,7 +36,18 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
 }) => {
   const { login, register, user } = useAuth();
   const [loginData, setLoginData] = useState({ email: "", password: "" });
-  const [registerData, setRegisterData] = useState({
+  const [registerData, setRegisterData] = useState<{
+    email: string;
+    password: string;
+    confirmPassword: string;
+    nom: string;
+    prenom: string;
+    telephone: string;
+    whatsapp: string;
+    dateNaissance: string;
+    adresse: string;
+    role: "client" | "conseillere" | "admin";
+  }>({
     email: "",
     password: "",
     confirmPassword: "",
@@ -39,6 +57,7 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
     whatsapp: "",
     dateNaissance: "",
     adresse: "",
+    role: "client",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -98,8 +117,8 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
     }
 
     try {
-      const { confirmPassword, ...userData } = registerData;
-      const success = await register(userData);
+      const { confirmPassword, role, ...userData } = registerData;
+      const success = await register({ ...userData, role });
       if (success) {
         onSuccess?.(user);
         onOpenChange(false);
@@ -299,6 +318,32 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
                   className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
                   placeholder="Adresse complète du client"
                 />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="client-role" className="text-sm">
+                  Rôle
+                </Label>
+                <Select
+                  value={registerData.role}
+                  onValueChange={(value) =>
+                    setRegisterData({
+                      ...registerData,
+                      role: value as "client" | "conseillere" | "admin",
+                    })
+                  }
+                >
+                  <SelectTrigger
+                    id="client-role"
+                    className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
+                  >
+                    <SelectValue placeholder="Sélectionner un rôle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="client">Client</SelectItem>
+                    <SelectItem value="conseillere">Conseillère</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="client-register-password" className="text-sm">
