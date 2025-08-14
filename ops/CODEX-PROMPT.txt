@@ -1,0 +1,3 @@
+RÔLE: À chaque PR qui touche la DB, **prépare un SQL brut** dans `ops/sql_to_apply/pr<NUMERO>.sql` (facultatif mais recommandé) et remplis la section DB de la PR.
+OBJECTIF: permettre à @AhmedLimaiem d'exécuter le SQL dans Supabase rapidement.
+Bonnes pratiques: IF NOT EXISTS, checks information_schema, rollback simple.
