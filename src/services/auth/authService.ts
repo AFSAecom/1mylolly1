@@ -130,9 +130,15 @@ export async function register(
   },
 ): Promise<User | null> {
   try {
-    const { password, role = "client" } = userData;
-    const rolePrefix = role === "conseillere" ? "CNS" : role === "admin" ? "ADM" : "C";
-    const codeClient = `${rolePrefix}${Date.now().toString().slice(-3)}`;
+    const {
+      password,
+      role = "client",
+      codeClient: providedCodeClient,
+    } = userData;
+    const rolePrefix =
+      role === "conseillere" ? "CNS" : role === "admin" ? "ADM" : "C";
+    const codeClient =
+      providedCodeClient || `${rolePrefix}${Date.now().toString().slice(-3)}`;
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
@@ -178,7 +184,7 @@ export async function register(
       dateNaissance: userData.dateNaissance,
       adresse: userData.adresse,
       role,
-      codeClient,
+      codeClient: insertedUser.code_client || codeClient,
     };
   } catch (err) {
     logger.error("Unexpected registration error", err);
