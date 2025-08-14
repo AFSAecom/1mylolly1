@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Guard: DB changée => migration requise
+      - name: Guard:" DB changée => migration requise"
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         run: |
           set -e
@@ -65,7 +65,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Guard: DB changée => migration requise
+      - name: Guard:" DB changée => migration requise"
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         run: |
           set -e
