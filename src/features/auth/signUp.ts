@@ -26,15 +26,11 @@ export async function handleSignUp(p: SignUpPayload) {
     data: { user },
     error: userErr,
   } = await supabase.auth.getUser();
-
   if (userErr) return { ok: false, step: 'getUser', error: userErr.message };
 
-  // Si la confirmation email est activée, il n'y a pas encore de session
+  // si confirmation e-mail = ON, il n'y a pas encore de session
   if (!user) {
-    return {
-      ok: true,
-      needEmailConfirmation: true, // l'utilisateur doit confirmer son email avant la création du profil
-    };
+    return { ok: true, needEmailConfirmation: true };
   }
 
   // 3) créer le profil lié (public.users)
@@ -47,7 +43,6 @@ export async function handleSignUp(p: SignUpPayload) {
     birth_date: p.dateNaissance ?? null,
     address: p.adresse ?? null,
   });
-
   if (profileErr) {
     return { ok: false, step: 'insertProfile', error: profileErr.message };
   }
