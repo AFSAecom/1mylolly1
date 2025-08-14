@@ -431,9 +431,9 @@ const AdminSpace = () => {
   const handleDownloadTemplate = (type) => {
     const templates = {
       products:
-        "code_produit,nom_lolly,nom_parfum_inspire,marque_inspire,genre,saison,famille_olfactive,note_tete,note_coeur,note_fond,description,image_url,prix_15ml,stock_15ml,prix_30ml,stock_30ml,prix_50ml,stock_50ml\n" +
-        'L001,Élégance Nocturne,Black Opium,Yves Saint Laurent,femme,toutes saisons,Oriental Vanillé,"Café,Poire,Mandarine","Jasmin,Fleur d\'oranger,Vanille","Patchouli,Cèdre,Musc",Une fragrance envoûtante qui mêle l\'intensité du café à la douceur de la vanille,https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80,19.900,10,29.900,15,39.900,8\n' +
-        'L002,Mystère Oriental,La Vie Est Belle,Lancôme,femme,toutes saisons,Floral Fruité,"Poire,Cassis,Bergamote","Iris,Jasmin,Fleur d\'oranger","Praline,Vanille,Patchouli",Un parfum joyeux et gourmand qui célèbre la beauté de la vie,https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80,19.900,12,29.900,20,39.900,10',
+        "code_article,nom_lolly,parfum_inspire,marque_inspiree,genre,saison,famille_olfactive,description,image_url\n" +
+        'L001,Élégance Nocturne,Black Opium,Yves Saint Laurent,femme,toutes saisons,Oriental Vanillé,Une fragrance envoûtante qui mêle l\'intensité du café à la douceur de la vanille,https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80\n' +
+        'L002,Mystère Oriental,La Vie Est Belle,Lancôme,femme,toutes saisons,Floral Fruité,Un parfum joyeux et gourmand qui célèbre la beauté de la vie,https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80',
       users:
         "nom,prenom,email,role,telephone,whatsapp,date_naissance,adresse,code_client\n" +
         "Dupont,Jean,jean.dupont@email.com,client,+216 20 123 456,+216 20 123 456,1990-01-15,123 Avenue Habib Bourguiba Tunis,C001\n" +
