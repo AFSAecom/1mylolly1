@@ -1,0 +1,79 @@
+name: DB Drift Guard
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "schema.sql"
+      - ".github/workflows/db-guard.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "schema.sql"
+      - ".github/workflows/db-guard.yml"
+  schedule:
+    - cron: "0 6 * * *"  # daily at 06:00 UTC
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node (for Supabase CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Supabase CLI
+        run: npm i -g supabase
+
+      - name: Verify CLI
+        run: supabase --version
+
+      # Build a local shadow DB from schema.sql to compare against remote
+      - name: Start local Postgres (shadow)
+        run: |
+          docker run -d --name shadowdb -e POSTGRES_PASSWORD=postgres -p 54322:5432 postgres:15
+          # Wait for DB
+          for i in {1..30}; do
+            if docker exec shadowdb pg_isready -U postgres > /dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          echo "host=localhost port=54322 user=postgres password=postgres dbname=postgres" > .shadow.cnf
+
+      - name: Apply schema.sql to shadow DB
+        run: |
+          docker exec -i shadowdb psql -U postgres -d postgres < schema.sql
+
+      - name: Diff remote Supabase vs GitHub schema.sql
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          # Export remote schema
+          supabase db dump --db-url "$SUPABASE_DB_URL" --schema-only > remote_schema.sql
+          # Export shadow schema (matches GitHub schema.sql)
+          docker exec shadowdb pg_dump --schema-only --no-owner --no-privileges -U postgres -d postgres > shadow_schema.sql
+
+          # Use 'diff' to detect drift (you can replace by 'migra' if needed)
+          diff -u shadow_schema.sql remote_schema.sql || true
+
+          # Save unified diff artifact and mark job failure if diff is non-empty
+          DIFF_OUTPUT=$(diff -u shadow_schema.sql remote_schema.sql || true)
+          echo "$DIFF_OUTPUT" > db_drift.diff
+
+          if [ -s db_drift.diff ]; then
+            echo "::warning file=schema.sql::Database drift detected between GitHub schema and Supabase remote"
+            echo "Drift detected"
+            exit 1
+          else
+            echo "No drift detected"
+          fi
+
+      - name: Upload diff artifact (if any)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-drift-diff
+          path: db_drift.diff
