@@ -1,0 +1,18 @@
+RÔLE: À chaque PR qui touche la DB, livre un PACK SQL **dans la branche de la PR** (sans attendre le merge).
+
+1) MANIFEST
+- Fichier: ops/sql_to_apply/pr<NUM>-MANIFEST.md
+- Contenu: ordre des fichiers, tables impactées, remarques/risques.
+
+2) Fichiers SQL numérotés (idempotents)
+- pr<NUM>-01_core.sql (DDL, BEGIN/COMMIT ok)
+- pr<NUM>-02_backfill.sql (MAJ données)
+- pr<NUM>-03_constraints.sql (NOT NULL/FK)
+- pr<NUM>-04_indexes.sql (CREATE INDEX CONCURRENTLY, aucune transaction)
+- pr<NUM>-05_cleanup.sql (optionnel)
+
+RÈGLES
+- Idempotence: `IF NOT EXISTS`, `information_schema` avant DROP.
+- Séparer index concurrents dans `-04_indexes.sql`.
+- Ajouter en bas 1–3 requêtes de vérification en commentaire.
+- Le front **exécute** ces SQL manuellement dans Supabase **avant** le merge.
