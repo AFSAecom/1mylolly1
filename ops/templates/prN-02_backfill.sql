@@ -1,0 +1,3 @@
+-- PR#<NUM> 02_backfill — mises à jour de données
+-- Exemple:
+-- UPDATE public.products SET origin_country = COALESCE(origin_country, '');

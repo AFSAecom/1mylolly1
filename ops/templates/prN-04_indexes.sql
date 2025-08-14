@@ -1,0 +1,3 @@
+-- PR#<NUM> 04_indexes — index concurrents (NE PAS encapsuler dans BEGIN/COMMIT)
+-- Exemple:
+-- CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_code ON public.products (product_code);

@@ -1,0 +1,4 @@
+-- PR#<NUM> 03_constraints — contraintes après backfill
+-- Exemple:
+-- ALTER TABLE public.products ALTER COLUMN origin_country SET DEFAULT '';
+-- ALTER TABLE public.products ALTER COLUMN origin_country SET NOT NULL;
