@@ -91,101 +91,101 @@ const LoginDialog: React.FC<LoginDialogProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="login">Connexion</TabsTrigger>
-            {!hideRegistration && <TabsTrigger value="register">Inscription</TabsTrigger>}
-          </TabsList>
+      <TabsList className="grid grid-cols-2">
+        <TabsTrigger value="login">Connexion</TabsTrigger>
+        {!hideRegistration && <TabsTrigger value="register">Inscription</TabsTrigger>}
+      </TabsList>
 
-          {/* —— Connexion —— */}
-          <TabsContent value="login" className="mt-4">
-            <form onSubmit={onSubmitLogin} className="space-y-3">
+      {/* —— Connexion —— */}
+      <TabsContent value="login" className="mt-4">
+        <form onSubmit={onSubmitLogin} className="space-y-3">
+          <div className="space-y-1">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+              placeholder="votre@email.com"
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>Mot de passe</Label>
+            <Input
+              type="password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          {loginMsg && <p className="text-sm text-red-600">{loginMsg}</p>}
+          <Button type="submit" disabled={loginBusy} className="w-full">
+            {loginBusy ? "Connexion..." : "Se connecter"}
+          </Button>
+        </form>
+      </TabsContent>
+
+      {/* —— Inscription —— */}
+      {!hideRegistration && (
+        <TabsContent value="register" className="mt-4">
+          <form onSubmit={onSubmitRegister} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="votre@email.com"
-                  required
-                />
+                <Label>Prénom</Label>
+                <Input value={reg.prenom} onChange={(e) => setReg({ ...reg, prenom: e.target.value })} />
               </div>
+              <div className="space-y-1">
+                <Label>Nom</Label>
+                <Input value={reg.nom} onChange={(e) => setReg({ ...reg, nom: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label>Email</Label>
+              <Input type="email" value={reg.email} onChange={(e) => setReg({ ...reg, email: e.target.value })} required />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Mot de passe</Label>
-                <Input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
+                <Input type="password" value={reg.password} onChange={(e) => setReg({ ...reg, password: e.target.value })} required />
               </div>
-              {loginMsg && <p className="text-sm text-red-600">{loginMsg}</p>}
-              <Button type="submit" disabled={loginBusy} className="w-full">
-                {loginBusy ? "Connexion..." : "Se connecter"}
-              </Button>
-            </form>
-          </TabsContent>
+              <div className="space-y-1">
+                <Label>Confirmer</Label>
+                <Input type="password" value={reg.confirm} onChange={(e) => setReg({ ...reg, confirm: e.target.value })} required />
+              </div>
+            </div>
 
-          {/* —— Inscription —— */}
-          {!hideRegistration && (
-            <TabsContent value="register" className="mt-4">
-              <form onSubmit={onSubmitRegister} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Prénom</Label>
-                    <Input value={reg.prenom} onChange={(e) => setReg({ ...reg, prenom: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Nom</Label>
-                    <Input value={reg.nom} onChange={(e) => setReg({ ...reg, nom: e.target.value })} />
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Téléphone</Label>
+                <Input value={reg.telephone} onChange={(e) => setReg({ ...reg, telephone: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>WhatsApp</Label>
+                <Input value={reg.whatsapp} onChange={(e) => setReg({ ...reg, whatsapp: e.target.value })} />
+              </div>
+            </div>
 
-                <div className="space-y-1">
-                  <Label>Email</Label>
-                  <Input type="email" value={reg.email} onChange={(e) => setReg({ ...reg, email: e.target.value })} required />
-                </div>
+            <div className="space-y-1">
+              <Label>Date de naissance</Label>
+              <Input type="date" value={reg.dateNaissance} onChange={(e) => setReg({ ...reg, dateNaissance: e.target.value })} />
+            </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Mot de passe</Label>
-                    <Input type="password" value={reg.password} onChange={(e) => setReg({ ...reg, password: e.target.value })} required />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Confirmer</Label>
-                    <Input type="password" value={reg.confirm} onChange={(e) => setReg({ ...reg, confirm: e.target.value })} required />
-                  </div>
-                </div>
+            <div className="space-y-1">
+              <Label>Adresse</Label>
+              <Input value={reg.adresse} onChange={(e) => setReg({ ...reg, adresse: e.target.value })} />
+            </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Téléphone</Label>
-                    <Input value={reg.telephone} onChange={(e) => setReg({ ...reg, telephone: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>WhatsApp</Label>
-                    <Input value={reg.whatsapp} onChange={(e) => setReg({ ...reg, whatsapp: e.target.value })} />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <Label>Date de naissance</Label>
-                  <Input type="date" value={reg.dateNaissance} onChange={(e) => setReg({ ...reg, dateNaissance: e.target.value })} />
-                </div>
-
-                <div className="space-y-1">
-                  <Label>Adresse</Label>
-                  <Input value={reg.adresse} onChange={(e) => setReg({ ...reg, adresse: e.target.value })} />
-                </div>
-
-                {regMsg && <p className="text-sm">{regMsg}</p>}
-                <Button type="submit" disabled={regBusy} className="w-full">
-                  {regBusy ? "Création..." : "Créer un compte"}
-                </Button>
-              </form>
-            </TabsContent>
-          )}
-        </Tabs>
+            {regMsg && <p className="text-sm">{regMsg}</p>}
+            <Button type="submit" disabled={regBusy} className="w-full">
+              {regBusy ? "Création..." : "Créer un compte"}
+            </Button>
+          </form>
+        </TabsContent>
+      )}
+    </Tabs>
       </DialogContent>
     </Dialog>
   );
