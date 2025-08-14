@@ -49,7 +49,10 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
   onAddToFavorites = () => {},
 }) => {
   // Function to load the latest product data
-  const loadProductData = (providedPerfume?: typeof perfume) => {
+  const loadProductData = (
+    providedPerfume?: typeof perfume,
+    options: { reset?: boolean } = {},
+  ) => {
     const defaultPerfume = {
       codeProduit: "L001",
       nomLolly: "Élégance Nocturne",
@@ -101,41 +104,47 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
       ],
     };
 
+    if (options.reset) {
+      localStorage.removeItem("admin-products");
+    }
+
     // Always try to load the most recent data from localStorage first
-    const savedProducts = localStorage.getItem("admin-products");
-    if (savedProducts) {
-      try {
-        const adminProducts = JSON.parse(savedProducts);
-        const targetCodeProduit =
-          providedPerfume?.codeProduit || defaultPerfume.codeProduit;
-        const matchingProduct = adminProducts.find(
-          (p: any) => p.codeArticle === targetCodeProduit,
-        );
-        if (matchingProduct) {
-          const updatedPerfume = {
-            ...defaultPerfume,
-            codeProduit: matchingProduct.codeArticle || targetCodeProduit,
-            nomLolly: matchingProduct.name || defaultPerfume.nomLolly,
-            nomParfumInspire:
-              matchingProduct.nomParfumInspire ||
-              defaultPerfume.nomParfumInspire,
-            marqueInspire:
-              matchingProduct.marqueInspire || defaultPerfume.marqueInspire,
-            imageURL: matchingProduct.imageURL || defaultPerfume.imageURL,
-            contenances:
-              matchingProduct.variants?.map((variant: any) => ({
-                refComplete: `${matchingProduct.codeArticle}-${variant.size}`,
-                contenance: parseInt(variant.size.replace("ml", "")),
-                unite: "ml",
-                prix: variant.price,
-                stockActuel: variant.stock,
-                actif: variant.stock > 0,
-              })) || defaultPerfume.contenances,
-          };
-          return updatedPerfume;
+    if (!options.reset) {
+      const savedProducts = localStorage.getItem("admin-products");
+      if (savedProducts) {
+        try {
+          const adminProducts = JSON.parse(savedProducts);
+          const targetCodeProduit =
+            providedPerfume?.codeProduit || defaultPerfume.codeProduit;
+          const matchingProduct = adminProducts.find(
+            (p: any) => p.codeArticle === targetCodeProduit,
+          );
+          if (matchingProduct) {
+            const updatedPerfume = {
+              ...defaultPerfume,
+              codeProduit: matchingProduct.codeArticle || targetCodeProduit,
+              nomLolly: matchingProduct.name || defaultPerfume.nomLolly,
+              nomParfumInspire:
+                matchingProduct.nomParfumInspire ||
+                defaultPerfume.nomParfumInspire,
+              marqueInspire:
+                matchingProduct.marqueInspire || defaultPerfume.marqueInspire,
+              imageURL: matchingProduct.imageURL || defaultPerfume.imageURL,
+              contenances:
+                matchingProduct.variants?.map((variant: any) => ({
+                  refComplete: `${matchingProduct.codeArticle}-${variant.size}`,
+                  contenance: parseInt(variant.size.replace("ml", "")),
+                  unite: "ml",
+                  prix: variant.price,
+                  stockActuel: variant.stock,
+                  actif: variant.stock > 0,
+                })) || defaultPerfume.contenances,
+            };
+            return updatedPerfume;
+          }
+        } catch (error) {
+          console.error("Error parsing admin products:", error);
         }
-      } catch (error) {
-        console.error("Error parsing admin products:", error);
       }
     }
 
@@ -154,11 +163,14 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
   const [imageUpdateKey, setImageUpdateKey] = useState(() => Date.now());
 
   // Function to refresh product data from localStorage
-  const refreshProductData = React.useCallback(() => {
-    const updatedData = loadProductData(perfume);
-    setProductData(updatedData);
-    setImageUpdateKey(Date.now()); // Use timestamp for unique key
-  }, [perfume]);
+  const refreshProductData = React.useCallback(
+    (reset = false) => {
+      const updatedData = loadProductData(perfume, { reset });
+      setProductData(updatedData);
+      setImageUpdateKey(Date.now()); // Use timestamp for unique key
+    },
+    [perfume],
+  );
 
   // Listen for product updates and refresh data
   React.useEffect(() => {
@@ -487,6 +499,13 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
               >
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Ajouter au panier
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto text-sm"
+                onClick={() => refreshProductData(true)}
+              >
+                Réinitialiser
               </Button>
             </CardFooter>
           </div>
