@@ -1,16 +1,14 @@
 import React, { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
+
+import { handleSignIn } from "@/features/auth/signIn";
+import { handleSignUp } from "@/features/auth/signUp";
 
 interface LoginDialogProps {
   open: boolean;
@@ -20,335 +18,169 @@ interface LoginDialogProps {
 }
 
 const LoginDialog: React.FC<LoginDialogProps> = ({
-  open,
-  onOpenChange,
-  onSuccess,
-  hideRegistration = false,
+  open, onOpenChange, onSuccess, hideRegistration = false,
 }) => {
-  const { login, register } = useAuth();
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
-  const [registerData, setRegisterData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    nom: "",
-    prenom: "",
-    telephone: "",
-    whatsapp: "",
-    dateNaissance: "",
-    adresse: "",
+  // ---- Connexion ----
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginMsg, setLoginMsg] = useState<string | null>(null);
+  const [loginBusy, setLoginBusy] = useState(false);
+
+  async function onSubmitLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoginMsg(null);
+    setLoginBusy(true);
+    const res = await handleSignIn(loginEmail.trim(), loginPassword);
+    setLoginBusy(false);
+    if (!res.ok) {
+      setLoginMsg(`Connexion refusée (${res.step}) : ${res.error}`);
+      return;
+    }
+    setLoginMsg("Connecté ✅");
+    onSuccess?.();
+    onOpenChange(false);
+  }
+
+  // ---- Inscription ----
+  const [reg, setReg] = useState({
+    email: "", password: "", confirm: "",
+    prenom: "", nom: "", telephone: "", whatsapp: "",
+    dateNaissance: "", adresse: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [regMsg, setRegMsg] = useState<string | null>(null);
+  const [regBusy, setRegBusy] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  async function onSubmitRegister(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const success = await login(loginData.email, loginData.password);
-      if (success) {
-        onOpenChange(false);
-        onSuccess?.();
-      } else {
-        setError("Email ou mot de passe incorrect. Vérifiez vos identifiants.");
-      }
-    } catch (err) {
-      setError("Erreur de connexion");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    // Validation des champs obligatoires
-    if (
-      !registerData.nom ||
-      !registerData.prenom ||
-      !registerData.whatsapp ||
-      !registerData.dateNaissance
-    ) {
-      setError(
-        "Les champs nom, prénom, WhatsApp et date de naissance sont obligatoires.",
-      );
-      setLoading(false);
+    setRegMsg(null);
+    if (reg.password !== reg.confirm) {
+      setRegMsg("Les mots de passe ne correspondent pas.");
       return;
     }
-
-    // Validation du mot de passe
-    if (registerData.password !== registerData.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
-      setLoading(false);
+    setRegBusy(true);
+    const res = await handleSignUp({
+      email: reg.email.trim(),
+      password: reg.password,
+      prenom: reg.prenom,
+      nom: reg.nom,
+      telephone: reg.telephone,
+      whatsapp: reg.whatsapp,
+      dateNaissance: reg.dateNaissance || undefined,
+      adresse: reg.adresse,
+    });
+    setRegBusy(false);
+    if (!res.ok) {
+      setRegMsg(`Inscription refusée (${res.step}) : ${res.error}`);
       return;
     }
-
-    // Validation du format WhatsApp (8 chiffres)
-    const whatsappRegex = /^\d{8}$/;
-    if (!whatsappRegex.test(registerData.whatsapp.replace("+216", "").trim())) {
-      setError("Le numéro WhatsApp doit contenir exactement 8 chiffres.");
-      setLoading(false);
+    if ((res as any).needEmailConfirmation) {
+      setRegMsg("Inscription créée. Vérifie ta boîte mail pour confirmer l'adresse.");
       return;
     }
-
-    try {
-      const success = await register(registerData);
-      if (success) {
-        onOpenChange(false);
-        onSuccess?.();
-      } else {
-        setError("Erreur lors de la création du compte");
-      }
-    } catch (err) {
-      setError("Erreur de création de compte");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setRegMsg("Compte créé ✅ — vous pouvez vous connecter.");
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] sm:max-w-[425px] max-h-[85vh] overflow-y-auto bg-[#FBF0E9] rounded-lg">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="text-[#805050] font-playfair">
-            Connexion / Inscription
-          </DialogTitle>
-          <DialogDescription className="text-[#AD9C92]">
+          <DialogTitle>Connexion / Inscription</DialogTitle>
+          <DialogDescription>
             Connectez-vous ou créez un compte pour finaliser votre commande
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="login" className="w-full">
-          {!hideRegistration && (
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Connexion</TabsTrigger>
-              <TabsTrigger value="register">Inscription</TabsTrigger>
-            </TabsList>
-          )}
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="login">Connexion</TabsTrigger>
+            {!hideRegistration && <TabsTrigger value="register">Inscription</TabsTrigger>}
+          </TabsList>
 
-          <TabsContent value="login">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+          {/* —— Connexion —— */}
+          <TabsContent value="login" className="mt-4">
+            <form onSubmit={onSubmitLogin} className="space-y-3">
+              <div className="space-y-1">
+                <Label>Email</Label>
                 <Input
-                  id="email"
                   type="email"
-                  value={loginData.email}
-                  onChange={(e) =>
-                    setLoginData({ ...loginData, email: e.target.value })
-                  }
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="votre@email.com"
                   required
-                  className="border-[#D4C2A1] focus:border-[#CE8F8A]"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
+              <div className="space-y-1">
+                <Label>Mot de passe</Label>
                 <Input
-                  id="password"
                   type="password"
-                  value={loginData.password}
-                  onChange={(e) =>
-                    setLoginData({ ...loginData, password: e.target.value })
-                  }
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
                   required
-                  className="border-[#D4C2A1] focus:border-[#CE8F8A]"
                 />
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#CE8F8A] hover:bg-[#CE8F8A]/90"
-              >
-                {loading ? "Connexion..." : "Se connecter"}
+              {loginMsg && <p className="text-sm text-red-600">{loginMsg}</p>}
+              <Button type="submit" disabled={loginBusy} className="w-full">
+                {loginBusy ? "Connexion..." : "Se connecter"}
               </Button>
             </form>
           </TabsContent>
 
+          {/* —— Inscription —— */}
           {!hideRegistration && (
-            <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-3">
+            <TabsContent value="register" className="mt-4">
+              <form onSubmit={onSubmitRegister} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="prenom" className="text-sm">
-                      Prénom *
-                    </Label>
-                    <Input
-                      id="prenom"
-                      value={registerData.prenom}
-                      onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          prenom: e.target.value,
-                        })
-                      }
-                      required
-                      className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                    />
+                    <Label>Prénom</Label>
+                    <Input value={reg.prenom} onChange={(e) => setReg({ ...reg, prenom: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="nom" className="text-sm">
-                      Nom *
-                    </Label>
-                    <Input
-                      id="nom"
-                      value={registerData.nom}
-                      onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          nom: e.target.value,
-                        })
-                      }
-                      required
-                      className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                    />
+                    <Label>Nom</Label>
+                    <Input value={reg.nom} onChange={(e) => setReg({ ...reg, nom: e.target.value })} />
                   </div>
                 </div>
+
                 <div className="space-y-1">
-                  <Label htmlFor="register-email" className="text-sm">
-                    Email
-                  </Label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    value={registerData.email}
-                    onChange={(e) =>
-                      setRegisterData({
-                        ...registerData,
-                        email: e.target.value,
-                      })
-                    }
-                    required
-                    className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                  />
+                  <Label>Email</Label>
+                  <Input type="email" value={reg.email} onChange={(e) => setReg({ ...reg, email: e.target.value })} required />
                 </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="telephone" className="text-sm">
-                      Téléphone
-                    </Label>
-                    <Input
-                      id="telephone"
-                      value={registerData.telephone}
-                      onChange={(e) => {
-                        let value = e.target.value;
-                        if (!value.startsWith("+216")) {
-                          value = "+216" + value.replace("+216", "");
-                        }
-                        setRegisterData({
-                          ...registerData,
-                          telephone: value,
-                        });
-                      }}
-                      placeholder="+216 12345678"
-                      className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                    />
+                    <Label>Mot de passe</Label>
+                    <Input type="password" value={reg.password} onChange={(e) => setReg({ ...reg, password: e.target.value })} required />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="whatsapp" className="text-sm">
-                      WhatsApp *
-                    </Label>
-                    <Input
-                      id="whatsapp"
-                      value={registerData.whatsapp}
-                      onChange={(e) => {
-                        let value = e.target.value;
-                        if (!value.startsWith("+216")) {
-                          value = "+216" + value.replace("+216", "");
-                        }
-                        setRegisterData({
-                          ...registerData,
-                          whatsapp: value,
-                        });
-                      }}
-                      placeholder="+216 12345678"
-                      required
-                      className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                    />
+                    <Label>Confirmer</Label>
+                    <Input type="password" value={reg.confirm} onChange={(e) => setReg({ ...reg, confirm: e.target.value })} required />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="dateNaissance" className="text-sm">
-                    Date de naissance *
-                  </Label>
-                  <Input
-                    id="dateNaissance"
-                    type="date"
-                    value={registerData.dateNaissance}
-                    onChange={(e) =>
-                      setRegisterData({
-                        ...registerData,
-                        dateNaissance: e.target.value,
-                      })
-                    }
-                    required
-                    className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                  />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Téléphone</Label>
+                    <Input value={reg.telephone} onChange={(e) => setReg({ ...reg, telephone: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>WhatsApp</Label>
+                    <Input value={reg.whatsapp} onChange={(e) => setReg({ ...reg, whatsapp: e.target.value })} />
+                  </div>
                 </div>
+
                 <div className="space-y-1">
-                  <Label htmlFor="adresse" className="text-sm">
-                    Adresse
-                  </Label>
-                  <Input
-                    id="adresse"
-                    value={registerData.adresse || ""}
-                    onChange={(e) =>
-                      setRegisterData({
-                        ...registerData,
-                        adresse: e.target.value,
-                      })
-                    }
-                    className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                    placeholder="Votre adresse complète"
-                  />
+                  <Label>Date de naissance</Label>
+                  <Input type="date" value={reg.dateNaissance} onChange={(e) => setReg({ ...reg, dateNaissance: e.target.value })} />
                 </div>
+
                 <div className="space-y-1">
-                  <Label htmlFor="register-password" className="text-sm">
-                    Mot de passe
-                  </Label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    value={registerData.password}
-                    onChange={(e) =>
-                      setRegisterData({
-                        ...registerData,
-                        password: e.target.value,
-                      })
-                    }
-                    required
-                    className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                  />
+                  <Label>Adresse</Label>
+                  <Input value={reg.adresse} onChange={(e) => setReg({ ...reg, adresse: e.target.value })} />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="confirm-password" className="text-sm">
-                    Confirmer le mot de passe
-                  </Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    value={registerData.confirmPassword}
-                    onChange={(e) =>
-                      setRegisterData({
-                        ...registerData,
-                        confirmPassword: e.target.value,
-                      })
-                    }
-                    required
-                    className="border-[#D4C2A1] focus:border-[#CE8F8A] h-9"
-                  />
-                </div>
-                {error && <p className="text-red-500 text-sm">{error}</p>}
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#CE8F8A] hover:bg-[#CE8F8A]/90"
-                >
-                  {loading ? "Création..." : "Créer un compte"}
+
+                {regMsg && <p className="text-sm">{regMsg}</p>}
+                <Button type="submit" disabled={regBusy} className="w-full">
+                  {regBusy ? "Création..." : "Créer un compte"}
                 </Button>
               </form>
             </TabsContent>
