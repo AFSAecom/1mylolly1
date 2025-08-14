@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ClientLoginDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
   title = "Identification Client",
   description = "Identifiez le client pour associer le panier à son compte",
 }) => {
+  const { login, register, user } = useAuth();
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
     email: "",
@@ -47,19 +49,9 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
     setError("");
 
     try {
-      // Mock client login - in real app, this would call an API
-      if (loginData.email && loginData.password) {
-        const mockClient = {
-          id: "C001",
-          email: loginData.email,
-          nom: "Dupont",
-          prenom: "Marie",
-          telephone: "+216 12345678",
-          whatsapp: "+216 12345678",
-          adresse: "123 Rue des Parfums, Tunis",
-          codeClient: "C001",
-        };
-        onSuccess?.(mockClient);
+      const success = await login(loginData.email, loginData.password);
+      if (success) {
+        onSuccess?.(user);
         onOpenChange(false);
       } else {
         setError("Email ou mot de passe incorrect");
@@ -106,20 +98,14 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
     }
 
     try {
-      // Mock client registration
-      const newClient = {
-        id: Date.now().toString(),
-        email: registerData.email,
-        nom: registerData.nom,
-        prenom: registerData.prenom,
-        telephone: registerData.telephone,
-        whatsapp: registerData.whatsapp,
-        dateNaissance: registerData.dateNaissance,
-        adresse: registerData.adresse,
-        codeClient: `C${Date.now().toString().slice(-3)}`,
-      };
-      onSuccess?.(newClient);
-      onOpenChange(false);
+      const { confirmPassword, ...userData } = registerData;
+      const success = await register(userData);
+      if (success) {
+        onSuccess?.(user);
+        onOpenChange(false);
+      } else {
+        setError("Erreur lors de la création du compte");
+      }
     } catch (err) {
       setError("Erreur de création de compte");
     } finally {
