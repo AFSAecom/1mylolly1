@@ -14,6 +14,28 @@ import {
 import PerfumeCard from "./PerfumeCard";
 import { supabase } from "@/lib/supabaseClient";
 
+// Simple debounce hook to delay invoking a callback until after a pause
+const useDebouncedCallback = (
+  callback: (value: string) => void,
+  delay: number,
+) => {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const debounced = useCallback(
+    (value: string) => {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => callback(value), delay);
+    },
+    [callback, delay],
+  );
+
+  useEffect(() => {
+    return () => clearTimeout(timeoutRef.current);
+  }, [debounced]);
+
+  return debounced;
+};
+
 interface PerfumeType {
   codeProduit: string;
   nomLolly: string;
@@ -45,6 +67,11 @@ const PerfumeCatalog = ({
   const [catalogPerfumes, setCatalogPerfumes] = useState<PerfumeType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSetSearchTerm = useDebouncedCallback(
+    (value: string) => setSearchTerm(value),
+    300,
+  );
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedSaison, setSelectedSaison] = useState<string | null>(null);
   const [selectedFamille, setSelectedFamille] = useState<string | null>(null);
@@ -219,6 +246,14 @@ const PerfumeCatalog = ({
     return searchMatch && genreMatch && saisonMatch && familleMatch;
   });
 
+  const handleSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedSetSearchTerm(value);
+  };
+
   const handleGenreSelect = (genre: string) => {
     setSelectedGenre(selectedGenre === genre ? null : genre);
   };
@@ -232,6 +267,7 @@ const PerfumeCatalog = ({
   };
 
   const clearFilters = () => {
+    setSearchInput("");
     setSearchTerm("");
     setSelectedGenre(null);
     setSelectedSaison(null);
@@ -266,8 +302,8 @@ const PerfumeCatalog = ({
           <Input
             type="text"
             placeholder="Rechercher par nom, marque, notes olfactives..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchInput}
+            onChange={handleSearchChange}
             className="pl-10 border-[#D4C2A1] bg-white focus:border-[#CE8F8A] text-[#805050]"
           />
         </div>
