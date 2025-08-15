@@ -64,7 +64,8 @@ const AdminSpace = () => {
   const { register } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
+  const today = new Date().toISOString().split("T")[0];
+  const [dateFilter, setDateFilter] = useState({ start: today, end: today });
   const [showLogin, setShowLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showNewProduct, setShowNewProduct] = useState(false);
@@ -110,6 +111,7 @@ const AdminSpace = () => {
   const [promotions, setPromotions] = useState([]);
 
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
 
   // Enhanced data loading with RLS diagnostics
   const loadData = async () => {
@@ -462,6 +464,19 @@ const AdminSpace = () => {
     return () =>
       window.removeEventListener("newSaleRecorded", handleNewSale);
   }, []);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    if (dateFilter.start && dateFilter.end) {
+      setFilteredOrders(
+        orders.filter(
+          (o) => o.date >= dateFilter.start && o.date <= dateFilter.end,
+        ),
+      );
+    } else {
+      setFilteredOrders(orders.filter((o) => o.date === today));
+    }
+  }, [orders, dateFilter.start, dateFilter.end]);
 
   const handleExportExcel = (type) => {
     // Create CSV content with UTF-8 BOM for Excel compatibility
@@ -3327,7 +3342,7 @@ const AdminSpace = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map((sale) => (
+                        {filteredOrders.map((sale) => (
                           <TableRow key={sale.id}>
                             <TableCell>{sale.date}</TableCell>
                             <TableCell>{sale.client}</TableCell>
