@@ -1,5 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { login as authLogin, register as authRegister } from '@/services/auth/authService';
+
+export interface User extends SupabaseUser {
+  nom?: string;
+  prenom?: string;
+  telephone?: string;
+  whatsapp?: string;
+  adresse?: string;
+  codeClient?: string;
+}
 import { supabase } from '@/lib/supabaseClient';
 
 type AuthCtx = {
@@ -10,6 +20,8 @@ type AuthCtx = {
   updateUser: (u: Partial<User>) => void;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  login: (email: string, password: string) => Promise<User | null>;
+  register: (data: any) => Promise<User | null>;
 };
 
 const Ctx = createContext<AuthCtx>({
@@ -20,6 +32,8 @@ const Ctx = createContext<AuthCtx>({
   updateUser: () => {},
   signOut: async () => {},
   refresh: async () => {},
+  login: async () => null,
+  register: async () => null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -34,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase.auth.exchangeCodeForSession(code).then(({ data }) => {
         if (data?.session) {
           setSession(data.session);
-          setUser(data.session.user);
+          setUser(data.session.user as User);
           window.history.replaceState({}, '', window.location.pathname);
         }
       });
@@ -42,8 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // getSessionFromUrl is not typed in our Supabase client, so cast to any
       (supabase.auth as any).getSessionFromUrl().then(({ data }: { data: { session: Session | null } }) => {
         if (data?.session) {
-          setSession(data.session);
-          setUser(data.session.user);
+          setSession(data.session); 
+          setUser(data.session.user as User); 
           window.history.replaceState({}, '', window.location.pathname);
         }
       });
@@ -56,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data } = await supabase.auth.getSession();
         if (!mounted) return;
         setSession(data.session ?? null);
-        setUser(data.session?.user ?? null);
+        setUser((data.session?.user as User) ?? null);
       } catch (error) {
         console.error('Error fetching session', error);
         alert('Erreur lors de la récupération de la session.');
@@ -67,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
-      setUser(newSession?.user ?? null);
+      setUser((newSession?.user as User) ?? null);
       window.dispatchEvent(new CustomEvent('auth:changed'));
     });
 
@@ -90,11 +104,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data } = await supabase.auth.getSession();
         setSession(data.session ?? null);
-        setUser(data.session?.user ?? null);
+        setUser((data.session?.user as User) ?? null);
       } catch (error) {
         console.error('Error refreshing session', error);
         alert('Erreur lors de la récupération de la session.');
       }
+    },
+    login: async (email, password) => {
+      const logged = await authLogin(email, password);
+      if (logged) setUser(logged as User);
+      return logged as User | null;
+    },
+    register: async (data) => {
+      const registered = await authRegister(data as any);
+      if (registered) setUser(registered as User);
+      return registered as User | null;
     },
   }), [user, session, loading]);
 
