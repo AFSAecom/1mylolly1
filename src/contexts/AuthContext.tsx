@@ -1,6 +1,19 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
+import { login as loginService, register as registerService } from '@/services/auth/authService';
+
+// Extend Supabase's User type with application-specific fields.
+interface User extends SupabaseUser {
+  nom?: string;
+  prenom?: string;
+  telephone?: string;
+  whatsapp?: string;
+  dateNaissance?: string;
+  adresse?: string;
+  role?: string;
+  codeClient?: string;
+}
 
 type AuthCtx = {
   user: User | null;
@@ -10,6 +23,8 @@ type AuthCtx = {
   updateUser: (u: Partial<User>) => void;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (data: any) => Promise<boolean>;
 };
 
 const Ctx = createContext<AuthCtx>({
@@ -20,6 +35,8 @@ const Ctx = createContext<AuthCtx>({
   updateUser: () => {},
   signOut: async () => {},
   refresh: async () => {},
+  login: async () => false,
+  register: async () => false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -95,6 +112,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error refreshing session', error);
         alert('Erreur lors de la récupération de la session.');
       }
+    },
+    login: async (email, password) => {
+      const res = await loginService(email, password);
+      if (res) {
+        setUser(res as User);
+        return true;
+      }
+      return false;
+    },
+    register: async (data: any) => {
+      const res = await registerService(data);
+      if (res) {
+        setUser(res as User);
+        return true;
+      }
+      return false;
     },
   }), [user, session, loading]);
 
