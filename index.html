@@ -6,14 +6,7 @@
     <title>Lolly</title>
 
     <!-- Fallback client: si on est à la racine, on envoie vers /client -->
-    <script>
-      (function () {
-        try {
-          var p = location.pathname.replace(/\/+$/, '');
-          if (p === '' || p === '/') location.replace('/client');
-        } catch (e) {}
-      })();
-    </script>
+    <!-- script removed to allow root page display without redirection -->
   </head>
   <body>
     <div id="root"></div>
