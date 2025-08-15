@@ -375,6 +375,14 @@ const AdminSpace = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleNewSale = (e) =>
+      setOrders((prev) => [e.detail, ...prev]);
+    window.addEventListener("newSaleRecorded", handleNewSale);
+    return () =>
+      window.removeEventListener("newSaleRecorded", handleNewSale);
+  }, []);
+
   const handleExportExcel = (type) => {
     // Create CSV content with UTF-8 BOM for Excel compatibility
     let csvContent = "\uFEFF"; // UTF-8 BOM
