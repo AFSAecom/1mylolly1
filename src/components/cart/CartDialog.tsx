@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShoppingBag, Trash2, Plus, Minus, Edit } from "lucide-react";
+import { ShoppingBag, Trash2, Plus, Minus, Edit, Loader2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginDialog from "@/components/auth/LoginDialog";
@@ -31,6 +31,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedUser, setEditedUser] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -46,6 +47,8 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
   };
 
   const handleFinalizeOrder = async () => {
+    setIsSubmitting(true);
+
     // Send notifications to admin and conseillère
     console.log(
       "Notification envoyée à l'admin et à la conseillère: Nouvelle commande reçue",
@@ -145,6 +148,9 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       }, 2000);
     } catch (err) {
       console.error("Error finalizing order:", err);
+      alert("Erreur lors de la validation de la commande");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -538,10 +544,17 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
               </Button>
               <Button
                 onClick={handleFinalizeOrder}
-                disabled={!user?.adresse}
+                disabled={!user?.adresse || isSubmitting}
                 className="flex-1 bg-[#805050] hover:bg-[#805050]/90 text-white"
               >
-                Conclure la vente
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Traitement...
+                  </>
+                ) : (
+                  "Conclure la vente"
+                )}
               </Button>
             </div>
           </div>
