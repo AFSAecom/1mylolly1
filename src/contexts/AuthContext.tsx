@@ -24,6 +24,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code') ?? params.get('token');
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ data }) => {
+        if (data?.session) {
+          setSession(data.session);
+          setUser(data.session.user);
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      });
+    }
+
     let mounted = true;
 
     (async () => {
