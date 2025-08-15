@@ -4,12 +4,22 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": "vite",
+
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/client",
+      "permanent": true
+    }
+  ],
+
   "rewrites": [
     {
-      "source": "/((?!api/.*).*)",
+      "source": "/((?!api/.*|$).*)",
       "destination": "/index.html"
     }
   ],
+
   "headers": [
     {
       "source": "/assets/(.*)",
