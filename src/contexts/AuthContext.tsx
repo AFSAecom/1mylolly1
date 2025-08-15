@@ -1,103 +1,71 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import {
-  login as authLogin,
-  register as authRegister,
-  logout as authLogout,
-  type User,
-} from "@/services/auth/authService";
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
-interface AuthContextType {
+type AuthCtx = {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (
-    userData: Omit<User, "id" | "role"> & {
-      password: string;
-      role?: "client" | "conseillere" | "admin";
-    },
-  ) => Promise<boolean>;
-  logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  session: Session | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+const Ctx = createContext<AuthCtx>({
+  user: null,
+  session: null,
+  loading: true,
+  signOut: async () => {},
+  refresh: async () => {},
+});
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    const authUser = await authLogin(email, password);
-    if (!authUser) return false;
+  // charge la session au démarrage
+  useEffect(() => {
+    let mounted = true;
 
-    setUser(authUser);
-    localStorage.setItem("current-user", JSON.stringify(authUser));
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      setSession(data.session ?? null);
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    })();
 
-    const clientKey = `client-favorites-${authUser.codeClient || authUser.email}`;
-    const clientFavorites = localStorage.getItem(clientKey);
-    if (clientFavorites) {
-      localStorage.setItem("lolly-favorites", clientFavorites);
-      window.dispatchEvent(new CustomEvent("favoritesUpdated"));
-    }
+    // écoute les changements (login, logout, refresh)
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      // signale à l'app (utile si certains composants écoutent)
+      window.dispatchEvent(new CustomEvent('auth:changed'));
+    });
 
-    window.dispatchEvent(new CustomEvent("loginSuccess", { detail: authUser }));
-    return true;
-  };
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
-  const register = async (
-    userData: Omit<User, "id" | "role"> & {
-      password: string;
-      role?: "client" | "conseillere" | "admin";
+  const value = useMemo<AuthCtx>(() => ({
+    user,
+    session,
+    loading,
+    signOut: async () => {
+      await supabase.auth.signOut();
     },
-  ): Promise<boolean> => {
-    const newUser = await authRegister(userData);
-    if (!newUser) return false;
+    refresh: async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session ?? null);
+      setUser(data.session?.user ?? null);
+    },
+  }), [user, session, loading]);
 
-    setUser(newUser);
-    return true;
-  };
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
 
-  const logout = async () => {
-    await authLogout();
-    setUser(null);
-    localStorage.removeItem("current-user");
-    localStorage.removeItem("lolly-favorites");
-  };
-
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      localStorage.setItem("current-user", JSON.stringify(updatedUser));
-      window.dispatchEvent(
-        new CustomEvent("userUpdated", { detail: updatedUser }),
-      );
-    }
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        register,
-        logout,
-        updateUser,
-        isAuthenticated: !!user,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+export function useAuth() {
+  return useContext(Ctx);
+}
