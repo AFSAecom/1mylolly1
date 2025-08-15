@@ -107,6 +107,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({
         setRegMsg(
           "Inscription créée. Vérifie ta boîte mail pour confirmer l'adresse."
         );
+        onOpenChange(false);
         return;
       }
 
