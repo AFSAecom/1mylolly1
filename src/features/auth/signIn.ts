@@ -2,11 +2,12 @@ import { supabase } from '../../lib/supabaseClient';
 
 /**
  * Connexion puis "ensure profile":
- * - se connecte via Auth
- * - upsert du profil dans public.users AVEC email (id = auth.users.id)
+ * - login via Auth
+ * - si le profil n'existe pas, on le crée avec les colonnes FR/EN
+ *   (id = auth.users.id, email obligatoire)
  */
 export async function handleSignIn(email: string, password: string) {
-  // 1) Connexion Auth (email/mot de passe)
+  // 1) Auth email/mot de passe
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { ok: false, step: 'auth', error: error.message };
 
@@ -20,21 +21,25 @@ export async function handleSignIn(email: string, password: string) {
     .maybeSingle();
   if (selErr) return { ok: false, step: 'selectProfile', error: selErr.message };
 
-  // 3) Créer / mettre à jour le profil AVEC email (colonne NOT NULL chez toi)
+  // 3) Créer le profil s'il n'existe pas (avec email + colonnes FR/EN)
   if (!profile) {
     const { error: insErr } = await supabase.from('users').insert({
       id: user.id,
-      email: user.email,            // <-- IMPORTANT
+      email: user.email,      // ← essentiel si email est NOT NULL/UNIQUE
+      // colonnes anglaises
       first_name: null,
-      last_name: null,
-      phone: null,
-      whatsapp: null,
+      last_name:  null,
+      address:    null,
+      phone:      null,
+      whatsapp:   null,
       birth_date: null,
-      address: null,
+      // colonnes françaises (compat)
+      prenom: null,
+      nom:    null,
     });
     if (insErr) return { ok: false, step: 'insertProfile', error: insErr.message };
   } else if (!profile.email && user.email) {
-    // au cas où un vieux profil existe sans email
+    // au cas où un ancien profil existe sans email
     const { error: updErr } = await supabase
       .from('users')
       .update({ email: user.email })
