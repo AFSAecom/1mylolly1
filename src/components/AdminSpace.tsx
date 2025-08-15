@@ -84,7 +84,9 @@ const AdminSpace = () => {
   const [selectedProductForRestock, setSelectedProductForRestock] =
     useState(null);
   const [editFormData, setEditFormData] = useState({});
-  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(
+    null,
+  );
   const [imagePreview, setImagePreview] = useState("");
   const [newUserFormData, setNewUserFormData] = useState({
     prenom: "",
@@ -4083,11 +4085,34 @@ const AdminSpace = () => {
             </div>
             <div>
               <Label>Image du produit</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                className="border-[#D4C2A1]"
-              />
+              <div className="space-y-2">
+                {imagePreview && (
+                  <img
+                    src={imagePreview}
+                    alt="Prévisualisation"
+                    className="w-full h-48 object-cover rounded border"
+                  />
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  className="border-[#D4C2A1]"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    setSelectedImageFile(file || null);
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const result = reader.result as string;
+                        setImagePreview(result);
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      setImagePreview("");
+                    }
+                  }}
+                />
+              </div>
             </div>
             <div>
               <Label>Contenances et prix (TND)</Label>
@@ -4179,6 +4204,28 @@ const AdminSpace = () => {
                       document.querySelector("#new-product-form"),
                     );
 
+                    // Handle image upload if a file is selected
+                    let imageUrl =
+                      imagePreview ||
+                      "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80";
+                    if (selectedImageFile) {
+                      const fileExt = selectedImageFile.name.split(".").pop();
+                      const fileName = `${Date.now()}.${fileExt}`;
+                      const filePath = `products/${fileName}`;
+                      const { data: uploadData, error: uploadError } =
+                        await supabase.storage
+                          .from("product-images")
+                          .upload(filePath, selectedImageFile);
+                      if (!uploadError && uploadData) {
+                        const {
+                          data: { publicUrl },
+                        } = supabase.storage
+                          .from("product-images")
+                          .getPublicUrl(filePath);
+                        imageUrl = publicUrl || imagePreview;
+                      }
+                    }
+
                     // Create product in Supabase
                     const { data: newProduct, error: productError } =
                       await supabase
@@ -4218,8 +4265,7 @@ const AdminSpace = () => {
                           description:
                             (formData.get("description") as string) ||
                             "Description du produit",
-                          image_url:
-                            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+                          image_url: imageUrl,
                           active: true,
                         })
                         .select()
@@ -4284,6 +4330,8 @@ const AdminSpace = () => {
                     await loadData();
 
                     alert("Produit créé avec succès dans Supabase!");
+                    setSelectedImageFile(null);
+                    setImagePreview("");
                     setShowNewProduct(false);
                   } catch (error) {
                     console.error("Error creating product:", error);
