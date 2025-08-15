@@ -286,9 +286,9 @@ const AdminSpace = () => {
       // STEP 5: Load orders (simplified)
       console.log("📋 Loading orders...");
       try {
-        const { data: ordersData, error: ordersError } = await supabase.from(
-          "orders",
-        ).select(`
+        const { data: ordersData, error: ordersError } = await supabase
+          .from("orders")
+          .select(`
             *,
             users!orders_user_id_fkey(prenom, nom),
             users!orders_conseillere_id_fkey(prenom, nom),
@@ -303,36 +303,90 @@ const AdminSpace = () => {
 
         if (ordersError) {
           console.error("❌ Orders error:", ordersError);
+
+          if (
+            ordersError.code === "42501" ||
+            ordersError.message?.includes("row-level security") ||
+            ordersError.message?.includes("policy") ||
+            ordersError.message?.includes("permission denied")
+          ) {
+            console.log(
+              "🔒 RLS Error detected! Showing RLS diagnostic info...",
+            );
+
+            const rlsErrorMessage =
+              `🔒 PROBLÈME RLS (Row Level Security) DÉTECTÉ\n\n` +
+              `❌ Erreur: ${ordersError.message}\n\n` +
+              `🔧 SOLUTIONS RECOMMANDÉES:\n\n` +
+              `SOLUTION 1 (Recommandée pour développement):\n` +
+              `Désactiver RLS sur la table orders:\n` +
+              `ALTER TABLE orders DISABLE ROW LEVEL SECURITY;\n\n` +
+              `SOLUTION 2 (Alternative):\n` +
+              `Créer une politique d'accès public:\n` +
+              `CREATE POLICY "Public read access" ON orders FOR SELECT USING (true);\n\n` +
+              `📋 ÉTAPES À SUIVRE:\n` +
+              `1. Ouvrez l'éditeur SQL de Supabase\n` +
+              `2. Exécutez une des commandes SQL ci-dessus\n` +
+              `3. Revenez ici et cliquez sur "Actualiser"\n\n` +
+              `💡 Ces commandes SQL sont copiées dans le presse-papiers.`;
+
+            const sqlCommands =
+              `-- SOLUTION 1: Désactiver RLS (recommandé pour développement)\nALTER TABLE orders DISABLE ROW LEVEL SECURITY;\n\n-- OU SOLUTION 2: Créer une politique d'accès public\nCREATE POLICY "Public read access" ON orders FOR SELECT USING (true);\n\n-- Vérifier que la table existe et contient des données\nSELECT * FROM orders LIMIT 5;`;
+
+            try {
+              await navigator.clipboard.writeText(sqlCommands);
+              console.log("📋 SQL commands copied to clipboard");
+            } catch (clipboardError) {
+              console.log("⚠️ Could not copy to clipboard:", clipboardError);
+            }
+
+            alert(rlsErrorMessage);
+          } else {
+            alert(
+              "❌ Erreur lors du chargement des commandes: " +
+                ordersError.message,
+            );
+          }
+          setOrders([]);
         } else {
-          const formattedOrders = (ordersData || []).map((order) => ({
-            id: order.id,
-            date:
-              order.created_at?.split("T")[0] ||
-              new Date().toISOString().split("T")[0],
-            client:
-              order.users &&
-              typeof order.users === "object" &&
-              !Array.isArray(order.users) &&
-              "prenom" in order.users &&
-              "nom" in order.users
-                ? `${(order.users as { prenom: string; nom: string }).prenom} ${(order.users as { prenom: string; nom: string }).nom}`
-                : "Client inconnu",
-            codeClient: order.code_client,
-            product:
-              order.order_items?.[0]?.product_variants?.products?.nom_lolly ||
-              "Produit inconnu",
-            codeArticle:
-              order.order_items?.[0]?.product_variants?.ref_complete || "N/A",
-            amount: order.total_amount,
-            conseillere:
-              order.users &&
-              typeof order.users === "object" &&
-              !Array.isArray(order.users) &&
-              "prenom" in order.users &&
-              "nom" in order.users
-                ? `${(order.users as { prenom: string; nom: string }).prenom} ${(order.users as { prenom: string; nom: string }).nom}`
-                : "N/A",
-          }));
+          const formattedOrders = (ordersData || []).flatMap((order) =>
+            (order.order_items || []).map((item) => ({
+              id: `${order.id}-${item.id}`,
+              date:
+                order.created_at?.split("T")[0] ??
+                new Date().toISOString().split("T")[0],
+              client:
+                order.users &&
+                typeof order.users === "object" &&
+                !Array.isArray(order.users) &&
+                "prenom" in order.users &&
+                "nom" in order.users
+                  ? `${
+                      (order.users as { prenom: string; nom: string }).prenom
+                    } ${
+                      (order.users as { prenom: string; nom: string }).nom
+                    }`
+                  : "Client inconnu",
+              codeClient: order.code_client,
+              product:
+                item.product_variants?.products?.nom_lolly ??
+                "Produit inconnu",
+              codeArticle: item.product_variants?.ref_complete ?? "N/A",
+              amount: item.total_price,
+              conseillere:
+                order.users &&
+                typeof order.users === "object" &&
+                !Array.isArray(order.users) &&
+                "prenom" in order.users &&
+                "nom" in order.users
+                  ? `${
+                      (order.users as { prenom: string; nom: string }).prenom
+                    } ${
+                      (order.users as { prenom: string; nom: string }).nom
+                    }`
+                  : "N/A",
+            })),
+          );
           setOrders(formattedOrders);
           console.log("✅ Orders loaded:", formattedOrders.length);
         }
