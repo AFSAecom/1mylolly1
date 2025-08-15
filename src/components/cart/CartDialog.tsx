@@ -85,13 +85,22 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       );
 
       // 3. Insert order items
-      const orderItems = items.map((item) => ({
-        order_id: orderId,
-        product_variant_id: variantMap.get(item.refComplete),
-        quantity: item.quantity,
-        unit_price: item.prix,
-        total_price: item.prix * item.quantity,
-      }));
+      const orderItems = [] as any[];
+      for (const item of items) {
+        const variantId = variantMap.get(item.refComplete);
+        if (!variantId) {
+          alert("Référence produit introuvable");
+          setIsSubmitting(false);
+          return;
+        }
+        orderItems.push({
+          order_id: orderId,
+          product_variant_id: variantId,
+          quantity: item.quantity,
+          unit_price: item.prix,
+          total_price: item.prix * item.quantity,
+        });
+      }
       const { error: itemsError } = await supabase
         .from("order_items")
         .insert(orderItems);

@@ -227,7 +227,7 @@ const ClientSpace = () => {
       imageURL: perfume.imageURL,
       contenances: [
         {
-          refComplete: `${perfume.codeProduit}-15`,
+          refComplete: `${perfume.codeProduit}-15ml`,
           contenance: 15,
           unite: "ml",
           prix: 19.9,
@@ -235,7 +235,7 @@ const ClientSpace = () => {
           actif: true,
         },
         {
-          refComplete: `${perfume.codeProduit}-30`,
+          refComplete: `${perfume.codeProduit}-30ml`,
           contenance: 30,
           unite: "ml",
           prix: 29.9,
@@ -243,7 +243,7 @@ const ClientSpace = () => {
           actif: true,
         },
         {
-          refComplete: `${perfume.codeProduit}-50`,
+          refComplete: `${perfume.codeProduit}-50ml`,
           contenance: 50,
           unite: "ml",
           prix: 39.9,
@@ -425,7 +425,7 @@ const ClientSpace = () => {
                                 "Une fragrance élégante et raffinée.",
                               contenances: [
                                 {
-                                  refComplete: `${favorite.codeProduit}-15`,
+                                  refComplete: `${favorite.codeProduit}-15ml`,
                                   contenance: 15,
                                   unite: "ml",
                                   prix: 19.9,
@@ -433,7 +433,7 @@ const ClientSpace = () => {
                                   actif: true,
                                 },
                                 {
-                                  refComplete: `${favorite.codeProduit}-30`,
+                                  refComplete: `${favorite.codeProduit}-30ml`,
                                   contenance: 30,
                                   unite: "ml",
                                   prix: 29.9,
@@ -441,7 +441,7 @@ const ClientSpace = () => {
                                   actif: true,
                                 },
                                 {
-                                  refComplete: `${favorite.codeProduit}-50`,
+                                  refComplete: `${favorite.codeProduit}-50ml`,
                                   contenance: 50,
                                   unite: "ml",
                                   prix: 39.9,
@@ -721,7 +721,7 @@ const ClientSpace = () => {
                                     "Une fragrance élégante et raffinée.",
                                   contenances: [
                                     {
-                                      refComplete: `${favorite.codeProduit}-15`,
+                                      refComplete: `${favorite.codeProduit}-15ml`,
                                       contenance: 15,
                                       unite: "ml",
                                       prix: 19.9,
@@ -729,7 +729,7 @@ const ClientSpace = () => {
                                       actif: true,
                                     },
                                     {
-                                      refComplete: `${favorite.codeProduit}-30`,
+                                      refComplete: `${favorite.codeProduit}-30ml`,
                                       contenance: 30,
                                       unite: "ml",
                                       prix: 29.9,
@@ -737,7 +737,7 @@ const ClientSpace = () => {
                                       actif: true,
                                     },
                                     {
-                                      refComplete: `${favorite.codeProduit}-50`,
+                                      refComplete: `${favorite.codeProduit}-50ml`,
                                       contenance: 50,
                                       unite: "ml",
                                       prix: 39.9,
