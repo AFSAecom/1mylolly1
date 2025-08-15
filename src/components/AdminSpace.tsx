@@ -290,8 +290,8 @@ const AdminSpace = () => {
           .from("orders")
           .select(`
             *,
-            users!orders_user_id_fkey(prenom, nom),
-            users!orders_conseillere_id_fkey(prenom, nom),
+            client:users!orders_user_id_fkey(prenom, nom),
+            conseillere:users!orders_conseillere_id_fkey(prenom, nom),
             order_items(
               *,
               product_variants(
@@ -356,15 +356,15 @@ const AdminSpace = () => {
                 order.created_at?.split("T")[0] ??
                 new Date().toISOString().split("T")[0],
               client:
-                order.users &&
-                typeof order.users === "object" &&
-                !Array.isArray(order.users) &&
-                "prenom" in order.users &&
-                "nom" in order.users
+                order.client &&
+                typeof order.client === "object" &&
+                !Array.isArray(order.client) &&
+                "prenom" in order.client &&
+                "nom" in order.client
                   ? `${
-                      (order.users as { prenom: string; nom: string }).prenom
+                      (order.client as { prenom: string; nom: string }).prenom
                     } ${
-                      (order.users as { prenom: string; nom: string }).nom
+                      (order.client as { prenom: string; nom: string }).nom
                     }`
                   : "Client inconnu",
               codeClient: order.code_client,
@@ -374,15 +374,15 @@ const AdminSpace = () => {
               codeArticle: item.product_variants?.ref_complete ?? "N/A",
               amount: item.total_price,
               conseillere:
-                order.users &&
-                typeof order.users === "object" &&
-                !Array.isArray(order.users) &&
-                "prenom" in order.users &&
-                "nom" in order.users
+                order.conseillere &&
+                typeof order.conseillere === "object" &&
+                !Array.isArray(order.conseillere) &&
+                "prenom" in order.conseillere &&
+                "nom" in order.conseillere
                   ? `${
-                      (order.users as { prenom: string; nom: string }).prenom
+                      (order.conseillere as { prenom: string; nom: string }).prenom
                     } ${
-                      (order.users as { prenom: string; nom: string }).nom
+                      (order.conseillere as { prenom: string; nom: string }).nom
                     }`
                   : "N/A",
             })),
