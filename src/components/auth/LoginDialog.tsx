@@ -43,7 +43,11 @@ const LoginDialog: React.FC<LoginDialogProps> = ({
 
     setLoginBusy(false);
     if (!res.ok) {
-      setLoginMsg(`Connexion refusée (${res.step}) : ${res.error}`);
+      if (res.error === 'Email non confirmée. Vérifiez votre boîte de réception.') {
+        setLoginMsg(res.error);
+      } else {
+        setLoginMsg(`Connexion refusée (${res.step}) : ${res.error}`);
+      }
       return;
     }
     setLoginMsg("Connecté ✅");
