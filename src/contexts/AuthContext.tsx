@@ -23,7 +23,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // charge la session au démarrage
   useEffect(() => {
     let mounted = true;
 
@@ -35,11 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     })();
 
-    // écoute les changements (login, logout, refresh)
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      // signale à l'app (utile si certains composants écoutent)
       window.dispatchEvent(new CustomEvent('auth:changed'));
     });
 
@@ -53,9 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
-    signOut: async () => {
-      await supabase.auth.signOut();
-    },
+    signOut: async () => { await supabase.auth.signOut(); },
     refresh: async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session ?? null);
