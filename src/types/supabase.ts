@@ -178,6 +178,7 @@ export type Database = {
           genre: string
           id: string
           image_url: string | null
+          origin_country: string | null
           marque_inspire: string
           nom_lolly: string
           nom_parfum_inspire: string
@@ -203,6 +204,7 @@ export type Database = {
           genre: string
           id?: string
           image_url?: string | null
+          origin_country?: string | null
           marque_inspire: string
           nom_lolly: string
           nom_parfum_inspire: string
@@ -228,6 +230,7 @@ export type Database = {
           genre?: string
           id?: string
           image_url?: string | null
+          origin_country?: string | null
           marque_inspire?: string
           nom_lolly?: string
           nom_parfum_inspire?: string
