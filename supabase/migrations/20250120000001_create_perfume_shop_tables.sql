@@ -98,8 +98,12 @@ CREATE TABLE IF NOT EXISTS public.promotions (
 );
 
 -- (idempotence pour les promotions)
-ALTER TABLE public.promotions
-  ADD CONSTRAINT IF NOT EXISTS promotions_unique_nom_dates UNIQUE (nom, date_debut, date_fin);
+DO $$
+BEGIN
+  ALTER TABLE public.promotions
+    ADD CONSTRAINT promotions_unique_nom_dates UNIQUE (nom, date_debut, date_fin);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Create stock movements table for tracking inventory changes
 CREATE TABLE IF NOT EXISTS public.stock_movements (
