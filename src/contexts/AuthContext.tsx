@@ -6,6 +6,8 @@ type AuthCtx = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAuthenticated: boolean;
+  updateUser: (u: Partial<User>) => void;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -14,6 +16,8 @@ const Ctx = createContext<AuthCtx>({
   user: null,
   session: null,
   loading: true,
+  isAuthenticated: false,
+  updateUser: () => {},
   signOut: async () => {},
   refresh: async () => {},
 });
@@ -28,6 +32,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const code = params.get('code') ?? params.get('token');
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ data }) => {
+        if (data?.session) {
+          setSession(data.session);
+          setUser(data.session.user);
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      });
+    } else if (window.location.hash.includes('access_token')) {
+      // getSessionFromUrl is not typed in our Supabase client, so cast to any
+      (supabase.auth as any).getSessionFromUrl().then(({ data }: { data: { session: Session | null } }) => {
         if (data?.session) {
           setSession(data.session);
           setUser(data.session.user);
@@ -62,6 +75,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    isAuthenticated: !!session,
+    updateUser: (u) => {
+      setUser((prev) => (prev ? { ...prev, ...u } as User : prev));
+    },
     signOut: async () => { await supabase.auth.signOut(); },
     refresh: async () => {
       const { data } = await supabase.auth.getSession();
