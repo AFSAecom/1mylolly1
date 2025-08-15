@@ -58,7 +58,7 @@ import {
 } from "lucide-react";
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabaseClient";
 
 const AdminSpace = () => {
   const { register } = useAuth();

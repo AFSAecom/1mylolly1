@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import PerfumeCard from "./PerfumeCard";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabaseClient";
 
 interface PerfumeType {
   codeProduit: string;
