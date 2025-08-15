@@ -9,7 +9,16 @@ import { supabase } from '../../lib/supabaseClient';
 export async function handleSignIn(email: string, password: string) {
   // 1) Auth email/mot de passe
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { ok: false, step: 'auth', error: error.message };
+  if (error) {
+    if (error.message?.includes('Email not confirmed')) {
+      return {
+        ok: false,
+        step: 'auth',
+        error: 'Email non confirmée. Vérifiez votre boîte de réception.',
+      };
+    }
+    return { ok: false, step: 'auth', error: error.message };
+  }
 
   const { user } = data;
 
