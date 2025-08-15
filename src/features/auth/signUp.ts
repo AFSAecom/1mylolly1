@@ -14,9 +14,9 @@ export type SignUpPayload = {
 /**
  * Inscription :
  * - crée le compte Auth
- * - si Confirm email = ON : pas de session → l’utilisateur confirme via email
+ * - si Confirm email = ON : pas de session → on attend le clic mail (redirigé vers /client)
  * - si Confirm email = OFF : session active → on crée le profil immédiatement
- * - redirection email vers /client (pas /auth/callback)
+ * - pour contourner les contraintes NOT NULL héritées, on met '' sur prenom/nom si absents
  */
 export async function handleSignUp(p: SignUpPayload) {
   const redirectUrl =
@@ -38,22 +38,22 @@ export async function handleSignUp(p: SignUpPayload) {
     return { ok: true, needEmailConfirmation: true };
   }
 
-  // 3) Confirm email = OFF → on a une session : on crée le profil (FR/EN)
+  // 3) Confirm email = OFF → on a une session : créer le profil
   const user = data.user;
 
   const { error: profileErr } = await supabase.from('users').insert({
     id: user.id,
-    email: user.email,              // ← important
-    // valeurs venant du formulaire (si présentes)
+    email: user.email ?? '',
+    // valeurs issues du formulaire
     first_name: p.prenom ?? null,
     last_name:  p.nom ?? null,
     address:    p.adresse ?? null,
     phone:      p.telephone ?? null,
     whatsapp:   p.whatsapp ?? null,
     birth_date: p.dateNaissance ?? null,
-    // doublon FR (compat)
-    prenom: p.prenom ?? null,
-    nom:    p.nom ?? null,
+    // doublon FR (et valeurs de secours pour NOT NULL éventuel)
+    prenom: p.prenom ?? '',
+    nom:    p.nom ?? '',
   });
   if (profileErr) return { ok: false, step: 'insertProfile', error: profileErr.message };
 
