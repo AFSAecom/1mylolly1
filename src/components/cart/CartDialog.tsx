@@ -74,7 +74,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       const orderId = newOrder.id;
 
       // 2. Fetch product variant ids for items in cart
-      const refs = items.map((item) => item.refComplete.replace(/ml$/, ""));
+      const refs = items.map((item) => item.refComplete);
       const { data: variants, error: variantError } = await supabase
         .from("product_variants")
         .select("id, ref_complete, stock_actuel")
@@ -82,7 +82,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       if (variantError) throw variantError;
       const variantMap = new Map(
         variants.map((v: any) => [
-          v.ref_complete.replace(/ml$/, ""),
+          v.ref_complete,
           { id: v.id, stock_actuel: v.stock_actuel },
         ]),
       );
@@ -90,9 +90,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       // 3. Insert order items
       const orderItems = [] as any[];
       for (const item of items) {
-        const variant = variantMap.get(
-          item.refComplete.replace(/ml$/, ""),
-        );
+        const variant = variantMap.get(item.refComplete);
         if (!variant) {
           alert("Référence produit introuvable");
           setIsSubmitting(false);
@@ -116,9 +114,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       const movementIds: string[] = [];
       try {
         for (const item of items) {
-          const variant = variantMap.get(
-            item.refComplete.replace(/ml$/, ""),
-          );
+          const variant = variantMap.get(item.refComplete);
           if (!variant) continue;
           const previousStock = variant.stock_actuel || 0;
           const newStock = previousStock - item.quantity;
