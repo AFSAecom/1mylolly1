@@ -15,7 +15,7 @@ import { ShoppingBag, Trash2, Plus, Minus, Edit, Loader2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginDialog from "@/components/auth/LoginDialog";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabaseClient";
 
 interface CartDialogProps {
   open: boolean;
