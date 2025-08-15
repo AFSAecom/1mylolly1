@@ -74,20 +74,22 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       const orderId = newOrder.id;
 
       // 2. Fetch product variant ids for items in cart
-      const refs = items.map((item) => item.refComplete);
+      const refs = items.map((item) => item.refComplete.replace(/ml$/, ""));
       const { data: variants, error: variantError } = await supabase
         .from("product_variants")
         .select("id, ref_complete")
         .in("ref_complete", refs);
       if (variantError) throw variantError;
       const variantMap = new Map(
-        variants.map((v: any) => [v.ref_complete, v.id]),
+        variants.map((v: any) => [v.ref_complete.replace(/ml$/, ""), v.id]),
       );
 
       // 3. Insert order items
       const orderItems = [] as any[];
       for (const item of items) {
-        const variantId = variantMap.get(item.refComplete);
+        const variantId = variantMap.get(
+          item.refComplete.replace(/ml$/, ""),
+        );
         if (!variantId) {
           alert("Référence produit introuvable");
           setIsSubmitting(false);
