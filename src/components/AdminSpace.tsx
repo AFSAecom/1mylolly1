@@ -376,8 +376,28 @@ const AdminSpace = () => {
   }, []);
 
   useEffect(() => {
-    const handleNewSale = (e) =>
-      setOrders((prev) => [e.detail, ...prev]);
+    const handleNewSale = (e: any) => {
+      // If the event contains a products array, expand each item into its own entry
+      if (Array.isArray(e.detail?.products)) {
+        const entries = e.detail.products.map((p: any, index: number) => ({
+          id: `${Date.now()}-${index}-${p.codeArticle}`,
+          date: e.detail.date,
+          client: e.detail.client,
+          codeClient: e.detail.codeClient,
+          product: p.product,
+          codeArticle: p.codeArticle,
+          amount: p.amount,
+          conseillere: p.conseillere || "N/A",
+        }));
+        setOrders((prev) => [...entries, ...prev]);
+      } else {
+        const sale = {
+          ...e.detail,
+          id: e.detail?.id ?? `${Date.now()}`,
+        };
+        setOrders((prev) => [sale, ...prev]);
+      }
+    };
     window.addEventListener("newSaleRecorded", handleNewSale);
     return () =>
       window.removeEventListener("newSaleRecorded", handleNewSale);
