@@ -15,6 +15,7 @@ import { ShoppingBag, Trash2, Plus, Minus, Edit } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginDialog from "@/components/auth/LoginDialog";
+import { supabase } from "@/lib/supabase";
 
 interface CartDialogProps {
   open: boolean;
@@ -24,7 +25,7 @@ interface CartDialogProps {
 const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
   const { items, removeFromCart, updateQuantity, getTotalPrice, clearCart } =
     useCart();
-  const { isAuthenticated, user, updateUser } = useAuth();
+  const { isAuthenticated, user, updateUser } = useAuth() as any;
   const [showLogin, setShowLogin] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -44,7 +45,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
     }
   };
 
-  const handleFinalizeOrder = () => {
+  const handleFinalizeOrder = async () => {
     // Send notifications to admin and conseillère
     console.log(
       "Notification envoyée à l'admin et à la conseillère: Nouvelle commande reçue",
@@ -73,6 +74,25 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
     );
     existingOrders.unshift(orderData);
     localStorage.setItem("client-orders", JSON.stringify(existingOrders));
+
+    // Persist order in Supabase
+    try {
+      const { error } = await supabase.from("orders").insert(
+        orderData.items.map((item) => ({
+          user_id: user?.id,
+          date: orderData.date,
+          code_article: item.codeArticle,
+          amount: item.amount,
+          quantity: item.quantity,
+          code_client: orderData.codeClient,
+        })) as any,
+      );
+      if (error) {
+        console.error("Error inserting order into Supabase:", error);
+      }
+    } catch (err) {
+      console.error("Unexpected error inserting order into Supabase:", err);
+    }
 
     // Dispatch event to notify admin space
     const adminEvent = new CustomEvent("newSaleRecorded", {
