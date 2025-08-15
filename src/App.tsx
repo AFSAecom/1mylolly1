@@ -10,6 +10,8 @@ import { FavoritesProvider } from "./contexts/FavoritesContext";
 import routes from "tempo-routes";
 
 function App() {
+  const tempoRoutes =
+    import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
   return (
     <AuthProvider>
       <CartProvider>
@@ -22,7 +24,7 @@ function App() {
                 <Route path="/conseillere" element={<ConseillerSpace />} />
                 <Route path="/admin" element={<AdminSpace />} />
               </Routes>
-              {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+              {tempoRoutes}
             </>
           </Suspense>
         </FavoritesProvider>
