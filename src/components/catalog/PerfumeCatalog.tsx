@@ -50,16 +50,14 @@ const PerfumeCatalog = ({
   const [selectedFamille, setSelectedFamille] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const hasFetchedRef = useRef(false);
+  const loadedRef = useRef(false);
 
   // Function to load products directly from Supabase
-  const loadProductsFromSupabase = useCallback(
-    async (force = false) => {
-      if (hasFetchedRef.current && !force) {
-        console.log("⏭️ Products already loaded, skipping fetch");
-        return;
-      }
-      hasFetchedRef.current = true;
+  const loadProductsFromSupabase = useCallback(async () => {
+    if (loadedRef.current) {
+      return;
+    }
+    loadedRef.current = true;
 
       try {
         setLoading(true);
@@ -116,24 +114,22 @@ const PerfumeCatalog = ({
           console.log("No products found in Supabase, using default perfumes");
           setCatalogPerfumes(defaultPerfumes);
         }
-      } catch (error) {
-        console.error("Error loading products from Supabase:", error);
-        setCatalogPerfumes(defaultPerfumes);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [includeInactive],
-  );
+    } catch (error) {
+      console.error("Error loading products from Supabase:", error);
+      setCatalogPerfumes(defaultPerfumes);
+    } finally {
+      setLoading(false);
+    }
+  }, [includeInactive]);
 
   // Load products on component mount
   useEffect(() => {
     if (perfumes) {
       setCatalogPerfumes(perfumes);
       setLoading(false);
-      hasFetchedRef.current = true;
+      loadedRef.current = true;
     } else {
-      hasFetchedRef.current = false;
+      loadedRef.current = false;
       loadProductsFromSupabase();
     }
   }, [perfumes, includeInactive, loadProductsFromSupabase]);
@@ -144,13 +140,15 @@ const PerfumeCatalog = ({
       console.log(
         "🔄 Catalog update event received, reloading from Supabase...",
       );
-      loadProductsFromSupabase(true);
+      loadedRef.current = false;
+      loadProductsFromSupabase();
     };
 
     const handleCatalogClear = () => {
       console.log("🗑️ Catalog clear event received, clearing and reloading...");
       setCatalogPerfumes([]);
-      loadProductsFromSupabase(true);
+      loadedRef.current = false;
+      loadProductsFromSupabase();
     };
 
     window.addEventListener("catalogUpdated", handleCatalogUpdate);
