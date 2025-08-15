@@ -12,28 +12,35 @@ export type SignUpPayload = {
 };
 
 export async function handleSignUp(p: SignUpPayload) {
-  // 1) créer le compte auth
-  const { error: signUpError } = await supabase.auth.signUp({
+  // URL stable pour la redirection email (si confirm email = ON)
+  const redirectUrl =
+    (import.meta as any).env?.VITE_SITE_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : '');
+
+  // 1) Créer le compte
+  const { data, error } = await supabase.auth.signUp({
     email: p.email,
     password: p.password,
+    options: {
+      // si la confirmation d’email est activée, Supabase redirigera ici après clic
+      emailRedirectTo: redirectUrl ? `${redirectUrl}/auth/callback` : undefined,
+    },
   });
-  if (signUpError) {
-    return { ok: false, step: 'signUp', error: signUpError.message };
+
+  if (error) {
+    // Exemple d’erreurs possibles : throttle (429), email désactivé, etc.
+    return { ok: false, step: 'signUp', error: error.message };
   }
 
-  // 2) récupérer l'utilisateur (session requise pour insérer le profil)
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
-  if (userErr) return { ok: false, step: 'getUser', error: userErr.message };
-
-  // si confirmation e-mail = ON, user sera null ici → on créera le profil au 1er login
-  if (!user) {
+  // 2) Si la confirmation email est ON, data.session === null
+  // => on n'essaie PAS de lire l'utilisateur, on demande juste de confirmer l'email
+  if (!data?.session || !data?.user) {
     return { ok: true, needEmailConfirmation: true };
   }
 
-  // 3) créer le profil lié (public.users)
+  // 3) Confirmation email OFF : on a déjà une session => créer le profil lié
+  const user = data.user;
+
   const { error: profileErr } = await supabase.from('users').insert({
     id: user.id, // FK vers auth.users.id
     first_name: p.prenom ?? null,
