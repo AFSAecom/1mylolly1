@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import HomeLayout from "./HomeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -84,8 +84,12 @@ const AdminSpace = () => {
   const [selectedProductForRestock, setSelectedProductForRestock] =
     useState(null);
   const [editFormData, setEditFormData] = useState({});
-  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(
+    null,
+  );
   const [imagePreview, setImagePreview] = useState("");
+  const newProductFormRef = useRef<HTMLFormElement>(null);
+  const newProductImageRef = useRef<HTMLInputElement>(null);
   const [newUserFormData, setNewUserFormData] = useState({
     prenom: "",
     nom: "",
@@ -3963,7 +3967,11 @@ const AdminSpace = () => {
               Ajouter un nouveau produit au catalogue
             </DialogDescription>
           </DialogHeader>
-          <form id="new-product-form" className="space-y-4">
+          <form
+            id="new-product-form"
+            ref={newProductFormRef}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Code Article</Label>
@@ -4083,11 +4091,36 @@ const AdminSpace = () => {
             </div>
             <div>
               <Label>Image du produit</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                className="border-[#D4C2A1]"
-              />
+              <div className="space-y-2">
+                {imagePreview && (
+                  <img
+                    src={imagePreview}
+                    alt="Prévisualisation"
+                    className="w-full h-48 object-cover rounded border"
+                  />
+                )}
+                <Input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  ref={newProductImageRef}
+                  className="border-[#D4C2A1]"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    setSelectedImageFile(file || null);
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const result = reader.result as string;
+                        setImagePreview(result);
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      setImagePreview("");
+                    }
+                  }}
+                />
+              </div>
             </div>
             <div>
               <Label>Contenances et prix (TND)</Label>
@@ -4175,9 +4208,33 @@ const AdminSpace = () => {
                 onClick={async () => {
                   try {
                     // Get form data
-                    const formData = new FormData(
-                      document.querySelector("#new-product-form"),
-                    );
+                    const formData = new FormData(newProductFormRef.current!);
+
+                    // Determine selected file
+                    const file =
+                      newProductImageRef.current?.files?.[0] || selectedImageFile;
+
+                    // Handle image upload if a file is selected
+                    let imageUrl =
+                      imagePreview ||
+                      "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80";
+                    if (file) {
+                      const fileExt = file.name.split(".").pop();
+                      const fileName = `${Date.now()}.${fileExt}`;
+                      const filePath = `products/${fileName}`;
+                      const { data: uploadData, error: uploadError } =
+                        await supabase.storage
+                          .from("product-images")
+                          .upload(filePath, file);
+                      if (!uploadError && uploadData) {
+                        const { data } = supabase.storage
+                          .from("product-images")
+                          .getPublicUrl(filePath);
+                        imageUrl = data.publicUrl || imagePreview;
+                      } else if (imagePreview) {
+                        imageUrl = imagePreview;
+                      }
+                    }
 
                     // Create product in Supabase
                     const { data: newProduct, error: productError } =
@@ -4218,8 +4275,7 @@ const AdminSpace = () => {
                           description:
                             (formData.get("description") as string) ||
                             "Description du produit",
-                          image_url:
-                            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+                          image_url: imageUrl,
                           active: true,
                         })
                         .select()
@@ -4284,6 +4340,12 @@ const AdminSpace = () => {
                     await loadData();
 
                     alert("Produit créé avec succès dans Supabase!");
+                    setSelectedImageFile(null);
+                    setImagePreview("");
+                    newProductFormRef.current?.reset();
+                    if (newProductImageRef.current) {
+                      newProductImageRef.current.value = "";
+                    }
                     setShowNewProduct(false);
                   } catch (error) {
                     console.error("Error creating product:", error);
