@@ -63,7 +63,7 @@ import { supabase } from "../lib/supabaseClient";
 const AdminSpace = () => {
   const { register } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const today = new Date().toISOString().split("T")[0];
   const [dateFilter, setDateFilter] = useState({ start: today, end: today });
   const [showLogin, setShowLogin] = useState(true);
@@ -83,7 +83,7 @@ const AdminSpace = () => {
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [selectedProductForRestock, setSelectedProductForRestock] =
     useState(null);
-  const [editFormData, setEditFormData] = useState({});
+  const [editFormData, setEditFormData] = useState<any>({});
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(
     null,
   );
@@ -1514,7 +1514,7 @@ const AdminSpace = () => {
                 ];
 
                 // Create product with properly encoded data
-                const newProduct = {
+                const newProduct: any = {
                   id: Date.now() + i,
                   codeArticle: fixEncoding(codeArticle),
                   name: fixEncoding(nomLolly),
