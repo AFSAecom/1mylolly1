@@ -4317,7 +4317,7 @@ const AdminSpace = () => {
                     for (const variant of variants) {
                       await supabase.from("product_variants").insert({
                         product_id: newProduct.id,
-                        ref_complete: `${newProduct.code_produit}-${variant.size}`,
+                        ref_complete: `${newProduct.code_produit}-${parseInt(variant.size)}`,
                         contenance: parseInt(variant.size),
                         unite: "ml",
                         prix: variant.price,
