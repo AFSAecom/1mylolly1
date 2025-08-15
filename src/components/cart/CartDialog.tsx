@@ -77,27 +77,30 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       const refs = items.map((item) => item.refComplete.replace(/ml$/, ""));
       const { data: variants, error: variantError } = await supabase
         .from("product_variants")
-        .select("id, ref_complete")
+        .select("id, ref_complete, stock_actuel")
         .in("ref_complete", refs);
       if (variantError) throw variantError;
       const variantMap = new Map(
-        variants.map((v: any) => [v.ref_complete.replace(/ml$/, ""), v.id]),
+        variants.map((v: any) => [
+          v.ref_complete.replace(/ml$/, ""),
+          { id: v.id, stock_actuel: v.stock_actuel },
+        ]),
       );
 
       // 3. Insert order items
       const orderItems = [] as any[];
       for (const item of items) {
-        const variantId = variantMap.get(
+        const variant = variantMap.get(
           item.refComplete.replace(/ml$/, ""),
         );
-        if (!variantId) {
+        if (!variant) {
           alert("Référence produit introuvable");
           setIsSubmitting(false);
           return;
         }
         orderItems.push({
           order_id: orderId,
-          product_variant_id: variantId,
+          product_variant_id: variant.id,
           quantity: item.quantity,
           unit_price: item.prix,
           total_price: item.prix * item.quantity,
@@ -107,6 +110,64 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
         .from("order_items")
         .insert(orderItems);
       if (itemsError) throw itemsError;
+
+      // 3b. Update stock and record movements
+      const updatedVariants: { id: string; previousStock: number }[] = [];
+      const movementIds: string[] = [];
+      try {
+        for (const item of items) {
+          const variant = variantMap.get(
+            item.refComplete.replace(/ml$/, ""),
+          );
+          if (!variant) continue;
+          const previousStock = variant.stock_actuel || 0;
+          const newStock = previousStock - item.quantity;
+          const { error: stockError } = await supabase
+            .from("product_variants")
+            .update({ stock_actuel: newStock })
+            .eq("id", variant.id);
+          if (stockError) throw stockError;
+          updatedVariants.push({ id: variant.id, previousStock });
+
+          const { data: movement, error: movementError } = await supabase
+            .from("stock_movements")
+            .insert({
+              product_variant_id: variant.id,
+              type: "sortie",
+              quantity: -item.quantity,
+              reason: "Commande client",
+              reference_document: `order:${orderId}`,
+              created_by: user?.id,
+            })
+            .select("id")
+            .single();
+          if (movementError) throw movementError;
+          movementIds.push(movement.id);
+
+          window.dispatchEvent(
+            new CustomEvent("stockUpdated", {
+              detail: { variantId: variant.id, newStock },
+            }),
+          );
+        }
+      } catch (stockErr) {
+        // Rollback stock updates and order in case of failure
+        for (const u of updatedVariants) {
+          await supabase
+            .from("product_variants")
+            .update({ stock_actuel: u.previousStock })
+            .eq("id", u.id);
+        }
+        if (movementIds.length) {
+          await supabase
+            .from("stock_movements")
+            .delete()
+            .in("id", movementIds);
+        }
+        await supabase.from("order_items").delete().eq("order_id", orderId);
+        await supabase.from("orders").delete().eq("id", orderId);
+        throw stockErr;
+      }
 
       // 4. Store order locally
       const orderData = {
