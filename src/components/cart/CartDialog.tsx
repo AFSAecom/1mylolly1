@@ -119,17 +119,22 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       existingOrders.unshift(orderData);
       localStorage.setItem("client-orders", JSON.stringify(existingOrders));
 
-      // 5. Notify admin space with full order details
-      const adminEvent = new CustomEvent("newSaleRecorded", {
-        detail: {
-          date: orderData.date,
-          client: orderData.client,
-          codeClient: orderData.codeClient,
-          totalAmount: orderData.totalAmount,
-          products: orderData.items,
-        },
+      // 5. Notify admin space for each item with expected keys
+      orderData.items.forEach((item: any) => {
+        const adminEvent = new CustomEvent("newSaleRecorded", {
+          detail: {
+            id: `${orderId}-${item.codeArticle}`,
+            date: orderData.date,
+            client: orderData.client,
+            codeClient: orderData.codeClient,
+            product: item.product,
+            codeArticle: item.codeArticle,
+            amount: item.amount,
+            conseillere: "N/A",
+          },
+        });
+        window.dispatchEvent(adminEvent);
       });
-      window.dispatchEvent(adminEvent);
 
       // Process order
       setOrderComplete(true);
