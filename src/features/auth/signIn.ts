@@ -3,8 +3,8 @@ import { supabase } from '../../lib/supabaseClient';
 /**
  * Connexion puis "ensure profile":
  * - login via Auth
- * - si le profil n'existe pas, on le crée avec les colonnes FR/EN
- *   (id = auth.users.id, email obligatoire)
+ * - si le profil n'existe pas, on le crée avec toutes les colonnes attendues
+ *   (id = auth.users.id). On met des valeurs de secours ('') si besoin.
  */
 export async function handleSignIn(email: string, password: string) {
   // 1) Auth email/mot de passe
@@ -21,25 +21,25 @@ export async function handleSignIn(email: string, password: string) {
     .maybeSingle();
   if (selErr) return { ok: false, step: 'selectProfile', error: selErr.message };
 
-  // 3) Créer le profil s'il n'existe pas (avec email + colonnes FR/EN)
+  // 3) Créer le profil s'il n'existe pas (email + colonnes FR/EN)
   if (!profile) {
     const { error: insErr } = await supabase.from('users').insert({
       id: user.id,
-      email: user.email,      // ← essentiel si email est NOT NULL/UNIQUE
-      // colonnes anglaises
+      email: user.email ?? '',   // ← important si email est NOT NULL / UNIQUE
+      // anglais (laisse null si ta table les accepte)
       first_name: null,
       last_name:  null,
       address:    null,
       phone:      null,
       whatsapp:   null,
       birth_date: null,
-      // colonnes françaises (compat)
-      prenom: null,
-      nom:    null,
+      // français (valeurs de secours pour contourner NOT NULL éventuel)
+      prenom: '',
+      nom:    '',
     });
     if (insErr) return { ok: false, step: 'insertProfile', error: insErr.message };
   } else if (!profile.email && user.email) {
-    // au cas où un ancien profil existe sans email
+    // ancien profil sans email → on le complète
     const { error: updErr } = await supabase
       .from('users')
       .update({ email: user.email })
