@@ -3,7 +3,15 @@ import { motion } from "framer-motion";
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
 import { Button } from "./ui/button";
-import { ShoppingBag, Heart, ArrowLeft, User, LogIn, Home } from "lucide-react";
+import {
+  ShoppingBag,
+  Heart,
+  ArrowLeft,
+  User,
+  LogIn,
+  Home,
+  LogOut,
+} from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -155,7 +163,7 @@ const ClientSpace = () => {
   const [editedUser, setEditedUser] = useState<any>(null);
   const { getTotalItems } = useCart();
   const { favorites, removeFromFavorites } = useFavorites();
-  const { isAuthenticated, user, updateUser } = useAuth();
+  const { isAuthenticated, user, updateUser, signOut } = useAuth();
 
   // Check role-based access - only allow clients and admins
   React.useEffect(() => {
@@ -307,18 +315,31 @@ const ClientSpace = () => {
                 Accueil
               </Button>
               {isAuthenticated ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowAccount(true);
-                    setSelectedPerfume(null);
-                    setShowFavorites(false);
-                  }}
-                  className="border-[#CE8F8A] text-[#805050] hover:bg-[#CE8F8A]/10"
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Mon Compte
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowAccount(true);
+                      setSelectedPerfume(null);
+                      setShowFavorites(false);
+                    }}
+                    className="border-[#CE8F8A] text-[#805050] hover:bg-[#CE8F8A]/10"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Mon Compte
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      signOut();
+                      setShowAccount(false);
+                    }}
+                    className="border-[#CE8F8A] text-[#805050] hover:bg-[#CE8F8A]/10"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Se déconnecter
+                  </Button>
+                </>
               ) : (
                 <Button
                   variant="outline"
