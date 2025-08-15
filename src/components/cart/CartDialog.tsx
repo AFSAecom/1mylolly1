@@ -51,77 +51,101 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
       "Notification envoyée à l'admin et à la conseillère: Nouvelle commande reçue",
     );
 
-    // Create order record with current date and article codes
-    const orderData = {
-      id: Date.now(),
-      date: new Date().toISOString().split("T")[0],
-      client: user ? `${user.prenom} ${user.nom}` : "Client Test",
-      codeClient: user?.codeClient || "C999",
-      items: items.map((item) => ({
-        product: item.nomLolly,
-        nomParfumInspire: item.nomParfumInspire || "Parfum Inspiré",
-        codeArticle: item.refComplete,
-        amount: item.prix * item.quantity,
-        quantity: item.quantity,
-      })),
-      totalAmount: getTotalPrice() * 0.85, // With discounts
-      status: "Confirmée",
-    };
+    const date = new Date().toISOString().split("T")[0];
+    const totalAmount = getTotalPrice() * 0.85; // With discounts
 
-    // Store order in localStorage for client account
-    const existingOrders = JSON.parse(
-      localStorage.getItem("client-orders") || "[]",
-    );
-    existingOrders.unshift(orderData);
-    localStorage.setItem("client-orders", JSON.stringify(existingOrders));
-
-    // Persist order in Supabase
     try {
-      const { error } = await supabase.from("orders").insert(
-        orderData.items.map((item) => ({
+      // 1. Create order
+      const { data: newOrder, error: orderError } = await supabase
+        .from("orders")
+        .insert({
           user_id: user?.id,
-          date: orderData.date,
-          code_article: item.codeArticle,
-          amount: item.amount,
-          quantity: item.quantity,
-          code_client: orderData.codeClient,
-        })) as any,
+          code_client: user?.codeClient || "C999",
+          total_amount: totalAmount,
+          status: "confirmee",
+        })
+        .select("id")
+        .single();
+
+      if (orderError) throw orderError;
+      const orderId = newOrder.id;
+
+      // 2. Fetch product variant ids for items in cart
+      const refs = items.map((item) => item.refComplete);
+      const { data: variants, error: variantError } = await supabase
+        .from("product_variants")
+        .select("id, ref_complete")
+        .in("ref_complete", refs);
+      if (variantError) throw variantError;
+      const variantMap = new Map(
+        variants.map((v: any) => [v.ref_complete, v.id]),
       );
-      if (error) {
-        console.error("Error inserting order into Supabase:", error);
-      }
+
+      // 3. Insert order items
+      const orderItems = items.map((item) => ({
+        order_id: orderId,
+        product_variant_id: variantMap.get(item.refComplete),
+        quantity: item.quantity,
+        unit_price: item.prix,
+        total_price: item.prix * item.quantity,
+      }));
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+      if (itemsError) throw itemsError;
+
+      // 4. Store order locally
+      const orderData = {
+        id: orderId,
+        date,
+        client: user ? `${user.prenom} ${user.nom}` : "Client Test",
+        codeClient: user?.codeClient || "C999",
+        items: items.map((item) => ({
+          product: item.nomLolly,
+          nomParfumInspire: item.nomParfumInspire || "Parfum Inspiré",
+          codeArticle: item.refComplete,
+          amount: item.prix * item.quantity,
+          quantity: item.quantity,
+        })),
+        totalAmount,
+        status: "Confirmée",
+      };
+      const existingOrders = JSON.parse(
+        localStorage.getItem("client-orders") || "[]",
+      );
+      existingOrders.unshift(orderData);
+      localStorage.setItem("client-orders", JSON.stringify(existingOrders));
+
+      // 5. Notify admin space with full order details
+      const adminEvent = new CustomEvent("newSaleRecorded", {
+        detail: {
+          date: orderData.date,
+          client: orderData.client,
+          codeClient: orderData.codeClient,
+          totalAmount: orderData.totalAmount,
+          products: orderData.items,
+        },
+      });
+      window.dispatchEvent(adminEvent);
+
+      // Process order
+      setOrderComplete(true);
+      clearCart();
+      setShowCheckout(false);
+
+      // Dispatch event to update order history immediately
+      window.dispatchEvent(new CustomEvent("orderCompleted"));
+
+      setTimeout(() => {
+        setOrderComplete(false);
+        onOpenChange(false);
+        // Redirect to account page after order completion
+        const event = new CustomEvent("redirectToAccount");
+        window.dispatchEvent(event);
+      }, 2000);
     } catch (err) {
-      console.error("Unexpected error inserting order into Supabase:", err);
+      console.error("Error finalizing order:", err);
     }
-
-    // Dispatch event to notify admin space
-    const adminEvent = new CustomEvent("newSaleRecorded", {
-      detail: {
-        client: orderData.client,
-        codeClient: orderData.codeClient,
-        product: orderData.items[0]?.product || "Produit Test",
-        codeArticle: orderData.items[0]?.codeArticle || "L999-30",
-        amount: orderData.items[0]?.amount || 29.9,
-        conseillere: "Conseillère Test",
-      },
-    });
-    window.dispatchEvent(adminEvent);
-
-    // Process order
-    setOrderComplete(true);
-    clearCart();
-    setShowCheckout(false);
-
-    // Dispatch event to update order history immediately
-    window.dispatchEvent(new CustomEvent("orderCompleted"));
-
-    setTimeout(() => {
-      setOrderComplete(false);
-      onOpenChange(false);
-      // Redirect to account page after order completion
-      const event = new CustomEvent("redirectToAccount");
-      window.dispatchEvent(event);
-    }, 2000);
   };
 
   const handleSaveProfile = () => {
