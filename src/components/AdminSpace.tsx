@@ -376,7 +376,7 @@ const AdminSpace = () => {
   }, []);
 
   useEffect(() => {
-    const handleNewSale = (e: any) => {
+    const handleNewSale = async (e: any) => {
       // If the event contains a products array, expand each item into its own entry
       if (Array.isArray(e.detail?.products)) {
         const entries = e.detail.products.map((p: any, index: number) => ({
@@ -396,6 +396,12 @@ const AdminSpace = () => {
           id: e.detail?.id ?? `${Date.now()}`,
         };
         setOrders((prev) => [sale, ...prev]);
+      }
+      try {
+        await loadData();
+      } catch (error) {
+        console.error("❌ Erreur lors du rechargement des commandes:", error);
+        alert("❌ Erreur lors du rechargement des commandes depuis Supabase");
       }
     };
     window.addEventListener("newSaleRecorded", handleNewSale);
