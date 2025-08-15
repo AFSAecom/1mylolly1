@@ -5,14 +5,6 @@
   "installCommand": "npm install",
   "framework": "vite",
 
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/client",
-      "permanent": true
-    }
-  ],
-
   "rewrites": [
     {
       "source": "/((?!api/).+)",
