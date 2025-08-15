@@ -52,11 +52,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
-      setSession(data.session ?? null);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!mounted) return;
+        setSession(data.session ?? null);
+        setUser(data.session?.user ?? null);
+      } catch (error) {
+        console.error('Error fetching session', error);
+        alert('Erreur lors de la récupération de la session.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -81,9 +87,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     signOut: async () => { await supabase.auth.signOut(); },
     refresh: async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session ?? null);
-      setUser(data.session?.user ?? null);
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session ?? null);
+        setUser(data.session?.user ?? null);
+      } catch (error) {
+        console.error('Error refreshing session', error);
+        alert('Erreur lors de la récupération de la session.');
+      }
     },
   }), [user, session, loading]);
 
