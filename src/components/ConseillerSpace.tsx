@@ -215,7 +215,7 @@ const ConseillerSpace = () => {
       imageURL: perfume.imageURL,
       contenances: [
         {
-          refComplete: `${perfume.codeProduit}-15`,
+          refComplete: `${perfume.codeProduit}-15ml`,
           contenance: 15,
           unite: "ml",
           prix: 19.9,
@@ -223,7 +223,7 @@ const ConseillerSpace = () => {
           actif: true,
         },
         {
-          refComplete: `${perfume.codeProduit}-30`,
+          refComplete: `${perfume.codeProduit}-30ml`,
           contenance: 30,
           unite: "ml",
           prix: 29.9,
@@ -231,7 +231,7 @@ const ConseillerSpace = () => {
           actif: true,
         },
         {
-          refComplete: `${perfume.codeProduit}-50`,
+          refComplete: `${perfume.codeProduit}-50ml`,
           contenance: 50,
           unite: "ml",
           prix: 39.9,

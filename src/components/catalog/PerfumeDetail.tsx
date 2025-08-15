@@ -70,7 +70,7 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
         "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80",
       contenances: [
         {
-          refComplete: "L001-15",
+          refComplete: "L001-15ml",
           contenance: 15,
           unite: "ml",
           prix: 19.9,
@@ -78,7 +78,7 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
           actif: true,
         },
         {
-          refComplete: "L001-30",
+          refComplete: "L001-30ml",
           contenance: 30,
           unite: "ml",
           prix: 29.9,
@@ -86,7 +86,7 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
           actif: true,
         },
         {
-          refComplete: "L001-50",
+          refComplete: "L001-50ml",
           contenance: 50,
           unite: "ml",
           prix: 39.9,
@@ -94,7 +94,7 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
           actif: true,
         },
         {
-          refComplete: "L001-100",
+          refComplete: "L001-100ml",
           contenance: 100,
           unite: "ml",
           prix: 59.9,
