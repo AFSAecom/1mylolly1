@@ -244,6 +244,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
                       {item.contenance} {item.unite} - {item.prix.toFixed(3)}{" "}
                       TND
                     </p>
+                    <p className="text-xs text-[#AD9C92]">Réf. : {item.refComplete}</p>
                   </div>
                   <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                     <div className="flex items-center gap-2">
