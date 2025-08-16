@@ -59,6 +59,12 @@ import {
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase } from "../lib/supabaseClient";
+import {
+  fetchUsers,
+  fetchProducts,
+  fetchPromotions,
+  fetchOrders,
+} from "../services/admin";
 
 const AdminSpace = () => {
   const { register } = useAuth();
@@ -122,280 +128,142 @@ const AdminSpace = () => {
     try {
       setLoading(true);
 
-      // STEP 1: Load users with comprehensive RLS error handling
-      console.log("👥 Loading users from Supabase...");
+      const [usersResult, productsResult, promotionsResult, ordersResult] =
+        await Promise.all([
+          fetchUsers(),
+          fetchProducts(),
+          fetchPromotions(),
+          fetchOrders(),
+        ]);
 
-      const { data: usersData, error: usersError } = await supabase
-        .from("users")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      console.log("📊 Raw users data from Supabase:", usersData);
-      console.log("❓ Users error:", usersError);
-
-      if (usersError) {
-        console.error("❌ Error loading users:", usersError);
-
-        // Check if it's an RLS error
+      // Users
+      if (usersResult.error) {
+        console.error("❌ Error loading users:", usersResult.error);
         if (
-          usersError.code === "42501" ||
-          usersError.message?.includes("row-level security") ||
-          usersError.message?.includes("policy") ||
-          usersError.message?.includes("permission denied")
+          usersResult.error.code === "42501" ||
+          usersResult.error.message?.includes("row-level security")
         ) {
-          console.log("🔒 RLS Error detected! Showing RLS diagnostic info...");
-
-          // Show detailed RLS error with solutions
-          const rlsErrorMessage =
-            `🔒 PROBLÈME RLS (Row Level Security) DÉTECTÉ\n\n` +
-            `❌ Erreur: ${usersError.message}\n\n` +
-            `🔧 SOLUTIONS RECOMMANDÉES:\n\n` +
-            `SOLUTION 1 (Recommandée pour développement):\n` +
-            `Désactiver RLS sur la table users:\n` +
-            `ALTER TABLE users DISABLE ROW LEVEL SECURITY;\n\n` +
-            `SOLUTION 2 (Alternative):\n` +
-            `Créer une politique d'accès public:\n` +
-            `CREATE POLICY "Public read access" ON users FOR SELECT USING (true);\n\n` +
-            `📋 ÉTAPES À SUIVRE:\n` +
-            `1. Ouvrez l'éditeur SQL de Supabase\n` +
-            `2. Exécutez une des commandes SQL ci-dessus\n` +
-            `3. Revenez ici et cliquez sur "Actualiser"\n\n` +
-            `💡 Ces commandes SQL sont copiées dans le presse-papiers.`;
-
-          // Copy SQL commands to clipboard
-          const sqlCommands = `-- SOLUTION 1: Désactiver RLS (recommandé pour développement)\nALTER TABLE users DISABLE ROW LEVEL SECURITY;\n\n-- OU SOLUTION 2: Créer une politique d'accès public\nCREATE POLICY "Public read access" ON users FOR SELECT USING (true);\n\n-- Vérifier que la table existe et contient des données\nSELECT * FROM users LIMIT 5;`;
-
-          try {
-            await navigator.clipboard.writeText(sqlCommands);
-            console.log("📋 SQL commands copied to clipboard");
-          } catch (clipboardError) {
-            console.log("⚠️ Could not copy to clipboard:", clipboardError);
-          }
-
-          alert(rlsErrorMessage);
-        } else {
-          // Other types of errors
-          alert(
-            "❌ Erreur lors du chargement des utilisateurs: " +
-              usersError.message,
-          );
+          alert("RLS error on users table");
         }
         setUsers([]);
       } else {
-        // Always process the data, even if it's an empty array
-        const userData = usersData || [];
-        console.log(
-          "✅ Processing users data:",
-          userData.length,
-          "users found",
-        );
-
-        if (userData.length > 0) {
-          console.log("📋 Sample user data:", userData[0]);
-        }
-
-        const formattedUsers = userData.map((user) => {
-          return {
-            id: user.id,
-            name: `${user.prenom || "Prénom"} ${user.nom || "Nom"}`,
-            email: user.email || "email@example.com",
-            role: user.role || "client",
-            prenom: user.prenom || "Prénom",
-            nom: user.nom || "Nom",
-            telephone: user.telephone,
-            whatsapp: user.whatsapp,
-            dateNaissance: user.date_naissance,
-            adresse: user.adresse,
-            codeClient: user.code_client,
-            isNew: false,
-            lastOrder:
-              user.created_at?.split("T")[0] ||
-              new Date().toISOString().split("T")[0],
-          };
-        });
-
-        console.log("✅ Formatted users:", formattedUsers.length);
-        console.log("📋 Formatted users data:", formattedUsers);
+        const formattedUsers = (usersResult.data || []).map((user) => ({
+          id: user.id,
+          name: `${user.prenom || "Prénom"} ${user.nom || "Nom"}`,
+          email: user.email || "email@example.com",
+          role: user.role || "client",
+          prenom: user.prenom || "Prénom",
+          nom: user.nom || "Nom",
+          telephone: user.telephone,
+          whatsapp: user.whatsapp,
+          dateNaissance: user.date_naissance,
+          adresse: user.adresse,
+          codeClient: user.code_client,
+          isNew: false,
+          lastOrder:
+            user.created_at?.split("T")[0] ||
+            new Date().toISOString().split("T")[0],
+        }));
         setUsers(formattedUsers);
       }
 
-      // STEP 3: Load products (simplified)
-      console.log("📦 Loading products...");
-      try {
-        const { data: productsData, error: productsError } =
-          await supabase.from("products").select(`
-            *,
-            product_variants(*)
-          `);
-
-        if (productsError) {
-          console.error("❌ Products error:", productsError);
-        } else {
-          const formattedProducts = (productsData || []).map((product) => ({
-            id: product.id,
-            codeArticle: product.code_produit,
-            name: product.nom_lolly,
-            nomParfumInspire: product.nom_parfum_inspire,
-            marqueInspire: product.marque_inspire,
-            brand: "Lolly",
-            price: product.product_variants?.[0]?.prix || 0,
-            stock:
-              product.product_variants?.reduce(
-                (sum, v) => sum + (v.stock_actuel || 0),
-                0,
-              ) || 0,
-            active: product.active,
-            imageURL: product.image_url,
-            genre: product.genre,
-            saison: product.saison,
-            familleOlfactive: product.famille_olfactive,
-            noteTete: product.note_tete,
-            noteCoeur: product.note_coeur,
-            noteFond: product.note_fond,
-            description: product.description,
-            variants:
-              product.product_variants?.map((v) => ({
-                id: v.id,
-                size: `${v.contenance}${v.unite}`,
-                price: v.prix,
-                stock: v.stock_actuel || 0,
-                refComplete: v.ref_complete,
-                actif: v.actif,
-              })) || [],
-          }));
-          setProducts(formattedProducts);
-          console.log("✅ Products loaded:", formattedProducts.length);
-        }
-      } catch (err) {
-        console.error("❌ Products loading failed:", err);
+      // Products
+      if (productsResult.error) {
+        console.error("❌ Products error:", productsResult.error);
+      } else {
+        const formattedProducts = (productsResult.data || []).map((product) => ({
+          id: product.id,
+          codeArticle: product.code_produit,
+          name: product.nom_lolly,
+          nomParfumInspire: product.nom_parfum_inspire,
+          marqueInspire: product.marque_inspire,
+          brand: "Lolly",
+          price: product.product_variants?.[0]?.prix || 0,
+          stock:
+            product.product_variants?.reduce(
+              (sum, v) => sum + (v.stock_actuel || 0),
+              0,
+            ) || 0,
+          active: product.active,
+          imageURL: product.image_url,
+          genre: product.genre,
+          saison: product.saison,
+          familleOlfactive: product.famille_olfactive,
+          noteTete: product.note_tete,
+          noteCoeur: product.note_coeur,
+          noteFond: product.note_fond,
+          description: product.description,
+          variants:
+            product.product_variants?.map((v) => ({
+              id: v.id,
+              size: `${v.contenance}${v.unite}`,
+              price: v.prix,
+              stock: v.stock_actuel || 0,
+              refComplete: v.ref_complete,
+              actif: v.actif,
+            })) || [],
+        }));
+        setProducts(formattedProducts);
       }
 
-      // STEP 4: Load promotions (simplified)
-      console.log("🎯 Loading promotions...");
-      try {
-        const { data: promotionsData, error: promotionsError } = await supabase
-          .from("promotions")
-          .select("*");
-
-        if (promotionsError) {
-          console.error("❌ Promotions error:", promotionsError);
-        } else {
-          setPromotions(promotionsData || []);
-          console.log("✅ Promotions loaded:", (promotionsData || []).length);
-        }
-      } catch (err) {
-        console.error("❌ Promotions loading failed:", err);
+      // Promotions
+      if (promotionsResult.error) {
+        console.error("❌ Promotions error:", promotionsResult.error);
+      } else {
+        setPromotions(promotionsResult.data || []);
       }
 
-      // STEP 5: Load orders (simplified)
-      console.log("📋 Loading orders...");
-      try {
-        const { data: ordersData, error: ordersError } = await supabase
-          .from("orders")
-          .select(`
-            *,
-            client:users!orders_user_id_fkey(prenom, nom),
-            conseillere:users!orders_conseillere_id_fkey(prenom, nom),
-            order_items(
-              *,
-              product_variants(
-                *,
-                products(*)
-              )
-            )
-          `);
-
-        if (ordersError) {
-          console.error("❌ Orders error:", ordersError);
-
-          if (
-            ordersError.code === "42501" ||
-            ordersError.message?.includes("row-level security") ||
-            ordersError.message?.includes("policy") ||
-            ordersError.message?.includes("permission denied")
-          ) {
-            console.log(
-              "🔒 RLS Error detected! Showing RLS diagnostic info...",
-            );
-
-            const rlsErrorMessage =
-              `🔒 PROBLÈME RLS (Row Level Security) DÉTECTÉ\n\n` +
-              `❌ Erreur: ${ordersError.message}\n\n` +
-              `🔧 SOLUTIONS RECOMMANDÉES:\n\n` +
-              `SOLUTION 1 (Recommandée pour développement):\n` +
-              `Désactiver RLS sur la table orders:\n` +
-              `ALTER TABLE orders DISABLE ROW LEVEL SECURITY;\n\n` +
-              `SOLUTION 2 (Alternative):\n` +
-              `Créer une politique d'accès public:\n` +
-              `CREATE POLICY "Public read access" ON orders FOR SELECT USING (true);\n\n` +
-              `📋 ÉTAPES À SUIVRE:\n` +
-              `1. Ouvrez l'éditeur SQL de Supabase\n` +
-              `2. Exécutez une des commandes SQL ci-dessus\n` +
-              `3. Revenez ici et cliquez sur "Actualiser"\n\n` +
-              `💡 Ces commandes SQL sont copiées dans le presse-papiers.`;
-
-            const sqlCommands =
-              `-- SOLUTION 1: Désactiver RLS (recommandé pour développement)\nALTER TABLE orders DISABLE ROW LEVEL SECURITY;\n\n-- OU SOLUTION 2: Créer une politique d'accès public\nCREATE POLICY "Public read access" ON orders FOR SELECT USING (true);\n\n-- Vérifier que la table existe et contient des données\nSELECT * FROM orders LIMIT 5;`;
-
-            try {
-              await navigator.clipboard.writeText(sqlCommands);
-              console.log("📋 SQL commands copied to clipboard");
-            } catch (clipboardError) {
-              console.log("⚠️ Could not copy to clipboard:", clipboardError);
-            }
-
-            alert(rlsErrorMessage);
-          } else {
-            alert(
-              "❌ Erreur lors du chargement des commandes: " +
-                ordersError.message,
-            );
-          }
-          setOrders([]);
-        } else {
-          const formattedOrders = (ordersData || []).flatMap((order) =>
-            (order.order_items || []).map((item) => ({
-              id: `${order.id}-${item.id}`,
-              date:
-                order.created_at?.split("T")[0] ??
-                new Date().toISOString().split("T")[0],
-              client:
-                order.client &&
-                typeof order.client === "object" &&
-                !Array.isArray(order.client) &&
-                "prenom" in order.client &&
-                "nom" in order.client
-                  ? `${
-                      (order.client as { prenom: string; nom: string }).prenom
-                    } ${
-                      (order.client as { prenom: string; nom: string }).nom
-                    }`
-                  : "Client inconnu",
-              codeClient: order.code_client,
-              product:
-                item.product_variants?.products?.nom_lolly ??
-                "Produit inconnu",
-              codeArticle: item.product_variants?.ref_complete ?? "N/A",
-              amount: item.total_price,
-              conseillere:
-                order.conseillere &&
-                typeof order.conseillere === "object" &&
-                !Array.isArray(order.conseillere) &&
-                "prenom" in order.conseillere &&
-                "nom" in order.conseillere
-                  ? `${
-                      (order.conseillere as { prenom: string; nom: string }).prenom
-                    } ${
-                      (order.conseillere as { prenom: string; nom: string }).nom
-                    }`
-                  : "N/A",
-            })),
-          );
-          setOrders(formattedOrders);
-          console.log("✅ Orders loaded:", formattedOrders.length);
+      // Orders
+      if (ordersResult.error) {
+        console.error("❌ Orders error:", ordersResult.error);
+        if (
+          ordersResult.error.code === "42501" ||
+          ordersResult.error.message?.includes("row-level security")
+        ) {
+          alert("RLS error on orders table");
         }
-      } catch (err) {
-        console.error("❌ Orders loading failed:", err);
+        setOrders([]);
+      } else {
+        const formattedOrders = (ordersResult.data || []).flatMap((order) =>
+          (order.order_items || []).map((item) => ({
+            id: `${order.id}-${item.id}`,
+            date:
+              order.created_at?.split("T")[0] ??
+              new Date().toISOString().split("T")[0],
+            client:
+              order.client &&
+              typeof order.client === "object" &&
+              !Array.isArray(order.client) &&
+              "prenom" in order.client &&
+              "nom" in order.client
+                ? `${
+                    (order.client as { prenom: string; nom: string }).prenom
+                  } ${
+                    (order.client as { prenom: string; nom: string }).nom
+                  }`
+                : "Client inconnu",
+            codeClient: order.code_client,
+            product:
+              item.product_variants?.products?.nom_lolly ??
+              "Produit inconnu",
+            codeArticle: item.product_variants?.ref_complete ?? "N/A",
+            amount: item.total_price,
+            conseillere:
+              order.conseillere &&
+              typeof order.conseillere === "object" &&
+              !Array.isArray(order.conseillere) &&
+              "prenom" in order.conseillere &&
+              "nom" in order.conseillere
+                ? `${
+                    (order.conseillere as { prenom: string; nom: string })
+                      .prenom
+                  } ${
+                    (order.conseillere as { prenom: string; nom: string }).nom
+                  }`
+                : "N/A",
+          })),
+        );
+        setOrders(formattedOrders);
       }
     } catch (error) {
       console.error("💥 RADICAL RELOAD FAILED:", error);
