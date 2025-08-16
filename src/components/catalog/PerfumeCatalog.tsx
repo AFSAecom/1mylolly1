@@ -78,6 +78,7 @@ const PerfumeCatalog = ({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const fetchGuardRef = useRef({ includeInactive, loaded: false });
+  const loadedRef = useRef(false);
 
   // Function to load products directly from Supabase
   const loadProductsFromSupabase = useCallback(async () => {
@@ -157,6 +158,8 @@ const PerfumeCatalog = ({
       setLoading(false);
       fetchGuardRef.current = { includeInactive, loaded: true };
     } else {
+      if (loadedRef.current) return;
+      loadedRef.current = true;
       loadProductsFromSupabase();
     }
   }, [perfumes, includeInactive, loadProductsFromSupabase]);

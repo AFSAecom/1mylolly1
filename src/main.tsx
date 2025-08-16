@@ -10,16 +10,14 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 
 const app = (
   <BrowserRouter>
-    <App />
+    {import.meta.env.PROD ? (
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    ) : (
+      <App />
+    )}
   </BrowserRouter>
 );
 
-if (import.meta.env.PROD) {
-  root.render(
-    <React.StrictMode>
-      {app}
-    </React.StrictMode>
-  );
-} else {
-  root.render(app);
-}
+root.render(app);
