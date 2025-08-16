@@ -15,7 +15,6 @@ export default defineConfig(({ mode }) => {
         "react",
         "react-dom",
         "react-router-dom",
-        "framer-motion",
         "lucide-react",
         "@radix-ui/react-dialog",
         "@radix-ui/react-tabs",

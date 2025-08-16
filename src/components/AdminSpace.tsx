@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import HomeLayout from "./HomeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -114,6 +113,7 @@ const AdminSpace = () => {
 
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [mounted, setMounted] = useState(false);
 
   // Enhanced data loading with RLS diagnostics
   const loadData = async () => {
@@ -431,6 +431,11 @@ const AdminSpace = () => {
     return () => {
       window.removeEventListener("usersImported", handleUsersImported);
     };
+  }, []);
+
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(t);
   }, []);
 
   useEffect(() => {
@@ -2652,11 +2657,10 @@ const AdminSpace = () => {
   return (
     <div className="min-h-screen bg-[#FBF0E9] p-4">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="space-y-8"
+        <div
+          className={`space-y-8 transition-all duration-500 ${
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+          }`}
         >
           <div className="flex justify-between items-center mb-8">
             <div className="text-center flex-1">
@@ -3951,7 +3955,7 @@ const AdminSpace = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        </motion.div>
+        </div>
       </div>
 
       {/* New Product Dialog */}

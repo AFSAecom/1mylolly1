@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
 import { Button } from "./ui/button";
@@ -161,6 +160,7 @@ const ClientSpace = () => {
   const [showAccount, setShowAccount] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   const { getTotalItems } = useCart();
   const { favorites, removeFromFavorites } = useFavorites();
   const { isAuthenticated, user, updateUser, signOut } = useAuth();
@@ -174,6 +174,11 @@ const ClientSpace = () => {
       window.location.href = "/conseillere";
     }
   }, [isAuthenticated, user]);
+
+  React.useEffect(() => {
+    const t = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
 
   // Listen for login dialog events from other components
   React.useEffect(() => {
@@ -269,11 +274,10 @@ const ClientSpace = () => {
     <div className="min-h-screen bg-[#FBF0E9] p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header with Logo and Title */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col items-center mb-8"
+        <div
+          className={`flex flex-col items-center mb-8 transition-all duration-500 ${
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"
+          }`}
         >
           <div className="w-24 h-24 mb-4 rounded-full bg-white flex items-center justify-center shadow-md p-2">
             <img
@@ -285,13 +289,12 @@ const ClientSpace = () => {
           <h1 className="text-3xl md:text-4xl font-playfair text-[#805050] mb-4 text-center">
             Le Compas Olfactif
           </h1>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="space-y-8"
+        <div
+          className={`space-y-8 transition-all duration-500 ${
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+          }`}
         >
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div className="text-center sm:text-left flex-1">
@@ -791,7 +794,7 @@ const ClientSpace = () => {
           ) : (
             <PerfumeCatalog onPerfumeSelect={handlePerfumeSelect} />
           )}
-        </motion.div>
+        </div>
       </div>
 
       <CartDialog open={showCart} onOpenChange={setShowCart} />
