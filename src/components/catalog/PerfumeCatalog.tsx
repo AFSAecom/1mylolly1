@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -63,34 +62,40 @@ const PerfumeCatalog = ({
   const [selectedFamille, setSelectedFamille] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const fetchGuardRef = useRef({ includeInactive, loaded: false });
-  const loadedRef = useRef(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to load products directly from Supabase
-  const loadProductsFromSupabase = useCallback(async () => {
-    const guard = fetchGuardRef.current;
-    if (guard.loaded && guard.includeInactive === includeInactive) {
-      return;
-    }
-    fetchGuardRef.current = { includeInactive, loaded: true };
-
+  const loadProductsFromSupabase = useCallback(
+    async (page: number, limit: number) => {
       try {
         setLoading(true);
         console.log("🔄 Loading products directly from Supabase...");
 
+        const start = (page - 1) * limit;
+        const end = start + limit - 1;
+
         let query = supabase
           .from("products")
-          .select("*, product_variants(*)");
+          .select(
+            "code_produit,nom_lolly,nom_parfum_inspire,marque_inspire,genre,saison,famille_olfactive,note_tete,note_coeur,note_fond,description,image_url,active",
+            { count: "exact" },
+          )
+          .range(start, end);
         if (!includeInactive) {
           query = query.eq("active", true);
         }
-        const { data: productsData, error } = await query;
+        const { data: productsData, count, error } = await query;
 
         if (error) {
           console.error("Error loading products from Supabase:", error);
           // Fallback to default perfumes if Supabase fails
           setCatalogPerfumes(defaultPerfumes);
+          setTotalCount(defaultPerfumes.length);
           return;
+        }
+
+        if (typeof count === "number") {
+          setTotalCount(count);
         }
 
         if (productsData && productsData.length > 0) {
@@ -129,44 +134,44 @@ const PerfumeCatalog = ({
           console.log("No products found in Supabase, using default perfumes");
           setCatalogPerfumes(defaultPerfumes);
         }
-    } catch (error) {
-      console.error("Error loading products from Supabase:", error);
-      setCatalogPerfumes(defaultPerfumes);
-    } finally {
-      setLoading(false);
-    }
-  }, [includeInactive]);
+      } catch (error) {
+        console.error("Error loading products from Supabase:", error);
+        setCatalogPerfumes(defaultPerfumes);
+        setTotalCount(defaultPerfumes.length);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [includeInactive],
+  );
 
   // Load products on component mount
   useEffect(() => {
     if (perfumes) {
       setCatalogPerfumes(perfumes);
       setLoading(false);
-      fetchGuardRef.current = { includeInactive, loaded: true };
+      setTotalCount(perfumes.length);
     } else {
-      if (loadedRef.current) return;
-      loadedRef.current = true;
-      loadProductsFromSupabase();
+      loadProductsFromSupabase(currentPage, itemsPerPage);
     }
-  }, [perfumes, includeInactive, loadProductsFromSupabase]);
+  }, [perfumes, includeInactive, currentPage, itemsPerPage, loadProductsFromSupabase]);
 
   // Listen for catalog updates and clear events
   useEffect(() => {
     const handleCatalogUpdate = () => {
-      console.log("🔄 Catalog update event received, cache invalidated");
-      fetchGuardRef.current.loaded = false;
+      console.log("🔄 Catalog update event received, reloading from Supabase");
+      loadProductsFromSupabase(currentPage, itemsPerPage);
     };
 
     const handleCatalogClear = () => {
       console.log("🗑️ Catalog clear event received, clearing cache");
       setCatalogPerfumes([]);
-      fetchGuardRef.current.loaded = false;
+      loadProductsFromSupabase(currentPage, itemsPerPage);
     };
 
     const handleCacheInvalidate = () => {
       console.log("♻️ Catalog cache invalidated, reloading from Supabase...");
-      fetchGuardRef.current.loaded = false;
-      loadProductsFromSupabase();
+      loadProductsFromSupabase(currentPage, itemsPerPage);
     };
 
     window.addEventListener("catalogUpdated", handleCatalogUpdate);
@@ -181,7 +186,7 @@ const PerfumeCatalog = ({
         handleCacheInvalidate,
       );
     };
-  }, [loadProductsFromSupabase]);
+  }, [loadProductsFromSupabase, currentPage, itemsPerPage]);
 
   const allPerfumes = perfumes || catalogPerfumes;
   const visiblePerfumes = includeInactive
@@ -269,10 +274,8 @@ const PerfumeCatalog = ({
   };
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredPerfumes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPerfumes = filteredPerfumes.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const currentPerfumes = filteredPerfumes;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -411,7 +414,7 @@ const PerfumeCatalog = ({
       {/* Results count and pagination info */}
       <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <p className="text-sm text-[#805050]">
-          {filteredPerfumes.length} parfums trouvés
+          {totalCount} parfums trouvés
           {totalPages > 1 && (
             <span className="ml-2 text-[#AD9C92]">
               (Page {currentPage} sur {totalPages})
