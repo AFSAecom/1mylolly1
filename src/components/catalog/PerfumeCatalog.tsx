@@ -14,26 +14,16 @@ import {
 import PerfumeCard from "./PerfumeCard";
 import { supabase } from "@/lib/supabaseClient";
 
-// Simple debounce hook to delay invoking a callback until after a pause
-const useDebouncedCallback = (
-  callback: (value: string) => void,
-  delay: number,
-) => {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-  const debounced = useCallback(
-    (value: string) => {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => callback(value), delay);
-    },
-    [callback, delay],
-  );
+// Hook returning a debounced value after a specified delay
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    return () => clearTimeout(timeoutRef.current);
-  }, [debounced]);
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
 
-  return debounced;
+  return debouncedValue;
 };
 
 interface PerfumeType {
@@ -66,12 +56,8 @@ const PerfumeCatalog = ({
   // All useState hooks must be called before any early returns
   const [catalogPerfumes, setCatalogPerfumes] = useState<PerfumeType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const debouncedSetSearchTerm = useDebouncedCallback(
-    (value: string) => setSearchTerm(value),
-    300,
-  );
+  const searchTerm = useDebounce(searchInput, 300);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedSaison, setSelectedSaison] = useState<string | null>(null);
   const [selectedFamille, setSelectedFamille] = useState<string | null>(null);
@@ -259,9 +245,7 @@ const PerfumeCatalog = ({
   const handleSearchChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const value = e.target.value;
-    setSearchInput(value);
-    debouncedSetSearchTerm(value);
+    setSearchInput(e.target.value);
   };
 
   const handleGenreSelect = (genre: string) => {
@@ -278,7 +262,6 @@ const PerfumeCatalog = ({
 
   const clearFilters = () => {
     setSearchInput("");
-    setSearchTerm("");
     setSelectedGenre(null);
     setSelectedSaison(null);
     setSelectedFamille(null);
