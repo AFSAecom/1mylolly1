@@ -5,6 +5,16 @@ import { tempo } from "tempo-devtools/dist/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
+  const isTempo = process.env.VITE_TEMPO === "true";
+  const alias: Record<string, string> = {
+    "@": path.resolve(__dirname, "./src"),
+    "tempo-routes": path.resolve(__dirname, "src/tempo-routes.ts"),
+  };
+
+  if (isTempo) {
+    delete alias["tempo-routes"];
+  }
+
   const config = {
     base: "/",
     cacheDir: "node_modules/.vite-cache",
@@ -48,12 +58,10 @@ export default defineConfig(({ mode }) => {
         "tailwind-merge",
       ],
     },
-    plugins: process.env.VITE_TEMPO === "true" ? [react(), tempo()] : [react()],
+    plugins: isTempo ? [react(), tempo()] : [react()],
     resolve: {
       preserveSymlinks: false,
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
+      alias,
     },
     server: {
       // @ts-ignore
