@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
+import { useRoutes, Routes, Route, RouteObject } from "react-router-dom";
 const Home = lazy(() => import("./components/home"));
 const ClientSpace = lazy(() => import("./components/ClientSpace"));
 const ConseillerSpace = lazy(() => import("./components/ConseillerSpace"));
@@ -7,13 +7,16 @@ const AdminSpace = lazy(() => import("./components/AdminSpace"));
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
-let tempoRoutes: ReturnType<typeof useRoutes> | null = null;
+
+let tempoRoutes: RouteObject[] | null = null;
+const tempoModule = "tempo-routes";
 if (import.meta.env.VITE_TEMPO === "true") {
-  const { default: routes } = await import("tempo-routes");
-  tempoRoutes = useRoutes(routes);
+  const { default: routes } = await import(/* @vite-ignore */ tempoModule);
+  tempoRoutes = routes;
 }
 
 function App() {
+  const tempoElements = tempoRoutes ? useRoutes(tempoRoutes) : null;
   return (
     <AuthProvider>
       <CartProvider>
@@ -53,7 +56,7 @@ function App() {
                 }
               />
             </Routes>
-            {tempoRoutes && tempoRoutes}
+            {tempoElements}
           </>
         </FavoritesProvider>
       </CartProvider>
