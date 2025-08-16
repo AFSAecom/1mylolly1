@@ -2389,7 +2389,7 @@ const AdminSpace = () => {
                   // Find variant by contenance
                   const { data: variant } = await supabase
                     .from("product_variants")
-                    .select("*")
+                    .select("id, stock_actuel")
                     .eq("product_id", product.id)
                     .eq("contenance", stockItem.contenance)
                     .single();
@@ -2920,7 +2920,7 @@ const AdminSpace = () => {
                           try {
                             const { data, error } = await supabase
                               .from("users")
-                              .select("*")
+                              .select("id, email")
                               .limit(10);
 
                             console.log("📊 Direct Supabase test result:", {
