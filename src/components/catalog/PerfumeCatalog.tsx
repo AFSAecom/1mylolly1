@@ -77,14 +77,15 @@ const PerfumeCatalog = ({
   const [selectedFamille, setSelectedFamille] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const loadedRef = useRef(false);
+  const fetchGuardRef = useRef({ includeInactive, loaded: false });
 
   // Function to load products directly from Supabase
   const loadProductsFromSupabase = useCallback(async () => {
-    if (loadedRef.current) {
+    const guard = fetchGuardRef.current;
+    if (guard.loaded && guard.includeInactive === includeInactive) {
       return;
     }
-    loadedRef.current = true;
+    fetchGuardRef.current = { includeInactive, loaded: true };
 
       try {
         setLoading(true);
@@ -154,9 +155,8 @@ const PerfumeCatalog = ({
     if (perfumes) {
       setCatalogPerfumes(perfumes);
       setLoading(false);
-      loadedRef.current = true;
+      fetchGuardRef.current = { includeInactive, loaded: true };
     } else {
-      loadedRef.current = false;
       loadProductsFromSupabase();
     }
   }, [perfumes, includeInactive, loadProductsFromSupabase]);
@@ -164,26 +164,33 @@ const PerfumeCatalog = ({
   // Listen for catalog updates and clear events
   useEffect(() => {
     const handleCatalogUpdate = () => {
-      console.log(
-        "🔄 Catalog update event received, reloading from Supabase...",
-      );
-      loadedRef.current = false;
-      loadProductsFromSupabase();
+      console.log("🔄 Catalog update event received, cache invalidated");
+      fetchGuardRef.current.loaded = false;
     };
 
     const handleCatalogClear = () => {
-      console.log("🗑️ Catalog clear event received, clearing and reloading...");
+      console.log("🗑️ Catalog clear event received, clearing cache");
       setCatalogPerfumes([]);
-      loadedRef.current = false;
+      fetchGuardRef.current.loaded = false;
+    };
+
+    const handleCacheInvalidate = () => {
+      console.log("♻️ Catalog cache invalidated, reloading from Supabase...");
+      fetchGuardRef.current.loaded = false;
       loadProductsFromSupabase();
     };
 
     window.addEventListener("catalogUpdated", handleCatalogUpdate);
     window.addEventListener("catalogCleared", handleCatalogClear);
+    window.addEventListener("catalogCacheInvalidated", handleCacheInvalidate);
 
     return () => {
       window.removeEventListener("catalogUpdated", handleCatalogUpdate);
       window.removeEventListener("catalogCleared", handleCatalogClear);
+      window.removeEventListener(
+        "catalogCacheInvalidated",
+        handleCacheInvalidate,
+      );
     };
   }, [loadProductsFromSupabase]);
 
