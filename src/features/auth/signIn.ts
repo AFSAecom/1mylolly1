@@ -25,7 +25,7 @@ export async function handleSignIn(email: string, password: string) {
   // 2) Lire le profil PAR id (RLS: auth.uid() = id)
   const { data: profile, error: selErr } = await supabase
     .from('users')
-    .select('*')
+    .select('id, email')
     .eq('id', user.id)
     .maybeSingle();
   if (selErr) return { ok: false, step: 'selectProfile', error: selErr.message };
