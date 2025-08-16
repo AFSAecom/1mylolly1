@@ -7,11 +7,13 @@ const AdminSpace = lazy(() => import("./components/AdminSpace"));
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
-import routes from "tempo-routes";
+let tempoRoutes: ReturnType<typeof useRoutes> | null = null;
+if (import.meta.env.VITE_TEMPO === "true") {
+  const { default: routes } = await import("tempo-routes");
+  tempoRoutes = useRoutes(routes);
+}
 
 function App() {
-  const tempoRoutes =
-    import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
   return (
     <AuthProvider>
       <CartProvider>
@@ -51,7 +53,7 @@ function App() {
                 }
               />
             </Routes>
-            {tempoRoutes}
+            {tempoRoutes && tempoRoutes}
           </>
         </FavoritesProvider>
       </CartProvider>
