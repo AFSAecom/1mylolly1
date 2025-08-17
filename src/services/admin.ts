@@ -1,54 +1,30 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from "../lib/supabaseClient";
 
-export const fetchUsers = () =>
-  supabase
-    .from('users')
-    .select(
-      'id, prenom, nom, email, role, telephone, whatsapp, date_naissance, adresse, code_client, created_at',
-    )
-    .order('created_at', { ascending: false })
-    .range(0, 99);
+const PAGE_SIZE = 50;
 
-export const fetchProducts = () =>
+export const fetchUsers = (from = 0, to = from + PAGE_SIZE - 1) =>
   supabase
-    .from('products')
-    .select(`
-      id,
-      code_produit,
-      nom_lolly,
-      nom_parfum_inspire,
-      marque_inspire,
-      active,
-      image_url,
-      genre,
-      saison,
-      famille_olfactive,
-      note_tete,
-      note_coeur,
-      note_fond,
-      description,
-      product_variants(
-        id,
-        contenance,
-        unite,
-        prix,
-        stock_actuel,
-        ref_complete,
-        actif
-      )
-    `)
-    .range(0, 99);
+    .from("users")
+    .select("id, prenom, nom, email")
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-export const fetchPromotions = () =>
+export const fetchProducts = (from = 0, to = from + PAGE_SIZE - 1) =>
   supabase
-    .from('promotions')
-    .select('id, nom, pourcentage_reduction, description, date_debut, date_fin, active')
-    .order('date_debut', { ascending: false })
-    .range(0, 99);
+    .from("products")
+    .select("id, code_produit, nom_lolly")
+    .range(from, to);
 
-export const fetchOrders = () =>
+export const fetchPromotions = (from = 0, to = from + PAGE_SIZE - 1) =>
   supabase
-    .from('orders')
+    .from("promotions")
+    .select("id, nom, pourcentage_reduction")
+    .order("date_debut", { ascending: false })
+    .range(from, to);
+
+export const fetchOrders = (from = 0, to = from + PAGE_SIZE - 1) =>
+  supabase
+    .from("orders")
     .select(`
       id,
       created_at,
@@ -67,5 +43,5 @@ export const fetchOrders = () =>
         )
       )
     `)
-    .order('created_at', { ascending: false })
-    .range(0, 99);
+    .order("created_at", { ascending: false })
+    .range(from, to);
