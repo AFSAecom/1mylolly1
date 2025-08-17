@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -13,6 +12,18 @@ import {
 } from "@/components/ui/select";
 import PerfumeCard from "./PerfumeCard";
 import { supabase } from "@/lib/supabaseClient";
+
+// Hook returning a debounced value after a specified delay
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 interface PerfumeType {
   codeProduit: string;
@@ -44,120 +55,138 @@ const PerfumeCatalog = ({
   // All useState hooks must be called before any early returns
   const [catalogPerfumes, setCatalogPerfumes] = useState<PerfumeType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const searchTerm = useDebounce(searchInput, 300);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedSaison, setSelectedSaison] = useState<string | null>(null);
   const [selectedFamille, setSelectedFamille] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const [totalCount, setTotalCount] = useState(0);
 
   // Function to load products directly from Supabase
-  const loadProductsFromSupabase = async () => {
-    try {
-      setLoading(true);
-      console.log("🔄 Loading products directly from Supabase...");
+  const loadProductsFromSupabase = useCallback(
+    async (page: number, limit: number) => {
+      try {
+        setLoading(true);
+        console.log("🔄 Loading products directly from Supabase...");
 
-      let query = supabase
-        .from("products")
-        .select("*, product_variants(*)");
-      if (!includeInactive) {
-        query = query.eq("active", true);
-      }
-      const { data: productsData, error } = await query;
+        const start = (page - 1) * limit;
+        const end = start + limit - 1;
 
-      if (error) {
+        let query = supabase
+          .from("products")
+          .select(
+            "code_produit,nom_lolly,nom_parfum_inspire,marque_inspire,genre,saison,famille_olfactive,note_tete,note_coeur,note_fond,description,image_url,active",
+            { count: "exact" },
+          )
+          .range(start, end);
+        if (!includeInactive) {
+          query = query.eq("active", true);
+        }
+        const { data: productsData, count, error } = await query;
+
+        if (error) {
+          console.error("Error loading products from Supabase:", error);
+          // Fallback to default perfumes if Supabase fails
+          setCatalogPerfumes(defaultPerfumes);
+          setTotalCount(defaultPerfumes.length);
+          return;
+        }
+
+        if (typeof count === "number") {
+          setTotalCount(count);
+        }
+
+        if (productsData && productsData.length > 0) {
+          const formattedPerfumes = productsData.map((product) => ({
+            codeProduit: product.code_produit,
+            nomLolly: product.nom_lolly,
+            nomParfumInspire: product.nom_parfum_inspire,
+            marqueInspire: product.marque_inspire,
+            genre: (product.genre as "homme" | "femme" | "mixte") || "mixte",
+            saison:
+              (product.saison as "été" | "hiver" | "toutes saisons") ||
+              "toutes saisons",
+            familleOlfactive: product.famille_olfactive || "Oriental",
+            noteTete: Array.isArray(product.note_tete)
+              ? product.note_tete.join(", ")
+              : product.note_tete || "Bergamote, Citron",
+            noteCoeur: Array.isArray(product.note_coeur)
+              ? product.note_coeur.join(", ")
+              : product.note_coeur || "Jasmin, Rose",
+            noteFond: Array.isArray(product.note_fond)
+              ? product.note_fond.join(", ")
+              : product.note_fond || "Musc, Vanille",
+            description:
+              product.description || "Une fragrance élégante et raffinée.",
+            imageURL:
+              product.image_url ||
+              "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+            active: product.active,
+          }));
+
+          console.log(
+            `✅ Loaded ${formattedPerfumes.length} products from Supabase`,
+          );
+          setCatalogPerfumes(formattedPerfumes);
+        } else {
+          console.log("No products found in Supabase, using default perfumes");
+          setCatalogPerfumes(defaultPerfumes);
+        }
+      } catch (error) {
         console.error("Error loading products from Supabase:", error);
-        // Fallback to default perfumes if Supabase fails
         setCatalogPerfumes(defaultPerfumes);
-        return;
+        setTotalCount(defaultPerfumes.length);
+      } finally {
+        setLoading(false);
       }
-
-      if (productsData && productsData.length > 0) {
-        const formattedPerfumes = productsData.map((product) => ({
-          codeProduit: product.code_produit,
-          nomLolly: product.nom_lolly,
-          nomParfumInspire: product.nom_parfum_inspire,
-          marqueInspire: product.marque_inspire,
-          genre: (product.genre as "homme" | "femme" | "mixte") || "mixte",
-          saison:
-            (product.saison as "été" | "hiver" | "toutes saisons") ||
-            "toutes saisons",
-          familleOlfactive: product.famille_olfactive || "Oriental",
-          noteTete: Array.isArray(product.note_tete)
-            ? product.note_tete.join(", ")
-            : product.note_tete || "Bergamote, Citron",
-          noteCoeur: Array.isArray(product.note_coeur)
-            ? product.note_coeur.join(", ")
-            : product.note_coeur || "Jasmin, Rose",
-          noteFond: Array.isArray(product.note_fond)
-            ? product.note_fond.join(", ")
-            : product.note_fond || "Musc, Vanille",
-          description:
-            product.description || "Une fragrance élégante et raffinée.",
-          imageURL:
-            product.image_url ||
-            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
-          active: product.active,
-        }));
-
-        console.log(
-          `✅ Loaded ${formattedPerfumes.length} products from Supabase`,
-        );
-        setCatalogPerfumes(formattedPerfumes);
-      } else {
-        console.log("No products found in Supabase, using default perfumes");
-        setCatalogPerfumes(defaultPerfumes);
-      }
-    } catch (error) {
-      console.error("Error loading products from Supabase:", error);
-      setCatalogPerfumes(defaultPerfumes);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [includeInactive],
+  );
 
   // Load products on component mount
   useEffect(() => {
     if (perfumes) {
       setCatalogPerfumes(perfumes);
       setLoading(false);
+      setTotalCount(perfumes.length);
     } else {
-      loadProductsFromSupabase();
+      loadProductsFromSupabase(currentPage, itemsPerPage);
     }
-  }, [perfumes, includeInactive]);
+  }, [perfumes, includeInactive, currentPage, itemsPerPage, loadProductsFromSupabase]);
 
   // Listen for catalog updates and clear events
   useEffect(() => {
-    const handleCatalogUpdate = (event: any) => {
-      console.log(
-        "🔄 Catalog update event received, reloading from Supabase...",
-      );
-      loadProductsFromSupabase();
+    const handleCatalogUpdate = () => {
+      console.log("🔄 Catalog update event received, reloading from Supabase");
+      loadProductsFromSupabase(currentPage, itemsPerPage);
     };
 
-    const handleCatalogClear = (event: any) => {
-      console.log("🗑️ Catalog clear event received, clearing and reloading...");
+    const handleCatalogClear = () => {
+      console.log("🗑️ Catalog clear event received, clearing cache");
       setCatalogPerfumes([]);
-      loadProductsFromSupabase();
+      loadProductsFromSupabase(currentPage, itemsPerPage);
     };
 
-    // Listen for various update events
+    const handleCacheInvalidate = () => {
+      console.log("♻️ Catalog cache invalidated, reloading from Supabase...");
+      loadProductsFromSupabase(currentPage, itemsPerPage);
+    };
+
     window.addEventListener("catalogUpdated", handleCatalogUpdate);
     window.addEventListener("catalogCleared", handleCatalogClear);
-    window.addEventListener("productUpdated", handleCatalogUpdate);
-    window.addEventListener("productsImported", handleCatalogUpdate);
-    window.addEventListener("stockUpdated", handleCatalogUpdate);
-    window.addEventListener("productStatusUpdated", handleCatalogUpdate);
+    window.addEventListener("catalogCacheInvalidated", handleCacheInvalidate);
 
     return () => {
       window.removeEventListener("catalogUpdated", handleCatalogUpdate);
       window.removeEventListener("catalogCleared", handleCatalogClear);
-      window.removeEventListener("productUpdated", handleCatalogUpdate);
-      window.removeEventListener("productsImported", handleCatalogUpdate);
-      window.removeEventListener("stockUpdated", handleCatalogUpdate);
-      window.removeEventListener("productStatusUpdated", handleCatalogUpdate);
+      window.removeEventListener(
+        "catalogCacheInvalidated",
+        handleCacheInvalidate,
+      );
     };
-  }, []);
+  }, [loadProductsFromSupabase, currentPage, itemsPerPage]);
 
   const allPerfumes = perfumes || catalogPerfumes;
   const visiblePerfumes = includeInactive
@@ -218,6 +247,12 @@ const PerfumeCatalog = ({
     return searchMatch && genreMatch && saisonMatch && familleMatch;
   });
 
+  const handleSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setSearchInput(e.target.value);
+  };
+
   const handleGenreSelect = (genre: string) => {
     setSelectedGenre(selectedGenre === genre ? null : genre);
   };
@@ -231,7 +266,7 @@ const PerfumeCatalog = ({
   };
 
   const clearFilters = () => {
-    setSearchTerm("");
+    setSearchInput("");
     setSelectedGenre(null);
     setSelectedSaison(null);
     setSelectedFamille(null);
@@ -239,10 +274,8 @@ const PerfumeCatalog = ({
   };
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredPerfumes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPerfumes = filteredPerfumes.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const currentPerfumes = filteredPerfumes;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -265,8 +298,8 @@ const PerfumeCatalog = ({
           <Input
             type="text"
             placeholder="Rechercher par nom, marque, notes olfactives..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchInput}
+            onChange={handleSearchChange}
             className="pl-10 border-[#D4C2A1] bg-white focus:border-[#CE8F8A] text-[#805050]"
           />
         </div>
@@ -381,7 +414,7 @@ const PerfumeCatalog = ({
       {/* Results count and pagination info */}
       <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <p className="text-sm text-[#805050]">
-          {filteredPerfumes.length} parfums trouvés
+          {totalCount} parfums trouvés
           {totalPages > 1 && (
             <span className="ml-2 text-[#AD9C92]">
               (Page {currentPage} sur {totalPages})

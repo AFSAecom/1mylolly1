@@ -6,10 +6,18 @@ import App from './App';
 // ⚠️ Très important: import du CSS global (Tailwind, etc.)
 import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+
+const app = (
+  <BrowserRouter>
+    {import.meta.env.PROD ? (
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    ) : (
       <App />
-    </BrowserRouter>
-  </React.StrictMode>,
+    )}
+  </BrowserRouter>
 );
+
+root.render(app);

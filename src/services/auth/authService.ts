@@ -59,7 +59,9 @@ export async function login(
   try {
     const { data: existingUser, error: findError } = await supabase
       .from("users")
-      .select("*")
+      .select(
+        "id, email, nom, prenom, telephone, whatsapp, date_naissance, adresse, role, code_client",
+      )
       .eq("email", email)
       .single();
 
