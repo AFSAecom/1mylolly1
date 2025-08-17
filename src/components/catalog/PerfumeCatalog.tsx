@@ -52,14 +52,17 @@ const PerfumeCatalog = ({
   const itemsPerPage = 20;
 
   // Function to load products directly from Supabase
-  const loadProductsFromSupabase = async () => {
+  const loadProductsFromSupabase = async (page = 1) => {
     try {
       setLoading(true);
-      console.log("🔄 Loading products directly from Supabase...");
+      console.log(`🔄 Loading products directly from Supabase (page ${page})...`);
 
       let query = supabase
         .from("products")
-        .select("*, product_variants(*)");
+        .select(
+          "code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive, image_url, active",
+        )
+        .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
       if (!includeInactive) {
         query = query.eq("active", true);
       }
@@ -83,17 +86,10 @@ const PerfumeCatalog = ({
             (product.saison as "été" | "hiver" | "toutes saisons") ||
             "toutes saisons",
           familleOlfactive: product.famille_olfactive || "Oriental",
-          noteTete: Array.isArray(product.note_tete)
-            ? product.note_tete.join(", ")
-            : product.note_tete || "Bergamote, Citron",
-          noteCoeur: Array.isArray(product.note_coeur)
-            ? product.note_coeur.join(", ")
-            : product.note_coeur || "Jasmin, Rose",
-          noteFond: Array.isArray(product.note_fond)
-            ? product.note_fond.join(", ")
-            : product.note_fond || "Musc, Vanille",
-          description:
-            product.description || "Une fragrance élégante et raffinée.",
+          noteTete: "",
+          noteCoeur: "",
+          noteFond: "",
+          description: "",
           imageURL:
             product.image_url ||
             "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
@@ -244,7 +240,8 @@ const PerfumeCatalog = ({
   const endIndex = startIndex + itemsPerPage;
   const currentPerfumes = filteredPerfumes.slice(startIndex, endIndex);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = async (page: number) => {
+    await loadProductsFromSupabase(page);
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
