@@ -1,18 +1,23 @@
 import React from "react";
-import { motion } from "framer-motion";
 import HomeLayout from "./HomeLayout";
 
 const Home = () => {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    const t = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FBF0E9] flex flex-col items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="w-full max-w-4xl h-[600px]"
+      <div
+        className={`w-full max-w-4xl h-[600px] transition-all duration-700 ${
+          mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"
+        }`}
       >
         <HomeLayout />
-      </motion.div>
+      </div>
     </div>
   );
 };

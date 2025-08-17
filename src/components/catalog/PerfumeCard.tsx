@@ -40,6 +40,22 @@ const PerfumeCard = ({
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { isAuthenticated } = useAuth();
 
+  const buildSrcSet = (url: string) => {
+    try {
+      return [200, 400, 800]
+        .map((size) => {
+          const u = new URL(url);
+          u.searchParams.set("w", size.toString());
+          return `${u.toString()} ${size}w`;
+        })
+        .join(", ");
+    } catch {
+      return undefined;
+    }
+  };
+
+  const srcSet = buildSrcSet(imageURL);
+
   const handleAddToFavorites = (e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -101,6 +117,10 @@ const PerfumeCard = ({
           src={imageURL}
           alt={nomLolly}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          loading="lazy"
+          decoding="async"
+          srcSet={srcSet}
+          sizes={srcSet ? "(max-width: 600px) 100vw, 400px" : undefined}
         />
         <div className="absolute top-2 left-2 bg-[#CE8F8A] text-white text-xs px-2 py-1 rounded">
           {codeProduit}

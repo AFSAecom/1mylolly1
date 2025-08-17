@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import HomeLayout from "./HomeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -63,8 +62,9 @@ import { supabase } from "../lib/supabaseClient";
 const AdminSpace = () => {
   const { register } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const today = new Date().toISOString().split("T")[0];
+  const [dateFilter, setDateFilter] = useState({ start: today, end: today });
   const [showLogin, setShowLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showNewProduct, setShowNewProduct] = useState(false);
@@ -82,8 +82,10 @@ const AdminSpace = () => {
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [selectedProductForRestock, setSelectedProductForRestock] =
     useState(null);
-  const [editFormData, setEditFormData] = useState({});
-  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [editFormData, setEditFormData] = useState<any>({});
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(
+    null,
+  );
   const [imagePreview, setImagePreview] = useState("");
   const [newUserFormData, setNewUserFormData] = useState({
     prenom: "",
@@ -110,6 +112,8 @@ const AdminSpace = () => {
   const [promotions, setPromotions] = useState([]);
 
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [mounted, setMounted] = useState(false);
 
   // Enhanced data loading with RLS diagnostics
   const loadData = async () => {
@@ -430,6 +434,11 @@ const AdminSpace = () => {
   }, []);
 
   useEffect(() => {
+    const t = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
+
+  useEffect(() => {
     const handleNewSale = async (e: any) => {
       // If the event contains a products array, expand each item into its own entry
       if (Array.isArray(e.detail?.products)) {
@@ -462,6 +471,19 @@ const AdminSpace = () => {
     return () =>
       window.removeEventListener("newSaleRecorded", handleNewSale);
   }, []);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    if (dateFilter.start && dateFilter.end) {
+      setFilteredOrders(
+        orders.filter(
+          (o) => o.date >= dateFilter.start && o.date <= dateFilter.end,
+        ),
+      );
+    } else {
+      setFilteredOrders(orders.filter((o) => o.date === today));
+    }
+  }, [orders, dateFilter.start, dateFilter.end]);
 
   const handleExportExcel = (type) => {
     // Create CSV content with UTF-8 BOM for Excel compatibility
@@ -1497,7 +1519,7 @@ const AdminSpace = () => {
                 ];
 
                 // Create product with properly encoded data
-                const newProduct = {
+                const newProduct: any = {
                   id: Date.now() + i,
                   codeArticle: fixEncoding(codeArticle),
                   name: fixEncoding(nomLolly),
@@ -2635,11 +2657,10 @@ const AdminSpace = () => {
   return (
     <div className="min-h-screen bg-[#FBF0E9] p-4">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="space-y-8"
+        <div
+          className={`space-y-8 transition-all duration-500 ${
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+          }`}
         >
           <div className="flex justify-between items-center mb-8">
             <div className="text-center flex-1">
@@ -3327,7 +3348,7 @@ const AdminSpace = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map((sale) => (
+                        {filteredOrders.map((sale) => (
                           <TableRow key={sale.id}>
                             <TableCell>{sale.date}</TableCell>
                             <TableCell>{sale.client}</TableCell>
@@ -3934,7 +3955,7 @@ const AdminSpace = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        </motion.div>
+        </div>
       </div>
 
       {/* New Product Dialog */}
@@ -4068,11 +4089,34 @@ const AdminSpace = () => {
             </div>
             <div>
               <Label>Image du produit</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                className="border-[#D4C2A1]"
-              />
+              <div className="space-y-2">
+                {imagePreview && (
+                  <img
+                    src={imagePreview}
+                    alt="Prévisualisation"
+                    className="w-full h-48 object-cover rounded border"
+                  />
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  className="border-[#D4C2A1]"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    setSelectedImageFile(file || null);
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const result = reader.result as string;
+                        setImagePreview(result);
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      setImagePreview("");
+                    }
+                  }}
+                />
+              </div>
             </div>
             <div>
               <Label>Contenances et prix (TND)</Label>
@@ -4164,6 +4208,28 @@ const AdminSpace = () => {
                       document.querySelector("#new-product-form"),
                     );
 
+                    // Handle image upload if a file is selected
+                    let imageUrl =
+                      imagePreview ||
+                      "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80";
+                    if (selectedImageFile) {
+                      const fileExt = selectedImageFile.name.split(".").pop();
+                      const fileName = `${Date.now()}.${fileExt}`;
+                      const filePath = `products/${fileName}`;
+                      const { data: uploadData, error: uploadError } =
+                        await supabase.storage
+                          .from("product-images")
+                          .upload(filePath, selectedImageFile);
+                      if (!uploadError && uploadData) {
+                        const {
+                          data: { publicUrl },
+                        } = supabase.storage
+                          .from("product-images")
+                          .getPublicUrl(filePath);
+                        imageUrl = publicUrl || imagePreview;
+                      }
+                    }
+
                     // Create product in Supabase
                     const { data: newProduct, error: productError } =
                       await supabase
@@ -4203,8 +4269,7 @@ const AdminSpace = () => {
                           description:
                             (formData.get("description") as string) ||
                             "Description du produit",
-                          image_url:
-                            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+                          image_url: imageUrl,
                           active: true,
                         })
                         .select()
@@ -4256,7 +4321,7 @@ const AdminSpace = () => {
                     for (const variant of variants) {
                       await supabase.from("product_variants").insert({
                         product_id: newProduct.id,
-                        ref_complete: `${newProduct.code_produit}-${variant.size}`,
+                        ref_complete: `${newProduct.code_produit}-${parseInt(variant.size)}`,
                         contenance: parseInt(variant.size),
                         unite: "ml",
                         prix: variant.price,
@@ -4269,6 +4334,8 @@ const AdminSpace = () => {
                     await loadData();
 
                     alert("Produit créé avec succès dans Supabase!");
+                    setSelectedImageFile(null);
+                    setImagePreview("");
                     setShowNewProduct(false);
                   } catch (error) {
                     console.error("Error creating product:", error);
