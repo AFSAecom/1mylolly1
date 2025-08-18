@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import HomeLayout from "./HomeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -110,6 +110,16 @@ const AdminSpace = () => {
   const [promotions, setPromotions] = useState([]);
 
   const [orders, setOrders] = useState([]);
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((sale) => {
+      if (!dateFilter.start || !dateFilter.end) return true;
+      const saleDate = new Date(sale.date);
+      const startDate = new Date(dateFilter.start);
+      const endDate = new Date(dateFilter.end);
+      return saleDate >= startDate && saleDate <= endDate;
+    });
+  }, [orders, dateFilter.start, dateFilter.end]);
 
   // Enhanced data loading with RLS diagnostics
   const loadData = async () => {
@@ -3344,7 +3354,7 @@ const AdminSpace = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map((sale) => (
+                        {filteredOrders.map((sale) => (
                           <TableRow key={sale.id}>
                             <TableCell>{sale.date}</TableCell>
                             <TableCell>{sale.client}</TableCell>
