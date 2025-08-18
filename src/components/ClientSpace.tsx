@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
-import PerfumeDetail from "./catalog/PerfumeDetail";
 import { Button } from "./ui/button";
 import {
   ShoppingBag,
@@ -20,6 +19,8 @@ import LoginDialog from "./auth/LoginDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+
+const PerfumeDetail = React.lazy(() => import("./catalog/PerfumeDetail"));
 
 // Order History Component
 const OrderHistory = () => {
@@ -379,7 +380,9 @@ const ClientSpace = () => {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Retour au catalogue
               </Button>
-              <PerfumeDetail perfume={selectedPerfume} />
+              <Suspense fallback={<div>Chargement...</div>}>
+                <PerfumeDetail perfume={selectedPerfume} />
+              </Suspense>
             </div>
           ) : showFavorites ? (
             <div>
