@@ -59,6 +59,7 @@ import {
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase } from "../lib/supabaseClient";
+import { getPublicImageUrl } from "../lib/imageUtils";
 
 const AdminSpace = () => {
   const { register } = useAuth();
@@ -241,7 +242,9 @@ const AdminSpace = () => {
                 0,
               ) || 0,
             active: product.active,
-            imageURL: product.image_url,
+            imageURL: product.image_url
+              ? getPublicImageUrl(product.image_url)
+              : '',
             genre: product.genre,
             saison: product.saison,
             familleOlfactive: product.famille_olfactive,
@@ -4306,6 +4309,8 @@ const AdminSpace = () => {
                           "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80"
                         }
                         alt={selectedProduct.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-48 object-cover rounded"
                         key={`preview-${selectedProduct.id}-${selectedProduct.lastModified || Date.now()}`}
                       />
@@ -4473,6 +4478,8 @@ const AdminSpace = () => {
                           "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80"
                         }
                         alt={selectedProduct.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-48 object-cover rounded border"
                       />
                       <Input

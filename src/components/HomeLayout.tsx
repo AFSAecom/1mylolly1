@@ -19,6 +19,8 @@ const HomeLayout = ({ children = null }: HomeLayoutProps) => {
           <img
             src="/logo-lolly.png"
             alt="Lolly"
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-contain"
           />
         </div>

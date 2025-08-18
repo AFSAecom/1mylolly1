@@ -234,6 +234,8 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
                   <img
                     src={item.imageURL}
                     alt={item.nomLolly}
+                    loading="lazy"
+                    decoding="async"
                     className="w-16 h-16 object-cover rounded flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">

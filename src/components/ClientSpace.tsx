@@ -279,6 +279,8 @@ const ClientSpace = () => {
             <img
               src="/logo-lolly.png"
               alt="Lolly"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-contain"
             />
           </div>
@@ -458,6 +460,8 @@ const ClientSpace = () => {
                           <img
                             src={favorite.imageURL}
                             alt={favorite.nomLolly}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-32 object-cover rounded mb-2"
                           />
                           <h4 className="font-medium text-[#805050] mb-1">
@@ -753,6 +757,8 @@ const ClientSpace = () => {
                               <img
                                 src={favorite.imageURL}
                                 alt={favorite.nomLolly}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-32 object-cover rounded mb-2"
                               />
                               <h4 className="font-medium text-[#805050] mb-1">

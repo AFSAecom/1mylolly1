@@ -16,6 +16,7 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import CartDialog from "@/components/cart/CartDialog";
 import { supabase } from "@/lib/supabaseClient";
+import { getPublicImageUrl } from "@/lib/imageUtils";
 
 interface PerfumeSummary {
   codeProduit: string;
@@ -145,7 +146,9 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
           noteCoeur: data.note_coeur || [],
           noteFond: data.note_fond || [],
           description: data.description || "",
-          imageURL: data.image_url || prev.imageURL,
+          imageURL: data.image_url
+            ? getPublicImageUrl(data.image_url)
+            : prev.imageURL,
           contenances:
             data.product_variants?.map((v: any) => ({
               refComplete: v.ref_complete,
@@ -271,6 +274,8 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
                 key={imageKey}
                 src={imageUrlWithCacheBust}
                 alt={currentPerfume.nomLolly}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover rounded-xl"
                 onError={(e) => {
                   // Fallback to original URL if cache-busted version fails

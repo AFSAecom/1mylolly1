@@ -674,6 +674,8 @@ const ConseillerSpace = () => {
                               <img
                                 src={favorite.imageURL}
                                 alt={favorite.nomLolly}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-16 h-16 object-cover rounded"
                               />
                               <div className="flex-1 min-w-0">

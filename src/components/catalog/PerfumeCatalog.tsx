@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import PerfumeCard from "./PerfumeCard";
 import { supabase } from "@/lib/supabaseClient";
+import { getPublicImageUrl } from "@/lib/imageUtils";
 
 interface PerfumeType {
   codeProduit: string;
@@ -82,9 +83,9 @@ const PerfumeCatalog = ({
             (product.saison as "été" | "hiver" | "toutes saisons") ||
             "toutes saisons",
           familleOlfactive: product.famille_olfactive || "Oriental",
-          imageURL:
-            product.image_url ||
-            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+          imageURL: product.image_url
+            ? getPublicImageUrl(product.image_url)
+            : "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
           active: product.active,
         }));
 
