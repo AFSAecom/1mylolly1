@@ -22,10 +22,6 @@ interface PerfumeType {
   genre: "homme" | "femme" | "mixte";
   saison: "été" | "hiver" | "toutes saisons";
   familleOlfactive: string;
-  noteTete: string;
-  noteCoeur: string;
-  noteFond: string;
-  description: string;
   imageURL: string;
   active: boolean;
 }
@@ -86,10 +82,6 @@ const PerfumeCatalog = ({
             (product.saison as "été" | "hiver" | "toutes saisons") ||
             "toutes saisons",
           familleOlfactive: product.famille_olfactive || "Oriental",
-          noteTete: "",
-          noteCoeur: "",
-          noteFond: "",
-          description: "",
           imageURL:
             product.image_url ||
             "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
@@ -194,10 +186,7 @@ const PerfumeCatalog = ({
       searchTerm === "" ||
       normalizeText(perfume.nomLolly).includes(normalizedSearchTerm) ||
       normalizeText(perfume.nomParfumInspire).includes(normalizedSearchTerm) ||
-      normalizeText(perfume.marqueInspire).includes(normalizedSearchTerm) ||
-      normalizeText(perfume.noteTete).includes(normalizedSearchTerm) ||
-      normalizeText(perfume.noteCoeur).includes(normalizedSearchTerm) ||
-      normalizeText(perfume.noteFond).includes(normalizedSearchTerm);
+      normalizeText(perfume.marqueInspire).includes(normalizedSearchTerm);
 
     // Genre filter
     const genreMatch =
@@ -530,11 +519,6 @@ const defaultPerfumes: PerfumeType[] = [
     genre: "femme",
     saison: "toutes saisons",
     familleOlfactive: "Oriental Vanillé",
-    noteTete: "Café, Poire",
-    noteCoeur: "Jasmin, Fleur d'oranger",
-    noteFond: "Vanille, Patchouli, Cèdre",
-    description:
-      "Une fragrance addictive et envoûtante avec des notes gourmandes de café et de vanille.",
     imageURL:
       "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
     active: true,
@@ -547,11 +531,6 @@ const defaultPerfumes: PerfumeType[] = [
     genre: "homme",
     saison: "été",
     familleOlfactive: "Aromatique Aquatique",
-    noteTete: "Bergamote, Néroli",
-    noteCoeur: "Romarin, Persil, Jasmin",
-    noteFond: "Bois de cèdre, Musc, Ambre",
-    description:
-      "Une fragrance fraîche et marine inspirée par la mer Méditerranée.",
     imageURL:
       "https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?w=400&q=80",
     active: true,
@@ -564,11 +543,6 @@ const defaultPerfumes: PerfumeType[] = [
     genre: "femme",
     saison: "toutes saisons",
     familleOlfactive: "Floral Fruité",
-    noteTete: "Bergamote, Poire, Melon",
-    noteCoeur: "Rose de Mai, Jasmin, Magnolia",
-    noteFond: "Musc, Bois de cèdre",
-    description:
-      "Un bouquet floral sophistiqué et élégant aux notes délicates.",
     imageURL:
       "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80",
     active: true,
@@ -581,11 +555,6 @@ const defaultPerfumes: PerfumeType[] = [
     genre: "homme",
     saison: "toutes saisons",
     familleOlfactive: "Aromatique Fougère",
-    noteTete: "Bergamote, Poivre",
-    noteCoeur: "Lavande, Géranium, Poivre de Sichuan",
-    noteFond: "Ambroxan, Patchouli, Vétiver",
-    description:
-      "Une fragrance puissante et masculine avec des notes aromatiques et boisées.",
     imageURL:
       "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80",
     active: true,
@@ -598,11 +567,6 @@ const defaultPerfumes: PerfumeType[] = [
     genre: "femme",
     saison: "hiver",
     familleOlfactive: "Gourmand Floral",
-    noteTete: "Cassis, Poire",
-    noteCoeur: "Iris, Jasmin, Fleur d'oranger",
-    noteFond: "Praline, Vanille, Patchouli",
-    description:
-      "Une fragrance gourmande et féminine avec des notes sucrées de praline et de vanille.",
     imageURL:
       "https://images.unsplash.com/photo-1615529162924-f8605388461d?w=400&q=80",
     active: true,
@@ -615,11 +579,6 @@ const defaultPerfumes: PerfumeType[] = [
     genre: "mixte",
     saison: "été",
     familleOlfactive: "Citrus Aromatique",
-    noteTete: "Citron de Sicile, Pomme Granny Smith",
-    noteCoeur: "Jasmin, Rose Blanche, Bambou",
-    noteFond: "Cèdre, Ambre, Musc",
-    description:
-      "Une fragrance fraîche et légère évoquant la Méditerranée en été.",
     imageURL:
       "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80",
     active: true,

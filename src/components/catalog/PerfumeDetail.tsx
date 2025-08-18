@@ -15,30 +15,36 @@ import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import CartDialog from "@/components/cart/CartDialog";
+import { supabase } from "@/lib/supabaseClient";
+
+interface PerfumeSummary {
+  codeProduit: string;
+  nomLolly: string;
+  nomParfumInspire: string;
+  marqueInspire: string;
+  genre: "homme" | "femme" | "mixte";
+  saison: "été" | "hiver" | "toutes saisons";
+  familleOlfactive: string;
+  imageURL: string;
+}
+
+interface PerfumeDetailData extends PerfumeSummary {
+  noteTete: string[];
+  noteCoeur: string[];
+  noteFond: string[];
+  description: string;
+  contenances: {
+    refComplete: string;
+    contenance: number;
+    unite: string;
+    prix: number;
+    stockActuel: number;
+    actif: boolean;
+  }[];
+}
 
 interface PerfumeDetailProps {
-  perfume?: {
-    codeProduit: string;
-    nomLolly: string;
-    nomParfumInspire: string;
-    marqueInspire: string;
-    genre: "homme" | "femme" | "mixte";
-    saison: "été" | "hiver" | "toutes saisons";
-    familleOlfactive: string;
-    noteTete: string[];
-    noteCoeur: string[];
-    noteFond: string[];
-    description: string;
-    imageURL: string;
-    contenances: {
-      refComplete: string;
-      contenance: number;
-      unite: string;
-      prix: number;
-      stockActuel: number;
-      actif: boolean;
-    }[];
-  };
+  perfume?: PerfumeSummary;
   onAddToCart?: (refComplete: string, quantity: number) => void;
   onAddToFavorites?: (codeProduit: string) => void;
 }
@@ -48,194 +54,117 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
   onAddToCart = () => {},
   onAddToFavorites = () => {},
 }) => {
-  // Function to load the latest product data
-  const loadProductData = (
-    providedPerfume?: typeof perfume,
-    options: { reset?: boolean } = {},
-  ) => {
-    const defaultPerfume = {
-      codeProduit: "L001",
-      nomLolly: "Élégance Nocturne",
-      nomParfumInspire: "Black Opium",
-      marqueInspire: "Yves Saint Laurent",
-      genre: "femme" as const,
-      saison: "toutes saisons" as const,
-      familleOlfactive: "Oriental Vanillé",
-      noteTete: ["Café", "Poire", "Mandarine"],
-      noteCoeur: ["Jasmin", "Fleur d'oranger", "Vanille"],
-      noteFond: ["Patchouli", "Cèdre", "Musc"],
-      description:
-        "Une fragrance envoûtante qui mêle l'intensité du café à la douceur de la vanille, créant une signature olfactive addictive et mystérieuse.",
-      imageURL:
-        "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80",
-      contenances: [
-        {
-          refComplete: "L001-15ml",
-          contenance: 15,
-          unite: "ml",
-          prix: 19.9,
-          stockActuel: 25,
-          actif: true,
-        },
-        {
-          refComplete: "L001-30ml",
-          contenance: 30,
-          unite: "ml",
-          prix: 29.9,
-          stockActuel: 18,
-          actif: true,
-        },
-        {
-          refComplete: "L001-50ml",
-          contenance: 50,
-          unite: "ml",
-          prix: 39.9,
-          stockActuel: 10,
-          actif: true,
-        },
-        {
-          refComplete: "L001-100ml",
-          contenance: 100,
-          unite: "ml",
-          prix: 59.9,
-          stockActuel: 0,
-          actif: false,
-        },
-      ],
-    };
-
-    if (options.reset) {
-      localStorage.removeItem("admin-products");
-    }
-
-    // Always try to load the most recent data from localStorage first
-    if (!options.reset) {
-      const savedProducts = localStorage.getItem("admin-products");
-      if (savedProducts) {
-        try {
-          const adminProducts = JSON.parse(savedProducts);
-          const targetCodeProduit =
-            providedPerfume?.codeProduit || defaultPerfume.codeProduit;
-          const matchingProduct = adminProducts.find(
-            (p: any) => p.codeArticle === targetCodeProduit,
-          );
-          if (matchingProduct) {
-            const updatedPerfume = {
-              ...defaultPerfume,
-              codeProduit: matchingProduct.codeArticle || targetCodeProduit,
-              nomLolly: matchingProduct.name || defaultPerfume.nomLolly,
-              nomParfumInspire:
-                matchingProduct.nomParfumInspire ||
-                defaultPerfume.nomParfumInspire,
-              marqueInspire:
-                matchingProduct.marqueInspire || defaultPerfume.marqueInspire,
-              imageURL: matchingProduct.imageURL || defaultPerfume.imageURL,
-              contenances:
-                matchingProduct.variants?.map((variant: any) => ({
-                  refComplete: `${matchingProduct.codeArticle}-${variant.size}`,
-                  contenance: parseInt(variant.size.replace("ml", "")),
-                  unite: "ml",
-                  prix: variant.price,
-                  stockActuel: variant.stock,
-                  actif: variant.stock > 0,
-                })) || defaultPerfume.contenances,
-            };
-            return updatedPerfume;
-          }
-        } catch (error) {
-          console.error("Error parsing admin products:", error);
-        }
-      }
-    }
-
-    // If provided perfume exists and no localStorage data, use it
-    if (providedPerfume) return providedPerfume;
-
-    return defaultPerfume;
+  const defaultPerfume: PerfumeDetailData = {
+    codeProduit: "L001",
+    nomLolly: "Élégance Nocturne",
+    nomParfumInspire: "Black Opium",
+    marqueInspire: "Yves Saint Laurent",
+    genre: "femme",
+    saison: "toutes saisons",
+    familleOlfactive: "Oriental Vanillé",
+    noteTete: ["Café", "Poire", "Mandarine"],
+    noteCoeur: ["Jasmin", "Fleur d'oranger", "Vanille"],
+    noteFond: ["Patchouli", "Cèdre", "Musc"],
+    description:
+      "Une fragrance envoûtante qui mêle l'intensité du café à la douceur de la vanille, créant une signature olfactive addictive et mystérieuse.",
+    imageURL:
+      "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80",
+    contenances: [
+      {
+        refComplete: "L001-15ml",
+        contenance: 15,
+        unite: "ml",
+        prix: 19.9,
+        stockActuel: 25,
+        actif: true,
+      },
+      {
+        refComplete: "L001-30ml",
+        contenance: 30,
+        unite: "ml",
+        prix: 29.9,
+        stockActuel: 18,
+        actif: true,
+      },
+      {
+        refComplete: "L001-50ml",
+        contenance: 50,
+        unite: "ml",
+        prix: 39.9,
+        stockActuel: 10,
+        actif: true,
+      },
+      {
+        refComplete: "L001-100ml",
+        contenance: 100,
+        unite: "ml",
+        prix: 59.9,
+        stockActuel: 0,
+        actif: false,
+      },
+    ],
   };
 
-  // Load product data from localStorage if not provided
-  const [productData, setProductData] = useState(() =>
-    loadProductData(perfume),
-  );
+  const [currentPerfume, setCurrentPerfume] =
+    useState<PerfumeDetailData>(perfume ? { ...defaultPerfume, ...perfume } : defaultPerfume);
 
-  // State to force image re-render with timestamp
   const [imageUpdateKey, setImageUpdateKey] = useState(() => Date.now());
 
-  // Function to refresh product data from localStorage
-  const refreshProductData = React.useCallback(
-    (reset = false) => {
-      const updatedData = loadProductData(perfume, { reset });
-      setProductData(updatedData);
-      setImageUpdateKey(Date.now()); // Use timestamp for unique key
-    },
-    [perfume],
-  );
-
-  // Listen for product updates and refresh data
   React.useEffect(() => {
-    const handleProductUpdate = (event: any) => {
-      console.log("Product update event received:", event.detail);
-      // Force immediate refresh of product data
-      const updatedData = loadProductData(perfume);
-      setProductData(updatedData);
-      // Force component re-render to update image with timestamp
-      setImageUpdateKey(Date.now());
-    };
+    setCurrentPerfume(perfume ? { ...defaultPerfume, ...perfume } : defaultPerfume);
+    setImageUpdateKey(Date.now());
+  }, [perfume]);
 
-    const handleStockUpdate = (event: any) => {
-      console.log("Stock update event received:", event.detail);
-      // Force immediate refresh of product data
-      const updatedData = loadProductData(perfume);
-      setProductData(updatedData);
-      // Force component re-render to update image with timestamp
-      setImageUpdateKey(Date.now());
-    };
+  React.useEffect(() => {
+    const fetchDetails = async () => {
+      if (!perfume?.codeProduit) return;
+      const { data, error } = await supabase
+        .from("products")
+        .select(
+          `
+          note_tete,
+          note_coeur,
+          note_fond,
+          description,
+          image_url,
+          product_variants(ref_complete, contenance, unite, prix, stock_actuel, actif)
+        `
+        )
+        .eq("code_produit", perfume.codeProduit)
+        .single();
 
-    // Also listen for localStorage changes (in case of direct updates)
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "admin-products") {
-        console.log("localStorage admin-products changed");
-        // Force immediate refresh of product data
-        const updatedData = loadProductData(perfume);
-        setProductData(updatedData);
-        // Force component re-render to update image with timestamp
+      if (error) {
+        console.error("Error loading product details:", error);
+        return;
+      }
+
+      if (data) {
+        setCurrentPerfume((prev) => ({
+          ...prev,
+          noteTete: data.note_tete || [],
+          noteCoeur: data.note_coeur || [],
+          noteFond: data.note_fond || [],
+          description: data.description || "",
+          imageURL: data.image_url || prev.imageURL,
+          contenances:
+            data.product_variants?.map((v: any) => ({
+              refComplete: v.ref_complete,
+              contenance: v.contenance,
+              unite: v.unite,
+              prix: v.prix,
+              stockActuel: v.stock_actuel,
+              actif: v.actif,
+            })) || [],
+        }));
         setImageUpdateKey(Date.now());
       }
     };
 
-    // Refresh data on component mount to ensure we have the latest
-    const initialData = loadProductData(perfume);
-    setProductData(initialData);
+    fetchDetails();
+  }, [perfume]);
 
-    // Set up a polling mechanism to check for updates every 500ms
-    const pollInterval = setInterval(() => {
-      const currentData = loadProductData(perfume);
-      if (JSON.stringify(currentData) !== JSON.stringify(productData)) {
-        setProductData(currentData);
-        setImageUpdateKey(Date.now());
-      }
-    }, 500);
-
-    window.addEventListener("productUpdated", handleProductUpdate);
-    window.addEventListener("stockUpdated", handleStockUpdate);
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      clearInterval(pollInterval);
-      window.removeEventListener("productUpdated", handleProductUpdate);
-      window.removeEventListener("stockUpdated", handleStockUpdate);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [perfume, productData]);
-
-  // Use productData directly as currentPerfume
-  const currentPerfume = productData;
-
-  // Create a unique key for image that forces re-render
   const imageKey = `${currentPerfume.codeProduit}-${imageUpdateKey}-${currentPerfume.imageURL?.split("?")[0]}`;
 
-  // Add cache busting parameter to image URL
   const imageUrlWithCacheBust = `${currentPerfume.imageURL}${currentPerfume.imageURL?.includes("?") ? "&" : "?"}t=${imageUpdateKey}`;
   const { addToCart } = useCart();
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
@@ -530,13 +459,6 @@ const PerfumeDetail: React.FC<PerfumeDetailProps> = ({
               >
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Ajouter au panier
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto text-sm"
-                onClick={() => refreshProductData(true)}
-              >
-                Réinitialiser
               </Button>
             </CardFooter>
           </div>
