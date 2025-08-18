@@ -383,6 +383,10 @@ const AdminSpace = () => {
                 "Produit inconnu",
               codeArticle: item.product_variants?.ref_complete ?? "N/A",
               quantity: item.quantity,
+              parfumInspire:
+                item.product_variants?.products?.nom_parfum_inspire ?? "N/A",
+              marqueInspire:
+                item.product_variants?.products?.marque_inspire ?? "N/A",
               amount: item.total_price,
               conseillere:
                 order.conseillere &&
@@ -490,7 +494,7 @@ const AdminSpace = () => {
 
       if (type === "sales") {
         headers =
-          "Date,Client,Code Client,Produit,Code Article,Quantité,Marque Inspirée,Montant TND,Conseillère\n";
+          "Date,Client,Code Client,Produit,Code Article,Quantité,Parfum Inspiré,Marque Inspirée,Montant TND,Conseillère\n";
         const filteredSales = orders.filter((sale) => {
           if (!dateFilter.start || !dateFilter.end) return true;
           const saleDate = new Date(sale.date);
@@ -507,7 +511,7 @@ const AdminSpace = () => {
           const amount = Number.isFinite(sale.amount)
             ? sale.amount.toFixed(3)
             : "0.000";
-          rows += `"${sale.date}","${sale.client}","${sale.codeClient}","${sale.product}","${sale.codeArticle}","${sale.quantity}","Yves Saint Laurent","${amount}","${sale.conseillere}"\n`;
+          rows += `"${sale.date}","${sale.client}","${sale.codeClient}","${sale.product}","${sale.codeArticle}","${sale.quantity}","${sale.parfumInspire}","${sale.marqueInspire}","${amount}","${sale.conseillere}"\n`;
         });
       } else if (type === "clients") {
         headers =
@@ -3352,6 +3356,7 @@ const AdminSpace = () => {
                           <TableHead>Produit</TableHead>
                           <TableHead>Code Article</TableHead>
                           <TableHead>Quantité</TableHead>
+                          <TableHead>Parfum Inspiré</TableHead>
                           <TableHead>Marque Inspirée</TableHead>
                           <TableHead>Montant (TND)</TableHead>
                           <TableHead>Conseillère</TableHead>
@@ -3366,7 +3371,8 @@ const AdminSpace = () => {
                             <TableCell>{sale.product}</TableCell>
                             <TableCell>{sale.codeArticle}</TableCell>
                             <TableCell>{sale.quantity}</TableCell>
-                            <TableCell>Yves Saint Laurent</TableCell>
+                            <TableCell>{sale.parfumInspire}</TableCell>
+                            <TableCell>{sale.marqueInspire}</TableCell>
                             <TableCell>{sale.amount.toFixed(3)} TND</TableCell>
                             <TableCell>{sale.conseillere}</TableCell>
                           </TableRow>
