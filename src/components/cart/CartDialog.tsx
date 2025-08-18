@@ -108,6 +108,14 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
         .insert(orderItems);
       if (itemsError) throw itemsError;
 
+      // Decrement stock for each ordered item
+      for (const oi of orderItems) {
+        await supabase.rpc("trg_decrement_stock", {
+          product_variant_id: oi.product_variant_id,
+          quantity: oi.quantity,
+        });
+      }
+
       // 4. Store order locally
       const orderData = {
         id: orderId,
