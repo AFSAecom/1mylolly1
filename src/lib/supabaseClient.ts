@@ -1,8 +1,11 @@
 // src/lib/supabaseClient.ts
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
+// Vite n'expose au navigateur que les variables préfixées par VITE_
+const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL as string
+const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
-// IMPORTANT : n'utilise jamais la service_role key côté frontend.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl)  throw new Error('Missing VITE_SUPABASE_URL')
+if (!supabaseAnon) throw new Error('Missing VITE_SUPABASE_ANON_KEY')
+
+export const supabase = createClient(supabaseUrl, supabaseAnon)
