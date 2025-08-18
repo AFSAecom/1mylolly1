@@ -468,59 +468,68 @@ const AdminSpace = () => {
     event?: React.MouseEvent,
   ) => {
     event?.preventDefault();
-    // Create CSV content with UTF-8 BOM for Excel compatibility
-    let csvContent = "\uFEFF"; // UTF-8 BOM
-    let headers = "";
-    let rows = "";
-    const currentDate = new Date().toISOString().split("T")[0];
+    try {
+      // Create CSV content with UTF-8 BOM for Excel compatibility
+      let csvContent = "\uFEFF"; // UTF-8 BOM
+      let headers = "";
+      let rows = "";
+      const currentDate = new Date().toISOString().split("T")[0];
 
-    if (type === "sales") {
-      headers =
-        "Date,Client,Code Client,Produit,Code Article,Marque Inspirée,Montant TND,Conseillère\n";
-      const filteredSales = orders.filter((sale) => {
-        if (!dateFilter.start || !dateFilter.end) return true;
-        const saleDate = new Date(sale.date);
-        const startDate = new Date(dateFilter.start);
-        const endDate = new Date(dateFilter.end);
-        return saleDate >= startDate && saleDate <= endDate;
-      });
-
-      filteredSales.forEach((sale) => {
-        const amount = Number.isFinite(sale.amount)
-          ? sale.amount.toFixed(3)
-          : "0.000";
-        rows += `"${sale.date}","${sale.client}","${sale.codeClient}","${sale.product}","${sale.codeArticle}","Yves Saint Laurent","${amount}","${sale.conseillere}"\n`;
-      });
-    } else if (type === "clients") {
-      headers =
-        "Client,Code Client,Email,Articles Achetés,Parfum Inspiré,Marque Inspirée,Prix TND,Date Achat,Statut\n";
-      users
-        .filter((user) => user.role === "client")
-        .forEach((client) => {
-          rows += `"${client.name}","${client.codeClient}","${client.email}","L001-30","Black Opium","Yves Saint Laurent","29.900","${client.lastOrder}","Actif"\n`;
+      if (type === "sales") {
+        headers =
+          "Date,Client,Code Client,Produit,Code Article,Marque Inspirée,Montant TND,Conseillère\n";
+        const filteredSales = orders.filter((sale) => {
+          if (!dateFilter.start || !dateFilter.end) return true;
+          const saleDate = new Date(sale.date);
+          const startDate = new Date(dateFilter.start);
+          const endDate = new Date(dateFilter.end);
+          return saleDate >= startDate && saleDate <= endDate;
         });
+        if (filteredSales.length === 0) {
+          alert("Aucune vente à exporter.");
+          return;
+        }
+
+        filteredSales.forEach((sale) => {
+          const amount = Number.isFinite(sale.amount)
+            ? sale.amount.toFixed(3)
+            : "0.000";
+          rows += `"${sale.date}","${sale.client}","${sale.codeClient}","${sale.product}","${sale.codeArticle}","Yves Saint Laurent","${amount}","${sale.conseillere}"\n`;
+        });
+      } else if (type === "clients") {
+        headers =
+          "Client,Code Client,Email,Articles Achetés,Parfum Inspiré,Marque Inspirée,Prix TND,Date Achat,Statut\n";
+        users
+          .filter((user) => user.role === "client")
+          .forEach((client) => {
+            rows += `"${client.name}","${client.codeClient}","${client.email}","L001-30","Black Opium","Yves Saint Laurent","29.900","${client.lastOrder}","Actif"\n`;
+          });
+      }
+
+      csvContent += headers + rows;
+
+      // Create blob with CSV MIME type and UTF-8 encoding
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${type}_export_${currentDate}.csv`);
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Show success message
+      alert(
+        `Export ${type} terminé avec succès! Fichier: ${type}_export_${currentDate}.csv`,
+      );
+    } catch (err) {
+      alert("Erreur lors de l’export");
+      console.error(err);
     }
-
-    csvContent += headers + rows;
-
-    // Create blob with CSV MIME type and UTF-8 encoding
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `${type}_export_${currentDate}.csv`);
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    // Show success message
-    alert(
-      `Export ${type} terminé avec succès! Fichier: ${type}_export_${currentDate}.csv`,
-    );
   };
 
   const handleDownloadTemplate = (type) => {
