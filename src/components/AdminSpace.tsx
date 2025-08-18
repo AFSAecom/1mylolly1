@@ -26,6 +26,7 @@ import {
 import { Textarea } from "./ui/textarea";
 import LoginDialog from "./auth/LoginDialog";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "./ui/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -62,6 +63,7 @@ import { supabase } from "../lib/supabaseClient";
 
 const AdminSpace = () => {
   const { register } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
@@ -5493,74 +5495,51 @@ const AdminSpace = () => {
                       newUserFormData.role,
                     );
 
-                    // Create user directly in Supabase users table (bypassing auth for admin creation)
-                    const userData = {
+                    const payload = {
                       email: requiredFields.email.toLowerCase(),
-                      nom: requiredFields.nom,
+                      password: requiredFields.password,
                       prenom: requiredFields.prenom,
+                      nom: requiredFields.nom,
                       role: newUserFormData.role || "client",
                       telephone: newUserFormData.telephone?.trim() || null,
                       whatsapp: newUserFormData.whatsapp?.trim() || null,
                       date_naissance: newUserFormData.dateNaissance || null,
-                      code_client: `${newUserFormData.role === "admin" ? "ADM" : newUserFormData.role === "conseillere" ? "CNS" : "C"}${Date.now().toString().slice(-6)}`,
                     };
 
-                    console.log(
-                      "📝 Creating user in Supabase with data:",
-                      userData,
-                    );
+                    const {
+                      data: { session },
+                    } = await supabase.auth.getSession();
+                    const accessToken = session?.access_token;
 
-                    // Check if user already exists
-                    const { data: existingUser } = await supabase
-                      .from("users")
-                      .select("email")
-                      .eq("email", userData.email)
-                      .single();
-
-                    if (existingUser) {
-                      alert(
-                        `❌ Un utilisateur avec l'email ${userData.email} existe déjà.`,
-                      );
-                      return;
-                    }
-
-                    // Insert user directly into users table
-                    const { data: createdUser, error: createError } =
-                      await supabase
-                        .from("users")
-                        .insert(userData)
-                        .select()
-                        .single();
-
-                    if (createError) {
-                      console.error("❌ Error creating user:", createError);
-                      alert(
-                        `❌ Erreur lors de la création: ${createError.message}`,
-                      );
-                      return;
-                    }
-
-                    console.log("✅ User created successfully:", createdUser);
-
-                    // Reload users from Supabase
-                    await loadData();
-
-                    // Reset form
-                    setNewUserFormData({
-                      prenom: "",
-                      nom: "",
-                      email: "",
-                      telephone: "",
-                      whatsapp: "",
-                      dateNaissance: "",
-                      role: "client",
-                      password: "",
+                    const response = await fetch("/api/admin/create-user", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + accessToken,
+                      },
+                      body: JSON.stringify(payload),
                     });
 
-                    alert(
-                      `✅ Utilisateur créé avec succès!\n\nNom: ${userData.prenom} ${userData.nom}\nEmail: ${userData.email}\nRôle: ${userData.role}\nCode client: ${userData.code_client}\n\nL'utilisateur a été ajouté à la base de données Supabase.`,
-                    );
-                    setShowNewUser(false);
+                    const json = await response.json();
+
+                    if (response.ok) {
+                      setShowNewUser(false);
+                      toast({ description: "Utilisateur créé" });
+                      await loadData();
+                      setNewUserFormData({
+                        prenom: "",
+                        nom: "",
+                        email: "",
+                        telephone: "",
+                        whatsapp: "",
+                        dateNaissance: "",
+                        role: "client",
+                        password: "",
+                      });
+                    } else {
+                      const errorMessage = json.error || "Erreur lors de la création";
+                      alert(`❌ ${errorMessage}`);
+                    }
                   } catch (error) {
                     console.error("💥 Unexpected error creating user:", error);
                     alert(
