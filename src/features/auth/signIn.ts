@@ -35,10 +35,10 @@ export async function handleSignIn(email: string, password: string) {
     const { error: insErr } = await supabase.from('users').insert({
       id: user.id,
       email: user.email ?? '',   // ← important si email est NOT NULL / UNIQUE
-      // anglais (laisse null si ta table les accepte)
+      // valeurs par défaut pour toutes les colonnes
       first_name: null,
       last_name:  null,
-      address:    null,
+      adresse:    null,
       phone:      null,
       whatsapp:   null,
       birth_date: null,
