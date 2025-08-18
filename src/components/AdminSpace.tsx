@@ -486,7 +486,10 @@ const AdminSpace = () => {
       });
 
       filteredSales.forEach((sale) => {
-        rows += `"${sale.date}","${sale.client}","${sale.codeClient}","${sale.product}","${sale.codeArticle}","Yves Saint Laurent","${sale.amount.toFixed(3)}","${sale.conseillere}"\n`;
+        const amount = Number.isFinite(sale.amount)
+          ? sale.amount.toFixed(3)
+          : "0.000";
+        rows += `"${sale.date}","${sale.client}","${sale.codeClient}","${sale.product}","${sale.codeArticle}","Yves Saint Laurent","${amount}","${sale.conseillere}"\n`;
       });
     } else if (type === "clients") {
       headers =
