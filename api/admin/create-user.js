@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const {
-  NEXT_PUBLIC_SUPABASE_URL: SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
-  SUPABASE_SERVICE_ROLE_KEY
-} = process.env;
-
 export default async function handler(req, res) {
+  const url     = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon    = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url)     return res.status(500).json({ error: 'Missing env: SUPABASE_URL' });
+  if (!anon)    return res.status(500).json({ error: 'Missing env: ANON_KEY' });
+  if (!service) return res.status(500).json({ error: 'Missing env: SUPABASE_SERVICE_ROLE_KEY' });
+
   try {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
@@ -22,7 +23,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const caller = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    const caller = createClient(url, anon, {
       global: {
         headers: { Authorization: `Bearer ${token}` }
       },
@@ -90,11 +91,11 @@ export default async function handler(req, res) {
       return;
     }
 
-    const service = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    const serviceClient = createClient(url, service, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    const { data: created, error: createError } = await service.auth.admin.createUser({
+    const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -109,7 +110,7 @@ export default async function handler(req, res) {
 
     const id = created.user.id;
 
-    const { error: updateError } = await service
+    const { error: updateError } = await serviceClient
       .from('users')
       .update({ prenom, nom, role, telephone, whatsapp, date_naissance })
       .eq('id', id);
