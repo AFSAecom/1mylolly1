@@ -463,8 +463,11 @@ const AdminSpace = () => {
       window.removeEventListener("newSaleRecorded", handleNewSale);
   }, []);
 
-  const handleExportExcel = (type, event) => {
-    event.preventDefault();
+  const handleExportExcel = (
+    type: string,
+    event?: React.MouseEvent,
+  ) => {
+    event?.preventDefault();
     // Create CSV content with UTF-8 BOM for Excel compatibility
     let csvContent = "\uFEFF"; // UTF-8 BOM
     let headers = "";
