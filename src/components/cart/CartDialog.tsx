@@ -148,6 +148,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
             codeClient: orderData.codeClient,
             product: item.product,
             codeArticle: item.codeArticle,
+            quantity: item.quantity,
             amount: item.amount,
             conseillere: "N/A",
           },
