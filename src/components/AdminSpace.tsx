@@ -463,7 +463,8 @@ const AdminSpace = () => {
       window.removeEventListener("newSaleRecorded", handleNewSale);
   }, []);
 
-  const handleExportExcel = (type) => {
+  const handleExportExcel = (type, event) => {
+    event.preventDefault();
     // Create CSV content with UTF-8 BOM for Excel compatibility
     let csvContent = "\uFEFF"; // UTF-8 BOM
     let headers = "";
@@ -3305,7 +3306,8 @@ const AdminSpace = () => {
                         </div>
                       </div>
                       <Button
-                        onClick={() => handleExportExcel("sales")}
+                        type="button"
+                        onClick={(e) => handleExportExcel("sales", e)}
                         className="w-full bg-[#805050] hover:bg-[#704040] text-white"
                       >
                         <Download className="w-4 h-4 mr-2" />
@@ -3353,7 +3355,8 @@ const AdminSpace = () => {
                   <CardContent>
                     <form id="new-promotion-form" className="space-y-4">
                       <Button
-                        onClick={() => handleExportExcel("clients")}
+                        type="button"
+                        onClick={(e) => handleExportExcel("clients", e)}
                         className="w-full bg-[#805050] hover:bg-[#704040] text-white"
                       >
                         <Download className="w-4 h-4 mr-2" />
