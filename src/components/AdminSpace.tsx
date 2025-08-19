@@ -62,13 +62,16 @@ import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase } from "@/lib/supabaseClient";
 
 const AdminSpace = () => {
-  const { register } = useAuth();
+  const {
+    register,
+    user: authUser,
+    isAuthenticated: authIsAuthenticated,
+  } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
   const [showLogin, setShowLogin] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showNewProduct, setShowNewProduct] = useState(false);
   const [noteTete, setNoteTete] = useState("");
   const [noteCoeur, setNoteCoeur] = useState("");
@@ -370,13 +373,6 @@ const AdminSpace = () => {
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log("🚀 Initial data load triggered by authentication");
-      loadData();
-    }
-  }, [isAuthenticated]);
-
   // Add effect to listen for user import events
   useEffect(() => {
     const handleUsersImported = async (event) => {
@@ -536,11 +532,6 @@ const AdminSpace = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    setShowLogin(false);
-  };
-
   // Helper function to fix encoding issues
   const fixEncoding = (text) => {
     if (!text || typeof text !== "string") return text;
@@ -605,8 +596,6 @@ const AdminSpace = () => {
   };
 
   // Check authentication and role
-  const { user: authUser, isAuthenticated: authIsAuthenticated } = useAuth();
-
   React.useEffect(() => {
     console.log("🔍 Admin space useEffect triggered:", {
       authIsAuthenticated,
@@ -627,10 +616,9 @@ const AdminSpace = () => {
         authUser.email === "admin@lecompasolfactif.com" ||
         authUser.role === "admin"
       ) {
-        setIsAuthenticated(true);
         setShowLogin(false);
         console.log("✅ Admin access granted for:", authUser.email);
-        return; // Important: return early to prevent further execution
+        loadData();
       } else {
         console.log(
           "❌ Access denied for user:",
@@ -644,17 +632,14 @@ const AdminSpace = () => {
         setTimeout(() => {
           window.location.href = "/";
         }, 100);
-        return;
       }
     } else if (!authIsAuthenticated) {
       console.log("🔐 User not authenticated, showing login");
-      setIsAuthenticated(false);
       setShowLogin(true);
     }
   }, [authIsAuthenticated, authUser]);
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
     setShowLogin(true);
   };
 
@@ -2573,8 +2558,8 @@ const AdminSpace = () => {
     );
   }
 
-  // Show loading while checking authentication or loading data
-  if ((authIsAuthenticated && authUser && !isAuthenticated) || loading) {
+  // Show loading while data is being fetched
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
         <div className="text-center">
