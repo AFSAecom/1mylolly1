@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import type React from "react";
 import { motion } from "framer-motion";
 import HomeLayout from "./HomeLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -62,16 +63,13 @@ import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase, purgeLocalSupabaseTokens } from "@/lib/supabaseClient";
 
 const AdminSpace = () => {
-  const {
-    register,
-    user: authUser,
-    isAuthenticated: authIsAuthenticated,
-  } = useAuth();
+  const { user: authUser } = useAuth();
   const { toast } = useToast();
+  const [ready, setReady] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
-  const [showLogin, setShowLogin] = useState(true);
   const [showNewProduct, setShowNewProduct] = useState(false);
   const [noteTete, setNoteTete] = useState("");
   const [noteCoeur, setNoteCoeur] = useState("");
@@ -595,63 +593,35 @@ const AdminSpace = () => {
     }
   };
 
-  // Check authentication and role
-  React.useEffect(() => {
+  // Check session on mount using Supabase directly
+  useEffect(() => {
+    let mounted = true;
     const check = async () => {
-      console.log("🔍 Admin space useEffect triggered:", {
-        authIsAuthenticated,
-        authUser: authUser
-          ? { email: authUser.email, role: authUser.role }
-          : null,
-      });
-
-      const { error } = await supabase.auth.getUser();
-      if (error) {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) {
         await supabase.auth.signOut();
         purgeLocalSupabaseTokens();
-        setShowLogin(true);
+        if (mounted) {
+          setShowLogin(true);
+          setReady(true);
+        }
         return;
       }
-
-      if (authIsAuthenticated && authUser) {
-        console.log("🔍 Admin space access check:", {
-          email: authUser.email,
-          role: authUser.role,
-          isAdmin: authUser.role === "admin",
-        });
-
-        // Force admin access for development admin user
-        if (
-          authUser.email === "admin@lecompasolfactif.com" ||
-          authUser.role === "admin"
-        ) {
-          setShowLogin(false);
-          console.log("✅ Admin access granted for:", authUser.email);
-          loadData();
-        } else {
-          console.log(
-            "❌ Access denied for user:",
-            authUser.email,
-            "Role:",
-            authUser.role,
-          );
-          alert(
-            `Accès non autorisé. Votre rôle actuel: ${authUser.role}. Seuls les administrateurs peuvent accéder à cet espace.`,
-          );
-          setTimeout(() => {
-            window.location.href = "/";
-          }, 100);
-        }
-      } else if (!authIsAuthenticated) {
-        console.log("🔐 User not authenticated, showing login");
-        setShowLogin(true);
+      if (mounted) {
+        setShowLogin(false);
+        setReady(true);
       }
+      await loadData();
     };
-
     check();
-  }, [authIsAuthenticated, authUser]);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    purgeLocalSupabaseTokens();
     setShowLogin(true);
   };
 
@@ -715,7 +685,7 @@ const AdminSpace = () => {
   };
 
   // Calculate stock indicators
-  const stockIndicators = React.useMemo(() => {
+  const stockIndicators = useMemo(() => {
     let critique = 0;
     let faible = 0;
     let ok = 0;
@@ -2555,59 +2525,28 @@ const AdminSpace = () => {
     input.click();
   };
 
-  // Show login dialog if not authenticated
-  if (!authIsAuthenticated || showLogin) {
+  if (!ready) {
+    return <div style={{ padding: 24 }}>Chargement…</div>;
+  }
+
+  if (showLogin) {
     return (
       <LoginDialog
         open={showLogin}
         onOpenChange={setShowLogin}
-        onSuccess={() => {
-          console.log("🔐 Login successful, checking user role...");
-          // The useEffect will handle the role check after login
-        }}
         hideRegistration={true}
       />
     );
   }
 
-  // Show loading while data is being fetched
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#805050] mx-auto mb-4"></div>
           <p className="text-[#805050] font-montserrat">
-            {loading
-              ? "Chargement des données..."
-              : "Vérification des autorisations..."}
+            {loading ? "Chargement des données..." : "Vérification des autorisations..."}
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Block access if user is authenticated but not admin
-  if (
-    authIsAuthenticated &&
-    authUser &&
-    authUser.role !== "admin" &&
-    authUser.email !== "admin@lecompasolfactif.com"
-  ) {
-    return (
-      <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
-        <div className="text-center bg-white p-8 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-playfair text-[#805050] mb-4">
-            Accès Refusé
-          </h2>
-          <p className="text-[#AD9C92] mb-6">
-            Seuls les administrateurs peuvent accéder à cet espace.
-          </p>
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="bg-[#805050] hover:bg-[#704040] text-white px-6 py-2 rounded"
-          >
-            Retour à l'accueil
-          </button>
         </div>
       </div>
     );
