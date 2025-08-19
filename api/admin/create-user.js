@@ -1,12 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
 const {
-  NEXT_PUBLIC_SUPABASE_URL: SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY
 } = process.env;
 
 export default async function handler(req, res) {
+  const origin = process.env.ALLOWED_ORIGIN || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization'
+  );
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   try {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
