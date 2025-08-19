@@ -46,9 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('role')
         .eq('id', u.id)
         .single();
-      role = data?.role;
+      role = data?.role ?? undefined;
     }
-    return { ...u, role } as User;
+    return { ...u, role: role ?? 'client' } as User;
   };
 
   useEffect(() => {
