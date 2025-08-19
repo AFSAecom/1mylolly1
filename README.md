@@ -1,4 +1,4 @@
-Test PR – ne rien fusionnner
+1Test PR – ne rien fusionnner
 # 🌸 Lolly Web App – Gestion de vente de parfums et réseau de conseillères
 
 Application web pour la gestion des ventes de parfums inspirés, avec accès client, conseillère, et administrateur. Inclut un système de catalogue, panier, commandes, parrainage et réseau.
