@@ -308,7 +308,17 @@ const AdminSpace: React.FC = () => {
       }, 500);
     };
     window.addEventListener("usersImported", handleUsersImported);
-    return () => window.removeEventListener("usersImported", handleUsersImported);
+    
+// Reload smoothly when the tab regains focus (no purge, no full-screen spinner)
+useEffect(() => {
+  const onFocus = () => {
+    // Touch Supabase to ensure session is alive; no UI blocking
+    supabase.auth.getUser().catch(() => {});
+  };
+  window.addEventListener('focus', onFocus);
+  return () => window.removeEventListener('focus', onFocus);
+}, []);
+return () => window.removeEventListener("usersImported", handleUsersImported);
   }, []);
 
   // Nouveaux événements de vente (inchangé)
@@ -365,7 +375,15 @@ const AdminSpace: React.FC = () => {
           alert("Aucune vente à exporter.");
           return;
         }
-        filteredSales.forEach((sale) => {
+        filteredSales.forEach((sale) =>
+{loading && (
+  <div className="fixed top-4 right-4 z-50">
+    <div className="px-3 py-2 rounded-lg shadow bg-white/90 text-[#805050] text-sm">
+      Actualisation des données…
+    </div>
+  </div>
+)}
+ {
           const amount = Number.isFinite(sale.amount) ? sale.amount.toFixed(3) : "0.000";
           rows += `"${sale.date}","${sale.client}","${sale.codeClient}","${sale.product}","${sale.codeArticle}","${sale.quantity}","${sale.parfumInspire}","${sale.marqueInspire}","${amount}","${sale.conseillere}"\n`;
         });
@@ -543,18 +561,9 @@ const AdminSpace: React.FC = () => {
     return <LoginDialog open={showLogin} onOpenChange={setShowLogin} hideRegistration={true} />;
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#805050] mx-auto mb-4"></div>
-          <p className="text-[#805050] font-montserrat">
-            {loading ? "Chargement des données..." : "Vérification des autorisations..."}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  
+/* Full-screen loading removed by AdminSpaceX_nouveau */
+
 
   return (
     <div className="min-h-screen bg-[#FBF0E9] p-4">
