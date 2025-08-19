@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { handleSignIn } from '@/features/auth/signIn';
+import { handleSignUp } from '@/features/auth/signUp';
 import { supabase } from '@/lib/supabaseClient';
 
 interface User extends SupabaseUser {
@@ -14,6 +16,8 @@ type AuthCtx = {
   updateUser: (u: Partial<User>) => void;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  login: typeof handleSignIn;
+  register: typeof handleSignUp;
 };
 
 const Ctx = createContext<AuthCtx>({
@@ -24,6 +28,8 @@ const Ctx = createContext<AuthCtx>({
   updateUser: () => {},
   signOut: async () => {},
   refresh: async () => {},
+  login: handleSignIn,
+  register: handleSignUp,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -103,11 +109,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(data.session ?? null);
       setUser(await getUserWithRole(data.session?.user ?? null));
     },
+    login: handleSignIn,
+    register: handleSignUp,
   }), [user, session, loading]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthCtx {
   return useContext(Ctx);
 }
