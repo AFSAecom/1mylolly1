@@ -1,3 +1,8 @@
+import { ensureValidSession } from './lib/supabaseClient'
+
+// lance la vérification, sans bloquer l'UI
+ensureValidSession().catch(() => {})
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
