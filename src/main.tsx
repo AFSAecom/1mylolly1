@@ -3,9 +3,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
-import './index.css' // garde-le même s'il n'existe pas, sinon supprime cette ligne
+import './index.css' // supprime cette ligne si le fichier n'existe pas
 
-// ✅ Appel unique : vérifie la session au démarrage et purge si elle est invalide
 import { ensureValidSession } from './lib/supabaseClient'
 ensureValidSession().catch(() => {})
 
