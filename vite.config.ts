@@ -88,4 +88,8 @@ export default defineConfig({
     "process.env.NODE_ENV": JSON.stringify("development"),
   },
   clearScreen: false,
+  test: {
+    environment: "jsdom",
+    setupFiles: "./vitest.setup.ts",
+  },
 });
