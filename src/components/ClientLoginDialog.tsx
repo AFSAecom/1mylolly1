@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
+import { verifyClientCredentials } from "@/services/auth/verifyClientCredentials";
 
 interface ClientLoginDialogProps {
   open: boolean;
@@ -34,7 +35,7 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
   title = "Identification Client",
   description = "Identifiez le client pour associer le panier à son compte",
 }) => {
-  const { login, register, user } = useAuth();
+  const { register, user } = useAuth();
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState<{
     email: string;
@@ -68,9 +69,12 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
     setError("");
 
     try {
-      const success = await login(loginData.email, loginData.password);
-      if (success) {
-        onSuccess?.(user);
+      const clientData = await verifyClientCredentials(
+        loginData.email,
+        loginData.password,
+      );
+      if (clientData) {
+        onSuccess?.(clientData);
         onOpenChange(false);
       } else {
         setError("Email ou mot de passe incorrect");
