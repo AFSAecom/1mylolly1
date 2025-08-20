@@ -59,7 +59,7 @@ import {
 } from "lucide-react";
 import PerfumeCatalog from "./catalog/PerfumeCatalog";
 import PerfumeDetail from "./catalog/PerfumeDetail";
-import { supabase, purgeLocalSupabaseTokens } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 const AdminSpace = () => {
   const {
@@ -597,58 +597,46 @@ const AdminSpace = () => {
 
   // Check authentication and role
   React.useEffect(() => {
-    const check = async () => {
-      console.log("🔍 Admin space useEffect triggered:", {
-        authIsAuthenticated,
-        authUser: authUser
-          ? { email: authUser.email, role: authUser.role }
-          : null,
+    console.log("🔍 Admin space useEffect triggered:", {
+      authIsAuthenticated,
+      authUser: authUser
+        ? { email: authUser.email, role: authUser.role }
+        : null,
+    });
+
+    if (authIsAuthenticated && authUser) {
+      console.log("🔍 Admin space access check:", {
+        email: authUser.email,
+        role: authUser.role,
+        isAdmin: authUser.role === "admin",
       });
 
-      const { error } = await supabase.auth.getUser();
-      if (error) {
-        await supabase.auth.signOut();
-        purgeLocalSupabaseTokens();
-        setShowLogin(true);
-        return;
+      // Force admin access for development admin user
+      if (
+        authUser.email === "admin@lecompasolfactif.com" ||
+        authUser.role === "admin"
+      ) {
+        setShowLogin(false);
+        console.log("✅ Admin access granted for:", authUser.email);
+        loadData();
+      } else {
+        console.log(
+          "❌ Access denied for user:",
+          authUser.email,
+          "Role:",
+          authUser.role,
+        );
+        alert(
+          `Accès non autorisé. Votre rôle actuel: ${authUser.role}. Seuls les administrateurs peuvent accéder à cet espace.`,
+        );
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 100);
       }
-
-      if (authIsAuthenticated && authUser) {
-        console.log("🔍 Admin space access check:", {
-          email: authUser.email,
-          role: authUser.role,
-          isAdmin: authUser.role === "admin",
-        });
-
-        // Force admin access for development admin user
-        if (
-          authUser.email === "admin@lecompasolfactif.com" ||
-          authUser.role === "admin"
-        ) {
-          setShowLogin(false);
-          console.log("✅ Admin access granted for:", authUser.email);
-          loadData();
-        } else {
-          console.log(
-            "❌ Access denied for user:",
-            authUser.email,
-            "Role:",
-            authUser.role,
-          );
-          alert(
-            `Accès non autorisé. Votre rôle actuel: ${authUser.role}. Seuls les administrateurs peuvent accéder à cet espace.`,
-          );
-          setTimeout(() => {
-            window.location.href = "/";
-          }, 100);
-        }
-      } else if (!authIsAuthenticated) {
-        console.log("🔐 User not authenticated, showing login");
-        setShowLogin(true);
-      }
-    };
-
-    check();
+    } else if (!authIsAuthenticated) {
+      console.log("🔐 User not authenticated, showing login");
+      setShowLogin(true);
+    }
   }, [authIsAuthenticated, authUser]);
 
   const handleLogout = () => {
