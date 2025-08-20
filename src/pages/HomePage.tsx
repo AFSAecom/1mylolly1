@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import bottle from "/images/bouteille1.png";
+import bottle from "/images/bouteille1.web^p";
 import background from "/images/background1.jpg";
 
 const HomePage = () => {
