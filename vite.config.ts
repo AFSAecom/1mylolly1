@@ -7,7 +7,6 @@ import { tempo } from "tempo-devtools/dist/vite";
 export default defineConfig({
   base: "/",
   cacheDir: "node_modules/.vite-cache",
-  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   optimizeDeps: {
     entries: ["src/main.tsx", "src/tempobook/**/*"],
     force: true,
