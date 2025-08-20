@@ -8,7 +8,7 @@ interface HomeLayoutProps {
 }
 
 const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutProps) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // use client-side navigation
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4 bg-[#FBF0E9]">
