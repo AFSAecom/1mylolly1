@@ -21,8 +21,8 @@ const HomePage = () => {
         const buttonRect = clientButtonRef.current.getBoundingClientRect();
         const distance = buttonRect.top - bottleRect.top - bottleRect.height;
 
-        // Ajout d'une marge de sécurité pour stopper avant le bouton
-        setDropDistance(distance - 40); // ← ajuste cette valeur selon besoin
+        // Ajout d'une marge plus grande pour stopper plus haut
+        setDropDistance(distance - 80); // ← valeur ajustée ici
       }
     };
     updateDistance();
