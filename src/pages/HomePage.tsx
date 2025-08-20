@@ -17,9 +17,7 @@ const HomePage = () => {
       if (bottleRef.current && clientButtonRef.current) {
         const bottleRect = bottleRef.current.getBoundingClientRect();
         const buttonRect = clientButtonRef.current.getBoundingClientRect();
-        setDropDistance(
-          buttonRect.top - bottleRect.top - bottleRect.height + buttonRect.height
-        );
+        setDropDistance(buttonRect.top - bottleRect.top - bottleRect.height);
       }
     };
     updateDistance();
@@ -32,7 +30,7 @@ const HomePage = () => {
 
   return (
     <div
-      className="relative min-h-[150vh] w-full bg-cover bg-center bg-fixed"
+      className="relative h-[150vh] w-full bg-cover bg-center"
       style={{ backgroundImage: `url(${background})` }}
     >
       <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat">
