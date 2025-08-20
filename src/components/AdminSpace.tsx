@@ -62,13 +62,10 @@ import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase } from "../lib/supabaseClient";
 
 const AdminSpace = () => {
-  const { register } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
-  const [showLogin, setShowLogin] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showNewProduct, setShowNewProduct] = useState(false);
   const [noteTete, setNoteTete] = useState("");
   const [noteCoeur, setNoteCoeur] = useState("");
@@ -422,11 +419,11 @@ const AdminSpace = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (authIsAuthenticated && authUser?.role === "admin") {
       console.log("🚀 Initial data load triggered by authentication");
       loadData();
     }
-  }, [isAuthenticated]);
+  }, [authIsAuthenticated, authUser]);
 
   // Add effect to listen for user import events
   useEffect(() => {
@@ -587,11 +584,6 @@ const AdminSpace = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    setShowLogin(false);
-  };
-
   // Helper function to fix encoding issues
   const fixEncoding = (text) => {
     if (!text || typeof text !== "string") return text;
@@ -656,57 +648,14 @@ const AdminSpace = () => {
   };
 
   // Check authentication and role
-  const { user: authUser, isAuthenticated: authIsAuthenticated } = useAuth();
-
-  React.useEffect(() => {
-    console.log("🔍 Admin space useEffect triggered:", {
-      authIsAuthenticated,
-      authUser: authUser
-        ? { email: authUser.email, role: authUser.role }
-        : null,
-    });
-
-    if (authIsAuthenticated && authUser) {
-      console.log("🔍 Admin space access check:", {
-        email: authUser.email,
-        role: authUser.role,
-        isAdmin: authUser.role === "admin",
-      });
-
-      // Force admin access for development admin user
-      if (
-        authUser.email === "admin@lecompasolfactif.com" ||
-        authUser.role === "admin"
-      ) {
-        setIsAuthenticated(true);
-        setShowLogin(false);
-        console.log("✅ Admin access granted for:", authUser.email);
-        return; // Important: return early to prevent further execution
-      } else {
-        console.log(
-          "❌ Access denied for user:",
-          authUser.email,
-          "Role:",
-          authUser.role,
-        );
-        alert(
-          `Accès non autorisé. Votre rôle actuel: ${authUser.role}. Seuls les administrateurs peuvent accéder à cet espace.`,
-        );
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 100);
-        return;
-      }
-    } else if (!authIsAuthenticated) {
-      console.log("🔐 User not authenticated, showing login");
-      setIsAuthenticated(false);
-      setShowLogin(true);
-    }
-  }, [authIsAuthenticated, authUser]);
+  const {
+    user: authUser,
+    isAuthenticated: authIsAuthenticated,
+    signOut,
+  } = useAuth();
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setShowLogin(true);
+    signOut();
   };
 
   const toggleProductStatus = async (productId) => {
@@ -2609,23 +2558,19 @@ const AdminSpace = () => {
     input.click();
   };
 
-  // Show login dialog if not authenticated
-  if (!authIsAuthenticated || showLogin) {
+  // Show login dialog if not authenticated or not admin
+  if (!authIsAuthenticated || authUser?.role !== "admin") {
     return (
       <LoginDialog
-        open={showLogin}
-        onOpenChange={setShowLogin}
-        onSuccess={() => {
-          console.log("🔐 Login successful, checking user role...");
-          // The useEffect will handle the role check after login
-        }}
+        open={!authIsAuthenticated || authUser?.role !== "admin"}
+        onOpenChange={() => {}}
         hideRegistration={true}
       />
     );
   }
 
-  // Show loading while checking authentication or loading data
-  if ((authIsAuthenticated && authUser && !isAuthenticated) || loading) {
+  // Show loading while loading data
+  if (authIsAuthenticated && authUser?.role === "admin" && loading) {
     return (
       <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
         <div className="text-center">
@@ -2635,33 +2580,6 @@ const AdminSpace = () => {
               ? "Chargement des données..."
               : "Vérification des autorisations..."}
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Block access if user is authenticated but not admin
-  if (
-    authIsAuthenticated &&
-    authUser &&
-    authUser.role !== "admin" &&
-    authUser.email !== "admin@lecompasolfactif.com"
-  ) {
-    return (
-      <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
-        <div className="text-center bg-white p-8 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-playfair text-[#805050] mb-4">
-            Accès Refusé
-          </h2>
-          <p className="text-[#AD9C92] mb-6">
-            Seuls les administrateurs peuvent accéder à cet espace.
-          </p>
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="bg-[#805050] hover:bg-[#704040] text-white px-6 py-2 rounded"
-          >
-            Retour à l'accueil
-          </button>
         </div>
       </div>
     );
