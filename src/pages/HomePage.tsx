@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import bottle from "/images/bouteille1.web^p";
+import bottle from "/images/bouteille1.webp";
 import background from "/images/background1.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 15 });
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 15 });
+
   const bottleRef = useRef<HTMLImageElement>(null);
   const clientButtonRef = useRef<HTMLButtonElement>(null);
   const [dropDistance, setDropDistance] = useState(0);
@@ -30,7 +31,7 @@ const HomePage = () => {
 
   return (
     <div
-      className="relative min-h-[200vh] w-full bg-cover bg-center bg-fixed"
+      className="relative h-[150vh] w-full overflow-hidden bg-cover bg-center"
       style={{ backgroundImage: `url(${background})` }}
     >
       <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat">
