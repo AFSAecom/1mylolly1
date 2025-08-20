@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import bottle from "/images/bouteille1.png";
 import background from "/images/background1.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
-  const bottleY = useTransform(scrollY, [0, 300], [0, -100]);
+  const { scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 60, damping: 20 });
+  const bottleY = useTransform(smoothProgress, [0, 1], [0, window.innerHeight]);
+  const bottleRotation = useTransform(smoothProgress, [0, 1], [-45, 0]);
 
   return (
     <div
@@ -36,7 +38,7 @@ const HomePage = () => {
           src={bottle}
           alt="Bouteille"
           className="w-40 h-auto"
-          style={{ y: bottleY }}
+          style={{ y: bottleY, rotate: bottleRotation }}
         />
       </div>
 
