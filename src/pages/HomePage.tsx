@@ -5,8 +5,9 @@ import background from "/images/background1.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
   const bottleY = useTransform(scrollY, [0, 300], [0, -100]);
+  const bottleRotation = useTransform(scrollYProgress, [0, 1], [-10, 0]);
 
   return (
     <div
@@ -36,7 +37,7 @@ const HomePage = () => {
           src={bottle}
           alt="Bouteille"
           className="w-40 h-auto"
-          style={{ y: bottleY }}
+          style={{ y: bottleY, rotate: bottleRotation }}
         />
       </div>
 
