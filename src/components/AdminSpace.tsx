@@ -107,6 +107,7 @@ const AdminSpace = () => {
   // State for products from Supabase
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   const [users, setUsers] = useState([]);
   const [promotions, setPromotions] = useState([]);
@@ -129,6 +130,7 @@ const AdminSpace = () => {
 
     try {
       setLoading(true);
+      setErrorState(null);
 
       // STEP 1: Load users with comprehensive RLS error handling
       console.log("👥 Loading users from Supabase...");
@@ -189,6 +191,9 @@ const AdminSpace = () => {
           );
         }
         setUsers([]);
+        setErrorState("Erreur lors du chargement des utilisateurs");
+        setLoading(false);
+        return;
       } else {
         // Always process the data, even if it's an empty array
         const userData = usersData || [];
@@ -238,6 +243,9 @@ const AdminSpace = () => {
 
         if (productsError) {
           console.error("❌ Products error:", productsError);
+          setErrorState("Erreur lors du chargement des produits");
+          setLoading(false);
+          return;
         } else {
           const formattedProducts = (productsData || []).map((product) => ({
             id: product.id,
@@ -274,9 +282,12 @@ const AdminSpace = () => {
           setProducts(formattedProducts);
           console.log("✅ Products loaded:", formattedProducts.length);
         }
-      } catch (err) {
-        console.error("❌ Products loading failed:", err);
-      }
+        } catch (err) {
+          console.error("❌ Products loading failed:", err);
+          setErrorState("Erreur lors du chargement des produits");
+          setLoading(false);
+          return;
+        }
 
       // STEP 4: Load promotions (simplified)
       console.log("🎯 Loading promotions...");
@@ -287,13 +298,19 @@ const AdminSpace = () => {
 
         if (promotionsError) {
           console.error("❌ Promotions error:", promotionsError);
+          setErrorState("Erreur lors du chargement des promotions");
+          setLoading(false);
+          return;
         } else {
           setPromotions(promotionsData || []);
           console.log("✅ Promotions loaded:", (promotionsData || []).length);
         }
-      } catch (err) {
-        console.error("❌ Promotions loading failed:", err);
-      }
+        } catch (err) {
+          console.error("❌ Promotions loading failed:", err);
+          setErrorState("Erreur lors du chargement des promotions");
+          setLoading(false);
+          return;
+        }
 
       // STEP 5: Load orders (simplified)
       console.log("📋 Loading orders...");
@@ -360,6 +377,9 @@ const AdminSpace = () => {
             );
           }
           setOrders([]);
+          setErrorState("Erreur lors du chargement des commandes");
+          setLoading(false);
+          return;
         } else {
           const formattedOrders = (ordersData || []).flatMap((order) =>
             (order.order_items || []).map((item) => ({
@@ -409,12 +429,16 @@ const AdminSpace = () => {
         }
       } catch (err) {
         console.error("❌ Orders loading failed:", err);
+        setErrorState("Erreur lors du chargement des commandes");
+        setLoading(false);
+        return;
       }
     } catch (error) {
       console.error("💥 RADICAL RELOAD FAILED:", error);
       alert(
         "❌ Erreur critique lors du chargement des données: " + error.message,
       );
+      setErrorState("Erreur critique lors du chargement des données");
     } finally {
       setLoading(false);
       console.log("🏁 RADICAL RELOAD COMPLETED");
@@ -2621,6 +2645,18 @@ const AdminSpace = () => {
         }}
         hideRegistration={true}
       />
+    );
+  }
+
+  if (errorState) {
+    return (
+      <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto mb-4 h-16 w-16 text-red-500" />
+          <p className="text-[#805050] font-montserrat mb-4">{errorState}</p>
+          <Button onClick={() => loadData()}>Réessayer</Button>
+        </div>
+      </div>
     );
   }
 
