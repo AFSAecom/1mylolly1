@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
-import { handleSignIn } from '@/features/auth/signIn';
-import { handleSignUp } from '@/features/auth/signUp';
+import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
-
-interface User extends SupabaseUser {
-  role?: string;
-}
 
 type AuthCtx = {
   user: User | null;
@@ -16,8 +10,6 @@ type AuthCtx = {
   updateUser: (u: Partial<User>) => void;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
-  login: typeof handleSignIn;
-  register: typeof handleSignUp;
 };
 
 const Ctx = createContext<AuthCtx>({
@@ -28,8 +20,6 @@ const Ctx = createContext<AuthCtx>({
   updateUser: () => {},
   signOut: async () => {},
   refresh: async () => {},
-  login: handleSignIn,
-  register: handleSignUp,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -37,37 +27,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const getUserWithRole = async (u: SupabaseUser | null): Promise<User | null> => {
-    if (!u) return null;
-    let role = (u.user_metadata as any)?.role as string | undefined;
-    if (!role) {
-      const { data } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', u.id)
-        .single();
-      role = data?.role ?? undefined;
-    }
-    return { ...u, role: role ?? 'client' } as User;
-  };
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code') ?? params.get('token');
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(async ({ data }) => {
+      supabase.auth.exchangeCodeForSession(code).then(({ data }) => {
         if (data?.session) {
           setSession(data.session);
-          setUser(await getUserWithRole(data.session.user));
+          setUser(data.session.user);
           window.history.replaceState({}, '', window.location.pathname);
         }
       });
     } else if (window.location.hash.includes('access_token')) {
       // getSessionFromUrl is not typed in our Supabase client, so cast to any
-      (supabase.auth as any).getSessionFromUrl().then(async ({ data }: { data: { session: Session | null } }) => {
+      (supabase.auth as any).getSessionFromUrl().then(({ data }: { data: { session: Session | null } }) => {
         if (data?.session) {
           setSession(data.session);
-          setUser(await getUserWithRole(data.session.user));
+          setUser(data.session.user);
           window.history.replaceState({}, '', window.location.pathname);
         }
       });
@@ -79,13 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
       setSession(data.session ?? null);
-      setUser(await getUserWithRole(data.session?.user ?? null));
+      setUser(data.session?.user ?? null);
       setLoading(false);
     })();
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
-      setUser(await getUserWithRole(newSession?.user ?? null));
+      setUser(newSession?.user ?? null);
       window.dispatchEvent(new CustomEvent('auth:changed'));
     });
 
@@ -107,15 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refresh: async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session ?? null);
-      setUser(await getUserWithRole(data.session?.user ?? null));
+      setUser(data.session?.user ?? null);
     },
-    login: handleSignIn,
-    register: handleSignUp,
   }), [user, session, loading]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-export function useAuth(): AuthCtx {
+export function useAuth() {
   return useContext(Ctx);
 }

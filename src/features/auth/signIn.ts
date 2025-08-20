@@ -1,7 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
 
-const adminEmail = import.meta.env.VITE_ADMIN_DEFAULT_EMAIL;
-
 /**
  * Connexion puis "ensure profile":
  * - login via Auth
@@ -37,8 +35,6 @@ export async function handleSignIn(email: string, password: string) {
     const { error: insErr } = await supabase.from('users').insert({
       id: user.id,
       email: user.email ?? '',   // ← important si email est NOT NULL / UNIQUE
-      // valeur par défaut du rôle (admin via configuration)
-      role: adminEmail && user.email === adminEmail ? 'admin' : 'client',
       // valeurs par défaut pour toutes les colonnes
       first_name: null,
       last_name:  null,
@@ -51,25 +47,13 @@ export async function handleSignIn(email: string, password: string) {
       nom:    '',
     });
     if (insErr) return { ok: false, step: 'insertProfile', error: insErr.message };
-  } else {
-    // profil existant mais complétion possible
-    if (!profile.email && user.email) {
-      // ancien profil sans email → on le complète
-      const { error: updErr } = await supabase
-        .from('users')
-        .update({ email: user.email })
-        .eq('id', user.id);
-      if (updErr) return { ok: false, step: 'updateEmail', error: updErr.message };
-    }
-    if (!profile.role) {
-      const { error: updRoleErr } = await supabase
-        .from('users')
-        .update({
-          role: adminEmail && user.email === adminEmail ? 'admin' : 'client',
-        })
-        .eq('id', user.id);
-      if (updRoleErr) return { ok: false, step: 'updateRole', error: updRoleErr.message };
-    }
+  } else if (!profile.email && user.email) {
+    // ancien profil sans email → on le complète
+    const { error: updErr } = await supabase
+      .from('users')
+      .update({ email: user.email })
+      .eq('id', user.id);
+    if (updErr) return { ok: false, step: 'updateEmail', error: updErr.message };
   }
 
   return { ok: true, user };

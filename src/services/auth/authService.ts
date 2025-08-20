@@ -1,9 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { logger } from "@/lib/logger";
 
-const adminEmail = import.meta.env.VITE_ADMIN_DEFAULT_EMAIL;
-const adminPassword = import.meta.env.VITE_ADMIN_DEFAULT_PASSWORD;
-
 export interface User {
   id: string;
   email: string;
@@ -18,13 +15,12 @@ export interface User {
 }
 
 async function ensureAdminUser(): Promise<User | null> {
-  if (!adminEmail) return null;
   try {
     const { data, error } = await supabase
       .from("users")
       .insert({
         id: crypto.randomUUID(),
-        email: adminEmail,
+        email: "admin@lecompasolfactif.com",
         nom: "Admin",
         prenom: "Système",
         role: "admin",
@@ -74,13 +70,7 @@ export async function login(
 
     let userRecord = existingUser;
 
-    if (
-      !userRecord &&
-      adminEmail &&
-      adminPassword &&
-      email === adminEmail &&
-      password === adminPassword
-    ) {
+    if (!userRecord && email === "admin@lecompasolfactif.com" && password === "admin123") {
       userRecord = await ensureAdminUser();
       if (!userRecord) return null;
     }
