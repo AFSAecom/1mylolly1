@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
@@ -18,7 +19,10 @@ const HomePage = () => {
       if (bottleRef.current && clientButtonRef.current) {
         const bottleRect = bottleRef.current.getBoundingClientRect();
         const buttonRect = clientButtonRef.current.getBoundingClientRect();
-        setDropDistance(buttonRect.top - bottleRect.top - bottleRect.height);
+        const distance = buttonRect.top - bottleRect.top - bottleRect.height;
+
+        // Ajout d'une marge de sécurité pour stopper avant le bouton
+        setDropDistance(distance - 40); // ← ajuste cette valeur selon besoin
       }
     };
     updateDistance();
@@ -76,4 +80,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
