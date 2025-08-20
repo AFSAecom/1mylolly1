@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface HomeLayoutProps {
   children?: React.ReactNode;
@@ -7,6 +8,8 @@ interface HomeLayoutProps {
 }
 
 const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4 bg-[#FBF0E9]">
       <motion.div
@@ -42,7 +45,7 @@ const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutPro
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-[#CE8F8A] hover:bg-[#B87B76] text-white font-montserrat font-semibold py-6 px-4 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center space-y-2"
-            onClick={() => (window.location.href = "/client")}
+            onClick={() => navigate("/client")}
           >
             <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
               <span className="text-xl">👤</span>
@@ -56,7 +59,7 @@ const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutPro
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-[#D4C2A1] hover:bg-[#C4B291] text-[#805050] font-montserrat font-semibold py-6 px-4 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center space-y-2"
-            onClick={() => (window.location.href = advisorPath)}
+            onClick={() => navigate(advisorPath)}
           >
             <div className="w-10 h-10 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
               <span className="text-xl">💼</span>
@@ -70,7 +73,7 @@ const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutPro
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-[#805050] hover:bg-[#704040] text-white font-montserrat font-semibold py-6 px-4 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center space-y-2"
-            onClick={() => (window.location.href = "/admin")}
+            onClick={() => navigate("/admin")}
           >
             <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
               <span className="text-xl">⚙️</span>
