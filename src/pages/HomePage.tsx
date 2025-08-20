@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import bottle from "/images/bouteille1.webp";
 import background from "/images/background1.jpg";
@@ -6,8 +7,26 @@ import background from "/images/background1.jpg";
 const HomePage = () => {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 60, damping: 20 });
-  const bottleY = useTransform(smoothProgress, [0, 1], [0, window.innerHeight]);
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 15 });
+
+  const bottleRef = useRef<HTMLImageElement>(null);
+  const clientButtonRef = useRef<HTMLButtonElement>(null);
+  const [dropDistance, setDropDistance] = useState(0);
+
+  useEffect(() => {
+    const updateDistance = () => {
+      if (bottleRef.current && clientButtonRef.current) {
+        const bottleRect = bottleRef.current.getBoundingClientRect();
+        const buttonRect = clientButtonRef.current.getBoundingClientRect();
+        setDropDistance(buttonRect.top - bottleRect.top - bottleRect.height);
+      }
+    };
+    updateDistance();
+    window.addEventListener("resize", updateDistance);
+    return () => window.removeEventListener("resize", updateDistance);
+  }, []);
+
+  const bottleY = useTransform(smoothProgress, [0, 1], [0, dropDistance]);
   const bottleRotation = useTransform(smoothProgress, [0, 1], [-45, 0]);
 
   return (
@@ -35,6 +54,7 @@ const HomePage = () => {
           Le Compas Olfactif
         </h1>
         <motion.img
+          ref={bottleRef}
           src={bottle}
           alt="Bouteille"
           className="w-40 h-auto"
@@ -44,6 +64,7 @@ const HomePage = () => {
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
         <button
+          ref={clientButtonRef}
           onClick={() => navigate("/client")}
           className="px-5 py-3 rounded bg-client text-cream font-montserrat text-sm"
         >
@@ -55,3 +76,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
