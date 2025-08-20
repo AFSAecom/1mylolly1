@@ -130,49 +130,100 @@ const AdminSpace = () => {
     try {
       setLoading(true);
 
-      // STEP 1: Load users through API
-      console.log("👥 Loading users from API...");
+      // STEP 1: Load users with comprehensive RLS error handling
+      console.log("👥 Loading users from Supabase...");
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
+      const { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      const response = await fetch("/api/admin/list-users", {
-        headers: {
-          Authorization: "Bearer " + accessToken,
-        },
-      });
+      console.log("📊 Raw users data from Supabase:", usersData);
+      console.log("❓ Users error:", usersError);
 
-      if (!response.ok) {
-        const { error } = await response
-          .json()
-          .catch(() => ({ error: "Unknown error" }));
-        console.error("❌ Error loading users:", error);
-        alert(
-          "❌ Erreur lors du chargement des utilisateurs: " +
-            (error || response.statusText),
-        );
+      if (usersError) {
+        console.error("❌ Error loading users:", usersError);
+
+        // Check if it's an RLS error
+        if (
+          usersError.code === "42501" ||
+          usersError.message?.includes("row-level security") ||
+          usersError.message?.includes("policy") ||
+          usersError.message?.includes("permission denied")
+        ) {
+          console.log("🔒 RLS Error detected! Showing RLS diagnostic info...");
+
+          // Show detailed RLS error with solutions
+          const rlsErrorMessage =
+            `🔒 PROBLÈME RLS (Row Level Security) DÉTECTÉ\n\n` +
+            `❌ Erreur: ${usersError.message}\n\n` +
+            `🔧 SOLUTIONS RECOMMANDÉES:\n\n` +
+            `SOLUTION 1 (Recommandée pour développement):\n` +
+            `Désactiver RLS sur la table users:\n` +
+            `ALTER TABLE users DISABLE ROW LEVEL SECURITY;\n\n` +
+            `SOLUTION 2 (Alternative):\n` +
+            `Créer une politique d'accès public:\n` +
+            `CREATE POLICY "Public read access" ON users FOR SELECT USING (true);\n\n` +
+            `📋 ÉTAPES À SUIVRE:\n` +
+            `1. Ouvrez l'éditeur SQL de Supabase\n` +
+            `2. Exécutez une des commandes SQL ci-dessus\n` +
+            `3. Revenez ici et cliquez sur "Actualiser"\n\n` +
+            `💡 Ces commandes SQL sont copiées dans le presse-papiers.`;
+
+          // Copy SQL commands to clipboard
+          const sqlCommands = `-- SOLUTION 1: Désactiver RLS (recommandé pour développement)\nALTER TABLE users DISABLE ROW LEVEL SECURITY;\n\n-- OU SOLUTION 2: Créer une politique d'accès public\nCREATE POLICY "Public read access" ON users FOR SELECT USING (true);\n\n-- Vérifier que la table existe et contient des données\nSELECT * FROM users LIMIT 5;`;
+
+          try {
+            await navigator.clipboard.writeText(sqlCommands);
+            console.log("📋 SQL commands copied to clipboard");
+          } catch (clipboardError) {
+            console.log("⚠️ Could not copy to clipboard:", clipboardError);
+          }
+
+          alert(rlsErrorMessage);
+        } else {
+          // Other types of errors
+          alert(
+            "❌ Erreur lors du chargement des utilisateurs: " +
+              usersError.message,
+          );
+        }
         setUsers([]);
       } else {
-        const userData = (await response.json()) || [];
-        const formattedUsers = userData.map((user) => ({
-          id: user.id,
-          name: `${user.prenom || "Prénom"} ${user.nom || "Nom"}`,
-          email: user.email || "email@example.com",
-          role: user.role || "client",
-          prenom: user.prenom || "Prénom",
-          nom: user.nom || "Nom",
-          telephone: user.telephone,
-          whatsapp: user.whatsapp,
-          dateNaissance: user.date_naissance,
-          adresse: user.adresse,
-          codeClient: user.code_client,
-          isNew: false,
-          lastOrder:
-            user.created_at?.split("T")[0] ||
-            new Date().toISOString().split("T")[0],
-        }));
+        // Always process the data, even if it's an empty array
+        const userData = usersData || [];
+        console.log(
+          "✅ Processing users data:",
+          userData.length,
+          "users found",
+        );
+
+        if (userData.length > 0) {
+          console.log("📋 Sample user data:", userData[0]);
+        }
+
+        const formattedUsers = userData.map((user) => {
+          return {
+            id: user.id,
+            name: `${user.prenom || "Prénom"} ${user.nom || "Nom"}`,
+            email: user.email || "email@example.com",
+            role: user.role || "client",
+            prenom: user.prenom || "Prénom",
+            nom: user.nom || "Nom",
+            telephone: user.telephone,
+            whatsapp: user.whatsapp,
+            dateNaissance: user.date_naissance,
+            adresse: user.adresse,
+            codeClient: user.code_client,
+            isNew: false,
+            lastOrder:
+              user.created_at?.split("T")[0] ||
+              new Date().toISOString().split("T")[0],
+          };
+        });
+
+        console.log("✅ Formatted users:", formattedUsers.length);
+        console.log("📋 Formatted users data:", formattedUsers);
         setUsers(formattedUsers);
       }
 
