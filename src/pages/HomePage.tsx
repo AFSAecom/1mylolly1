@@ -7,7 +7,7 @@ import background from "/images/background1.jpg";
 const HomePage = () => {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 15 });
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 150, damping: 20 });
   const bottleRef = useRef<HTMLImageElement>(null);
   const clientButtonRef = useRef<HTMLButtonElement>(null);
   const [dropDistance, setDropDistance] = useState(0);
@@ -17,7 +17,9 @@ const HomePage = () => {
       if (bottleRef.current && clientButtonRef.current) {
         const bottleRect = bottleRef.current.getBoundingClientRect();
         const buttonRect = clientButtonRef.current.getBoundingClientRect();
-        setDropDistance(buttonRect.top - bottleRect.top - bottleRect.height);
+        setDropDistance(
+          buttonRect.top - bottleRect.top - bottleRect.height + buttonRect.height
+        );
       }
     };
     updateDistance();
@@ -25,8 +27,8 @@ const HomePage = () => {
     return () => window.removeEventListener("resize", updateDistance);
   }, []);
 
-  const bottleY = useTransform(smoothProgress, [0, 1], [0, dropDistance]);
-  const bottleRotation = useTransform(smoothProgress, [0, 1], [-45, 0]);
+  const bottleY = useTransform(smoothProgress, [0, 0.9], [0, dropDistance]);
+  const bottleRotation = useTransform(smoothProgress, [0, 0.9], [-45, 0]);
 
   return (
     <div
