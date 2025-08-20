@@ -22,7 +22,7 @@ const HomePage = () => {
         const distance = buttonRect.top - bottleRect.top - bottleRect.height;
 
         // Ajout d'une marge plus grande pour stopper plus haut
-        setDropDistance(distance - 240); // ← valeur ajustée ici
+        setDropDistance(distance - 300); // ← valeur ajustée ici
       }
     };
     updateDistance();
