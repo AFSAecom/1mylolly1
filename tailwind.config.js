@@ -51,6 +51,10 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        advisor: "#D4C2A1",
+        admin: "#805050",
+        client: "#CE8F8A",
+        cream: "#FBF0E9",
       },
       fontFamily: {
         playfair: ['"Playfair Display"', "serif"],
