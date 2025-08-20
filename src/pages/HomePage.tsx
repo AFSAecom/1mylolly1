@@ -1,16 +1,38 @@
 import { useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
-import bottle from "/images/bouteille1.png";
+import { useRef, useEffect, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import bottle from "/images/bouteille1.webp";
 import background from "/images/background1.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
-  const bottleY = useTransform(scrollY, [0, 300], [0, -100]);
+  const { scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 150, damping: 20 });
+  const bottleRef = useRef<HTMLImageElement>(null);
+  const clientButtonRef = useRef<HTMLButtonElement>(null);
+  const [dropDistance, setDropDistance] = useState(0);
+
+  useEffect(() => {
+    const updateDistance = () => {
+      if (bottleRef.current && clientButtonRef.current) {
+        const bottleRect = bottleRef.current.getBoundingClientRect();
+        const buttonRect = clientButtonRef.current.getBoundingClientRect();
+        setDropDistance(
+          buttonRect.top - bottleRect.top - bottleRect.height + buttonRect.height
+        );
+      }
+    };
+    updateDistance();
+    window.addEventListener("resize", updateDistance);
+    return () => window.removeEventListener("resize", updateDistance);
+  }, []);
+
+  const bottleY = useTransform(smoothProgress, [0, 0.9], [0, dropDistance]);
+  const bottleRotation = useTransform(smoothProgress, [0, 0.9], [-45, 0]);
 
   return (
     <div
-      className="relative min-h-[200vh] w-full bg-cover bg-center bg-fixed"
+      className="relative min-h-[150vh] w-full bg-cover bg-center bg-fixed"
       style={{ backgroundImage: `url(${background})` }}
     >
       <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat">
@@ -33,15 +55,17 @@ const HomePage = () => {
           Le Compas Olfactif
         </h1>
         <motion.img
+          ref={bottleRef}
           src={bottle}
           alt="Bouteille"
           className="w-40 h-auto"
-          style={{ y: bottleY }}
+          style={{ y: bottleY, rotate: bottleRotation }}
         />
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
         <button
+          ref={clientButtonRef}
           onClick={() => navigate("/client")}
           className="px-5 py-3 rounded bg-client text-cream font-montserrat text-sm"
         >
