@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
-import Home from "./components/home";
+import HomePage from "./pages/HomePage";
 import ClientSpace from "./components/ClientSpace";
 import ConseillerSpace from "./components/ConseillerSpace";
 import AdminSpace from "./components/AdminSpace";
@@ -19,9 +19,9 @@ function App() {
           <Suspense fallback={<p>Loading...</p>}>
             <>
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/client" element={<ClientSpace />} />
-                <Route path="/conseillere" element={<ConseillerSpace />} />
+                <Route path="/advisor" element={<ConseillerSpace />} />
                 <Route path="/admin" element={<AdminSpace />} />
               </Routes>
               {tempoRoutes}

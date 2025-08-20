@@ -172,7 +172,7 @@ const ClientSpace = () => {
       alert(
         "Accès non autorisé. Les conseillères doivent utiliser leur espace dédié.",
       );
-      window.location.href = "/conseillere";
+      window.location.href = "/advisor";
     }
   }, [isAuthenticated, user]);
 

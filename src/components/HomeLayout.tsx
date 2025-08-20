@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 
 interface HomeLayoutProps {
   children?: React.ReactNode;
+  advisorPath?: string;
 }
 
-const HomeLayout = ({ children = null }: HomeLayoutProps) => {
+const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4 bg-[#FBF0E9]">
       <motion.div
@@ -55,7 +56,7 @@ const HomeLayout = ({ children = null }: HomeLayoutProps) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-[#D4C2A1] hover:bg-[#C4B291] text-[#805050] font-montserrat font-semibold py-6 px-4 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center space-y-2"
-            onClick={() => (window.location.href = "/conseillere")}
+            onClick={() => (window.location.href = advisorPath)}
           >
             <div className="w-10 h-10 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
               <span className="text-xl">💼</span>
