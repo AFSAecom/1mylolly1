@@ -6,7 +6,10 @@ import background from "/images/background1.jpg";
 const HomePage = () => {
   const navigate = useNavigate();
   const { scrollY } = useScroll();
-  const bottleY = useTransform(scrollY, [0, 300], [0, -100]);
+  const bottleY = useTransform(scrollY, [0, 300], [0, 80]);
+  const bottleRotate = useTransform(scrollY, [0, 300], [0, 5]);
+  const shadowOpacity = useTransform(scrollY, [0, 300], [0.3, 0]);
+  const shadowScale = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   return (
     <div
@@ -32,12 +35,18 @@ const HomePage = () => {
         <h1 className="text-3xl text-cream mb-8 font-playfair text-center">
           Le Compas Olfactif
         </h1>
-        <motion.img
-          src={bottle}
-          alt="Bouteille"
-          className="w-40 h-auto"
-          style={{ y: bottleY }}
-        />
+        <motion.div style={{ y: bottleY }} className="relative">
+          <motion.img
+            src={bottle}
+            alt="Bouteille"
+            className="w-40 h-auto"
+            style={{ rotate: bottleRotate }}
+          />
+          <motion.div
+            className="absolute top-full left-1/2 -translate-x-1/2 w-24 h-6 bg-black/30 rounded-full blur-md"
+            style={{ opacity: shadowOpacity, scale: shadowScale }}
+          />
+        </motion.div>
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
