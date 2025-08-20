@@ -1,14 +1,21 @@
 
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useMotionValue,
+} from "framer-motion";
 import bottle from "/images/bouteille1.webp";
 import background from "/images/background1.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 15 });
+  const rawProgress = useMotionValue(0);
+  const smoothProgress = useSpring(rawProgress, { stiffness: 100, damping: 15 });
 
   const bottleRef = useRef<HTMLImageElement>(null);
   const clientButtonRef = useRef<HTMLButtonElement>(null);
@@ -29,6 +36,19 @@ const HomePage = () => {
     window.addEventListener("resize", updateDistance);
     return () => window.removeEventListener("resize", updateDistance);
   }, []);
+
+  useEffect(() => {
+    let rafId = 0;
+    const update = (latest: number) => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => rawProgress.set(latest));
+    };
+    const unsubscribe = scrollYProgress.on("change", update);
+    return () => {
+      unsubscribe();
+      cancelAnimationFrame(rafId);
+    };
+  }, [scrollYProgress, rawProgress]);
 
   const bottleY = useTransform(smoothProgress, [0, 1], [0, dropDistance]);
   const bottleRotation = useTransform(smoothProgress, [0, 1], [-45, 0]);
@@ -62,7 +82,13 @@ const HomePage = () => {
           src={bottle}
           alt="Bouteille"
           className="w-40 h-auto"
-          style={{ y: bottleY, rotate: bottleRotation }}
+          style={{
+            y: bottleY,
+            rotate: bottleRotation,
+            willChange: "transform",
+            touchAction: "pan-y",
+            transform: "translate3d(0,0,0)",
+          }}
         />
       </div>
 
