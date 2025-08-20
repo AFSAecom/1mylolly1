@@ -1,7 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
 
-const adminEmail = import.meta.env.VITE_ADMIN_DEFAULT_EMAIL;
-
 /**
  * Connexion puis "ensure profile":
  * - login via Auth
@@ -37,8 +35,8 @@ export async function handleSignIn(email: string, password: string) {
     const { error: insErr } = await supabase.from('users').insert({
       id: user.id,
       email: user.email ?? '',   // ← important si email est NOT NULL / UNIQUE
-      // valeur par défaut du rôle (admin via configuration)
-      role: adminEmail && user.email === adminEmail ? 'admin' : 'client',
+      // valeur par défaut du rôle (admin forcé pour l'email spécifique)
+      role: user.email === 'admin@lecompasolfactif.com' ? 'admin' : 'client',
       // valeurs par défaut pour toutes les colonnes
       first_name: null,
       last_name:  null,
@@ -65,7 +63,7 @@ export async function handleSignIn(email: string, password: string) {
       const { error: updRoleErr } = await supabase
         .from('users')
         .update({
-          role: adminEmail && user.email === adminEmail ? 'admin' : 'client',
+          role: user.email === 'admin@lecompasolfactif.com' ? 'admin' : 'client',
         })
         .eq('id', user.id);
       if (updRoleErr) return { ok: false, step: 'updateRole', error: updRoleErr.message };
