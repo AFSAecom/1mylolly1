@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { verifyClientCredentials } from "@/services/auth/verifyClientCredentials";
 
 interface ClientLoginDialogProps {
   open: boolean;
@@ -35,7 +34,7 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
   title = "Identification Client",
   description = "Identifiez le client pour associer le panier à son compte",
 }) => {
-  const { register, user } = useAuth();
+  const { login, register } = useAuth();
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState<{
     email: string;
@@ -69,15 +68,12 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
     setError("");
 
     try {
-      const clientData = await verifyClientCredentials(
-        loginData.email,
-        loginData.password,
-      );
-      if (clientData) {
-        onSuccess?.(clientData);
-        onOpenChange(false);
+      const result = await login(loginData.email, loginData.password);
+      if (!result.ok) {
+        setError(result.error ?? "Email ou mot de passe incorrect");
       } else {
-        setError("Email ou mot de passe incorrect");
+        onSuccess?.(result.user);
+        onOpenChange(false);
       }
     } catch (err) {
       setError("Erreur de connexion");
@@ -122,12 +118,12 @@ const ClientLoginDialog: React.FC<ClientLoginDialogProps> = ({
 
     try {
       const { confirmPassword, role, ...userData } = registerData;
-      const success = await register({ ...userData, role });
-      if (success) {
-        onSuccess?.(user);
-        onOpenChange(false);
+      const result = await register({ ...userData, role });
+      if (!result.ok) {
+        setError(result.error ?? "Erreur lors de la création du compte");
       } else {
-        setError("Erreur lors de la création du compte");
+        onSuccess?.(result.user);
+        onOpenChange(false);
       }
     } catch (err) {
       setError("Erreur de création de compte");
