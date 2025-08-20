@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import HomeLayout from "./HomeLayout";
+import HomeLayout from "../components/HomeLayout";
 
-const Home = () => {
+const HomePage = () => {
   return (
     <div className="min-h-screen bg-[#FBF0E9] flex flex-col items-center justify-center p-4">
       <motion.div
@@ -11,10 +11,10 @@ const Home = () => {
         transition={{ duration: 0.8 }}
         className="w-full max-w-4xl h-[600px]"
       >
-        <HomeLayout />
+        <HomeLayout advisorPath="/advisor" />
       </motion.div>
     </div>
   );
 };
 
-export default Home;
+export default HomePage;
