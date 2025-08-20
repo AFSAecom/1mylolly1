@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import bottle from "/images/bouteille1.webp";
 import background from "/images/background1.jpg";
@@ -12,25 +12,26 @@ const HomePage = () => {
   const clientButtonRef = useRef<HTMLButtonElement>(null);
   const [dropDistance, setDropDistance] = useState(0);
 
-  useEffect(() => {
-    const updateDistance = () => {
-      if (bottleRef.current && clientButtonRef.current) {
-        const bottleRect = bottleRef.current.getBoundingClientRect();
-        const buttonRect = clientButtonRef.current.getBoundingClientRect();
-        setDropDistance(buttonRect.top - bottleRect.top - bottleRect.height);
-      }
-    };
+  const updateDistance = () => {
+    if (bottleRef.current && clientButtonRef.current) {
+      const bottleRect = bottleRef.current.getBoundingClientRect();
+      const buttonRect = clientButtonRef.current.getBoundingClientRect();
+      setDropDistance(buttonRect.top - bottleRect.bottom);
+    }
+  };
+
+  useLayoutEffect(() => {
     updateDistance();
     window.addEventListener("resize", updateDistance);
     return () => window.removeEventListener("resize", updateDistance);
   }, []);
 
-  const bottleY = useTransform(smoothProgress, [0, 0.9], [0, dropDistance]);
-  const bottleRotation = useTransform(smoothProgress, [0, 0.9], [-45, 0]);
+  const bottleY = useTransform(smoothProgress, [0, 1], [0, dropDistance]);
+  const bottleRotation = useTransform(smoothProgress, [0, 1], [-45, 0]);
 
   return (
     <div
-      className="relative h-[150vh] w-full bg-cover bg-center"
+      className="relative h-[150vh] w-full overflow-hidden bg-cover bg-center"
       style={{ backgroundImage: `url(${background})` }}
     >
       <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat">
@@ -58,6 +59,7 @@ const HomePage = () => {
           alt="Bouteille"
           className="w-40 h-auto"
           style={{ y: bottleY, rotate: bottleRotation }}
+          onLoad={updateDistance}
         />
       </div>
 
