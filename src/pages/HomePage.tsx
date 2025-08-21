@@ -1,35 +1,37 @@
 
 import { useNavigate } from "react-router-dom";
-import { useRef, useEffect, useState } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useSpring,
-  useMotionValue,
-} from "framer-motion";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
+import { motion, useTransform, useSpring, useMotionValue } from "framer-motion";
 import bottle from "/images/bouteille1.webp";
-import background from "/images/background1.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { scrollYProgress } = useScroll();
-  const rawProgress = useMotionValue(0);
-  const smoothProgress = useSpring(rawProgress, { stiffness: 100, damping: 15 });
+  const scrollY = useMotionValue(0);
+  const smoothScroll = useSpring(scrollY, { stiffness: 100, damping: 15 });
 
   const bottleRef = useRef<HTMLImageElement>(null);
   const clientButtonRef = useRef<HTMLButtonElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [dropDistance, setDropDistance] = useState(0);
+  const [scrollRange, setScrollRange] = useState(1);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const updateRange = () => {
+      const range = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollRange(range > 0 ? range : 1);
+    };
+    updateRange();
+    window.addEventListener("resize", updateRange);
+    return () => window.removeEventListener("resize", updateRange);
+  }, []);
+
+  useLayoutEffect(() => {
     const updateDistance = () => {
       if (bottleRef.current && clientButtonRef.current) {
         const bottleRect = bottleRef.current.getBoundingClientRect();
         const buttonRect = clientButtonRef.current.getBoundingClientRect();
         const distance = buttonRect.top - bottleRect.top - bottleRect.height;
-
-        // Ajout d'une marge plus grande pour stopper plus haut
-        setDropDistance(distance - 300); // ← valeur ajustée ici
+        setDropDistance(distance - 300);
       }
     };
     updateDistance();
@@ -37,28 +39,47 @@ const HomePage = () => {
     return () => window.removeEventListener("resize", updateDistance);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let rafId = 0;
-    const update = (latest: number) => {
+    const handleScroll = () => {
       if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => rawProgress.set(latest));
+      rafId = requestAnimationFrame(() => scrollY.set(window.scrollY));
     };
-    const unsubscribe = scrollYProgress.on("change", update);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
-      unsubscribe();
+      window.removeEventListener("scroll", handleScroll);
       cancelAnimationFrame(rafId);
     };
-  }, [scrollYProgress, rawProgress]);
+  }, [scrollY]);
 
-  const bottleY = useTransform(smoothProgress, [0, 1], [0, dropDistance]);
-  const bottleRotation = useTransform(smoothProgress, [0, 1], [-45, 0]);
+  useEffect(() => {
+    const enableSound = () => {
+      if (videoRef.current) {
+        videoRef.current.muted = false;
+        videoRef.current.play();
+      }
+      window.removeEventListener("click", enableSound);
+    };
+    window.addEventListener("click", enableSound);
+    return () => window.removeEventListener("click", enableSound);
+  }, []);
+
+  const progress = useTransform(smoothScroll, (v) => Math.min(v / scrollRange, 1));
+  const bottleY = useTransform(progress, [0, 1], [0, dropDistance]);
+  const bottleRotation = useTransform(progress, [0, 1], [-45, 0]);
 
   return (
-    <div
-      className="relative h-[150vh] w-full overflow-hidden bg-cover bg-center"
-      style={{ backgroundImage: `url(${background})` }}
-    >
-      <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat">
+    <div className="relative h-[150vh] w-full overflow-hidden">
+      <video
+        ref={videoRef}
+        src="/videos/videobackground1.mp4"
+        className="absolute inset-0 h-full w-full object-cover z-0"
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+      <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat z-10">
         <button
           onClick={() => navigate("/advisor")}
           className="px-3 py-2 rounded bg-advisor text-admin"
@@ -73,7 +94,7 @@ const HomePage = () => {
         </button>
       </nav>
 
-      <div className="pt-24 flex flex-col items-center">
+      <div className="pt-24 flex flex-col items-center relative z-10">
         <h1 className="text-3xl text-cream mb-8 font-playfair text-center">
           Le Compas Olfactif
         </h1>
@@ -81,7 +102,7 @@ const HomePage = () => {
           ref={bottleRef}
           src={bottle}
           alt="Bouteille"
-          className="w-40 h-auto"
+          className="w-40 h-auto z-10"
           style={{
             y: bottleY,
             rotate: bottleRotation,
@@ -92,7 +113,7 @@ const HomePage = () => {
         />
       </div>
 
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
         <button
           ref={clientButtonRef}
           onClick={() => navigate("/client")}
