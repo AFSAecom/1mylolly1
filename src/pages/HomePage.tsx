@@ -1,16 +1,15 @@
 
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { motion, useTransform, useSpring, useMotionValue } from "framer-motion";
 import bottle from "/images/bouteille1.webp";
 
 const HomePage = () => {
-  const navigate = useNavigate();
   const scrollY = useMotionValue(0);
   const smoothScroll = useSpring(scrollY, { stiffness: 100, damping: 15 });
 
   const bottleRef = useRef<HTMLImageElement>(null);
-  const clientButtonRef = useRef<HTMLButtonElement>(null);
+  const clientButtonRef = useRef<HTMLAnchorElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [dropDistance, setDropDistance] = useState(0);
   const [scrollRange, setScrollRange] = useState(1);
@@ -80,18 +79,12 @@ const HomePage = () => {
         playsInline
       />
       <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat z-10">
-        <button
-          onClick={() => navigate("/advisor")}
-          className="px-3 py-2 rounded bg-advisor text-admin"
-        >
+        <Link to="/advisor" className="px-3 py-2 rounded bg-advisor text-admin">
           Espace Conseillère
-        </button>
-        <button
-          onClick={() => navigate("/admin")}
-          className="px-3 py-2 rounded bg-admin text-cream"
-        >
+        </Link>
+        <Link to="/admin" className="px-3 py-2 rounded bg-admin text-cream">
           Espace Admin
-        </button>
+        </Link>
       </nav>
 
       <div className="pt-24 flex flex-col items-center relative z-10">
@@ -114,13 +107,13 @@ const HomePage = () => {
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
-        <button
+        <Link
           ref={clientButtonRef}
-          onClick={() => navigate("/client")}
+          to="/client"
           className="px-5 py-3 rounded bg-client text-cream font-montserrat text-sm"
         >
           Espace Client
-        </button>
+        </Link>
       </div>
     </div>
   );

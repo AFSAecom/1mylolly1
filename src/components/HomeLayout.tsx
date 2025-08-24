@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface HomeLayoutProps {
   children?: React.ReactNode;
@@ -8,7 +8,7 @@ interface HomeLayoutProps {
 }
 
 const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutProps) => {
-  const navigate = useNavigate(); // use client-side navigation
+  const MotionLink = motion(Link);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4 bg-[#FBF0E9]">
@@ -41,46 +41,46 @@ const HomeLayout = ({ children = null, advisorPath = "/advisor" }: HomeLayoutPro
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Client Button */}
-          <motion.button
+          <MotionLink
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            to="/client"
             className="bg-[#CE8F8A] hover:bg-[#B87B76] text-white font-montserrat font-semibold py-6 px-4 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center space-y-2"
-            onClick={() => navigate("/client")}
           >
             <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
               <span className="text-xl">👤</span>
             </div>
             <span className="text-base">Espace Client</span>
             <span className="text-xs opacity-90">Découvrir nos parfums</span>
-          </motion.button>
+          </MotionLink>
 
           {/* Conseillère Button */}
-          <motion.button
+          <MotionLink
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            to={advisorPath}
             className="bg-[#D4C2A1] hover:bg-[#C4B291] text-[#805050] font-montserrat font-semibold py-6 px-4 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center space-y-2"
-            onClick={() => navigate(advisorPath)}
           >
             <div className="w-10 h-10 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
               <span className="text-xl">💼</span>
             </div>
             <span className="text-base">Espace Conseillère</span>
             <span className="text-xs opacity-90">Gérer les conseils</span>
-          </motion.button>
+          </MotionLink>
 
           {/* Admin Button */}
-          <motion.button
+          <MotionLink
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            to="/admin"
             className="bg-[#805050] hover:bg-[#704040] text-white font-montserrat font-semibold py-6 px-4 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center space-y-2"
-            onClick={() => navigate("/admin")}
           >
             <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
               <span className="text-xl">⚙️</span>
             </div>
             <span className="text-base">Espace Admin</span>
             <span className="text-xs opacity-90">Administration</span>
-          </motion.button>
+          </MotionLink>
         </div>
       </motion.div>
       {/* Content area */}
