@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -15,6 +14,7 @@ import PerfumeCard from "./PerfumeCard";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
 
+// Define the shape of a perfume record used in the catalog
 interface PerfumeType {
   codeProduit: string;
   nomLolly: string;
@@ -28,75 +28,97 @@ interface PerfumeType {
 }
 
 interface PerfumeCatalogProps {
+  /**
+   * Optional list of perfumes to display. If not provided the list will be
+   * fetched from Supabase on mount. When provided, loading will be skipped.
+   */
   perfumes?: PerfumeType[];
+  /**
+   * Callback invoked when a perfume card is clicked.
+   */
   onPerfumeSelect?: (perfume: PerfumeType) => void;
+  /**
+   * Whether to include inactive perfumes in the listing. Defaults to false.
+   */
   includeInactive?: boolean;
 }
 
+/**
+ * Catalogue component responsible for displaying a searchable, filterable list
+ * of perfumes. When no external perfumes are provided it loads data from
+ * Supabase, applying a timeout to avoid an infinite loading spinner. In the
+ * event of an error or timeout a set of default perfumes is displayed.
+ */
 const PerfumeCatalog = ({
   perfumes,
   onPerfumeSelect = () => {},
   includeInactive = false,
 }: PerfumeCatalogProps) => {
-  // All useState hooks must be called before any early returns
+  // Local catalogue state. When perfumes prop is provided this state
+  // will be populated from props; otherwise it will be populated from Supabase.
   const [catalogPerfumes, setCatalogPerfumes] = useState<PerfumeType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
+  // Filtering state
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedSaison, setSelectedSaison] = useState<string | null>(null);
   const [selectedFamille, setSelectedFamille] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 20;
 
-  // Function to load products directly from Supabase with timeout
+  /**
+   * Load perfume data directly from Supabase. A timeout is applied so that
+   * unresponsive network calls do not leave the UI in a perpetual loading
+   * state. If the query fails or times out the defaultPerfumes array will
+   * populate the catalogue.
+   */
   const loadProductsFromSupabase = async (page = 1) => {
     setLoading(true);
     console.log(`🔄 Loading products directly from Supabase (page ${page})...`);
     try {
+      // Build the base query selecting only the fields needed for the client.
       let query: any = supabase
         .from("products")
         .select(
           "code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive, image_url, active",
         )
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
+      // If inactive items should be excluded add a filter.
       if (!includeInactive) {
         query = query.eq("active", true);
       }
-
       // Create a timeout promise that rejects after 8 seconds
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("timeout")), 8000),
       );
-
       // Race the Supabase query against the timeout
       const result: any = await Promise.race([query, timeoutPromise]);
-
       const productsData = result?.data;
       const error = result?.error;
-
       if (error || !productsData) {
         console.error("Error loading products from Supabase:", error);
-        // Fallback to default perfumes if Supabase fails
         setCatalogPerfumes(defaultPerfumes);
         return;
       }
-
       if (productsData.length > 0) {
-        const formattedPerfumes = productsData.map((product: any) => ({
-          codeProduit: product.code_produit,
-          nomLolly: product.nom_lolly,
-          nomParfumInspire: product.nom_parfum_inspire,
-          marqueInspire: product.marque_inspire,
-          genre: (product.genre as "homme" | "femme" | "mixte") || "mixte",
-          saison:
-            (product.saison as "été" | "hiver" | "toutes saisons") ||
-            "toutes saisons",
-          familleOlfactive: product.famille_olfactive || "Oriental",
-          imageURL:
-            product.image_url ||
-            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
-          active: product.active,
-        }));
+        const formattedPerfumes: PerfumeType[] = productsData.map(
+          (product: any) => ({
+            codeProduit: product.code_produit,
+            nomLolly: product.nom_lolly,
+            nomParfumInspire: product.nom_parfum_inspire,
+            marqueInspire: product.marque_inspire,
+            genre: (product.genre as "homme" | "femme" | "mixte") || "mixte",
+            saison:
+              (product.saison as "été" | "hiver" | "toutes saisons") ||
+              "toutes saisons",
+            familleOlfactive: product.famille_olfactive || "Oriental",
+            imageURL:
+              product.image_url ||
+              "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+            active: product.active,
+          }),
+        );
         console.log(`✅ Loaded ${formattedPerfumes.length} products from Supabase`);
         setCatalogPerfumes(formattedPerfumes);
       } else {
@@ -111,7 +133,7 @@ const PerfumeCatalog = ({
     }
   };
 
-  // Load products on component mount
+  // On mount, populate the catalogue from props or Supabase
   useEffect(() => {
     if (perfumes) {
       setCatalogPerfumes(perfumes);
@@ -121,45 +143,13 @@ const PerfumeCatalog = ({
     }
   }, [perfumes, includeInactive]);
 
-  // Listen for catalog updates and clear events
-  useEffect(() => {
-    const handleCatalogUpdate = (event: any) => {
-      console.log(
-        "🔄 Catalog update event received, reloading from Supabase...",
-      );
-      loadProductsFromSupabase();
-    };
-
-    const handleCatalogClear = (event: any) => {
-      console.log("🗑️ Catalog clear event received, clearing and reloading...");
-      setCatalogPerfumes([]);
-      loadProductsFromSupabase();
-    };
-
-    // Listen for various update events
-    window.addEventListener("catalogUpdated", handleCatalogUpdate);
-    window.addEventListener("catalogCleared", handleCatalogClear);
-    window.addEventListener("productUpdated", handleCatalogUpdate);
-    window.addEventListener("productsImported", handleCatalogUpdate);
-    window.addEventListener("stockUpdated", handleCatalogUpdate);
-    window.addEventListener("productStatusUpdated", handleCatalogUpdate);
-
-    return () => {
-      window.removeEventListener("catalogUpdated", handleCatalogUpdate);
-      window.removeEventListener("catalogCleared", handleCatalogClear);
-      window.removeEventListener("productUpdated", handleCatalogUpdate);
-      window.removeEventListener("productsImported", handleCatalogUpdate);
-      window.removeEventListener("stockUpdated", handleCatalogUpdate);
-      window.removeEventListener("productStatusUpdated", handleCatalogUpdate);
-    };
-  }, []);
-
+  // Derived arrays for filtering and pagination
   const allPerfumes = perfumes || catalogPerfumes;
   const visiblePerfumes = includeInactive
     ? allPerfumes
     : allPerfumes.filter((p) => p.active);
 
-  // Show loading state
+  // Show spinner while loading if not receiving perfumes via props
   if (loading && !perfumes) {
     return (
       <div className="flex flex-col items-center justify-center mt-8">
@@ -168,53 +158,49 @@ const PerfumeCatalog = ({
     );
   }
 
-  // Get unique olfactory families for filter
+  // Build set of unique families for the dropdown filter
   const uniqueFamilies = [
     ...new Set(visiblePerfumes.map((p) => p.familleOlfactive)),
   ];
 
-  // Function to normalize text for search (handle accented characters)
+  // Helper for accent-insensitive search
   const normalizeText = (text: string) => {
     return text
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, ""); // Remove diacritics
+      .replace(/[\u0300-\u036f]/g, "");
   };
 
+  // Apply filters
   const filteredPerfumes = visiblePerfumes.filter((perfume) => {
-    // Search term filter with accent handling
     const normalizedSearchTerm = normalizeText(searchTerm);
     const searchMatch =
       searchTerm === "" ||
       normalizeText(perfume.nomLolly).includes(normalizedSearchTerm) ||
       normalizeText(perfume.nomParfumInspire).includes(normalizedSearchTerm) ||
       normalizeText(perfume.marqueInspire).includes(normalizedSearchTerm);
-
-    // Genre filter
     const genreMatch =
       selectedGenre === null || perfume.genre === selectedGenre;
-
-    // Season filter
     const saisonMatch =
       selectedSaison === null || perfume.saison === selectedSaison;
-
-    // Olfactory family filter
     const familleMatch =
       selectedFamille === null || perfume.familleOlfactive === selectedFamille;
-
     return searchMatch && genreMatch && saisonMatch && familleMatch;
   });
 
-  const handleGenreSelect = (genre: string) => {
-    setSelectedGenre(selectedGenre === genre ? null : genre);
-  };
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredPerfumes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPerfumes = filteredPerfumes.slice(startIndex, endIndex);
 
-  const handleSaisonSelect = (saison: string) => {
-    setSelectedSaison(selectedSaison === saison ? null : saison);
-  };
-
-  const handleFamilleSelect = (famille: string) => {
-    setSelectedFamille(selectedFamille === famille ? null : famille);
+  const handlePageChange = async (page: number) => {
+    // If there is no external perfumes prop we need to fetch new page
+    if (!perfumes) {
+      await loadProductsFromSupabase(page);
+    }
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const clearFilters = () => {
@@ -225,22 +211,9 @@ const PerfumeCatalog = ({
     setCurrentPage(1);
   };
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredPerfumes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPerfumes = filteredPerfumes.slice(startIndex, endIndex);
-
-  const handlePageChange = async (page: number) => {
-    await loadProductsFromSupabase(page);
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold mb-4">Catalogue de Parfums</h2>
-
       {/* Search bar */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -251,7 +224,6 @@ const PerfumeCatalog = ({
           className="pl-10 border-[#D4C2A1] bg-white focus:border-[#CE8F8A] text-[#805050]"
         />
       </div>
-
       {/* Filter section */}
       <div className="flex flex-wrap gap-4 mb-4">
         {/* Genre filter */}
@@ -274,7 +246,6 @@ const PerfumeCatalog = ({
             </SelectContent>
           </Select>
         </div>
-
         {/* Saison filter */}
         <div>
           <Label>Saison</Label>
@@ -295,7 +266,6 @@ const PerfumeCatalog = ({
             </SelectContent>
           </Select>
         </div>
-
         {/* Famille Olfactive filter */}
         <div>
           <Label>Famille Olfactive</Label>
@@ -319,8 +289,7 @@ const PerfumeCatalog = ({
           </Select>
         </div>
       </div>
-
-      {/* Active filters */}
+      {/* Active filters summary */}
       {(selectedGenre || selectedSaison || selectedFamille || searchTerm) && (
         <div className="flex items-center gap-2 flex-wrap">
           <span>Filtres actifs:</span>
@@ -328,17 +297,12 @@ const PerfumeCatalog = ({
           {selectedSaison && <Badge>Saison: {selectedSaison}</Badge>}
           {selectedFamille && <Badge>Famille: {selectedFamille}</Badge>}
           {searchTerm && <Badge>Recherche: {searchTerm}</Badge>}
-          <Button
-            variant="outline"
-            className="ml-2"
-            onClick={clearFilters}
-          >
+          <Button variant="outline" className="ml-2" onClick={clearFilters}>
             Effacer tous les filtres
           </Button>
         </div>
       )}
-
-      {/* Results count and pagination info */}
+      {/* Results count and top pagination */}
       <div className="flex items-center justify-between mb-4">
         <span>{filteredPerfumes.length} parfums trouvés</span>
         {totalPages > 1 && (
@@ -347,7 +311,6 @@ const PerfumeCatalog = ({
           </span>
         )}
       </div>
-
       {totalPages > 1 && (
         <div className="flex items-center gap-2 mb-4">
           <Button
@@ -371,14 +334,21 @@ const PerfumeCatalog = ({
           </Button>
         </div>
       )}
-
       {/* Perfume grid */}
       {currentPerfumes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {currentPerfumes.map((perfume) => (
             <PerfumeCard
               key={perfume.codeProduit}
-              perfume={perfume}
+              codeProduit={perfume.codeProduit}
+              nomLolly={perfume.nomLolly}
+              nomParfumInspire={perfume.nomParfumInspire}
+              marqueInspire={perfume.marqueInspire}
+              genre={perfume.genre}
+              saison={perfume.saison}
+              familleOlfactive={perfume.familleOlfactive}
+              imageURL={perfume.imageURL}
+              active={perfume.active}
               onClick={() => onPerfumeSelect(perfume)}
             />
           ))}
@@ -391,7 +361,6 @@ const PerfumeCatalog = ({
           </Button>
         </div>
       )}
-
       {/* Bottom pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-6">
@@ -460,7 +429,7 @@ const PerfumeCatalog = ({
   );
 };
 
-// Mock data for default display
+// Default perfumes used when the Supabase call fails or times out.
 const defaultPerfumes: PerfumeType[] = [
   {
     codeProduit: "L001",
