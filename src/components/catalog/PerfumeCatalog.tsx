@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import PerfumeCard from "./PerfumeCard";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
 
 interface PerfumeType {
@@ -47,13 +48,12 @@ const PerfumeCatalog = ({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Function to load products directly from Supabase
+  // Function to load products directly from Supabase with timeout
   const loadProductsFromSupabase = async (page = 1) => {
+    setLoading(true);
+    console.log(`🔄 Loading products directly from Supabase (page ${page})...`);
     try {
-      setLoading(true);
-      console.log(`🔄 Loading products directly from Supabase (page ${page})...`);
-
-      let query = supabase
+      let query: any = supabase
         .from("products")
         .select(
           "code_produit, nom_lolly, nom_parfum_inspire, marque_inspire, genre, saison, famille_olfactive, image_url, active",
@@ -62,17 +62,27 @@ const PerfumeCatalog = ({
       if (!includeInactive) {
         query = query.eq("active", true);
       }
-      const { data: productsData, error } = await query;
 
-      if (error) {
+      // Create a timeout promise that rejects after 8 seconds
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 8000),
+      );
+
+      // Race the Supabase query against the timeout
+      const result: any = await Promise.race([query, timeoutPromise]);
+
+      const productsData = result?.data;
+      const error = result?.error;
+
+      if (error || !productsData) {
         console.error("Error loading products from Supabase:", error);
         // Fallback to default perfumes if Supabase fails
         setCatalogPerfumes(defaultPerfumes);
         return;
       }
 
-      if (productsData && productsData.length > 0) {
-        const formattedPerfumes = productsData.map((product) => ({
+      if (productsData.length > 0) {
+        const formattedPerfumes = productsData.map((product: any) => ({
           codeProduit: product.code_produit,
           nomLolly: product.nom_lolly,
           nomParfumInspire: product.nom_parfum_inspire,
@@ -87,17 +97,14 @@ const PerfumeCatalog = ({
             "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
           active: product.active,
         }));
-
-        console.log(
-          `✅ Loaded ${formattedPerfumes.length} products from Supabase`,
-        );
+        console.log(`✅ Loaded ${formattedPerfumes.length} products from Supabase`);
         setCatalogPerfumes(formattedPerfumes);
       } else {
         console.log("No products found in Supabase, using default perfumes");
         setCatalogPerfumes(defaultPerfumes);
       }
     } catch (error) {
-      console.error("Error loading products from Supabase:", error);
+      console.error("Timeout or error loading products from Supabase:", error);
       setCatalogPerfumes(defaultPerfumes);
     } finally {
       setLoading(false);
@@ -155,13 +162,8 @@ const PerfumeCatalog = ({
   // Show loading state
   if (loading && !perfumes) {
     return (
-      <div className="w-full bg-[#FBF0E9] p-6 rounded-lg">
-        <div className="text-center py-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#805050] mx-auto mb-4"></div>
-          <p className="text-[#805050] font-montserrat">
-            Chargement du catalogue depuis Supabase...
-          </p>
-        </div>
+      <div className="flex flex-col items-center justify-center mt-8">
+        <p>Chargement du catalogue depuis Supabase...</p>
       </div>
     );
   }
@@ -236,208 +238,163 @@ const PerfumeCatalog = ({
   };
 
   return (
-    <div className="w-full bg-[#FBF0E9] p-6 rounded-lg">
-      <div className="mb-6">
-        <h2 className="text-2xl font-playfair text-[#805050] mb-4">
-          Catalogue de Parfums
-        </h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold mb-4">Catalogue de Parfums</h2>
 
-        {/* Search bar */}
-        <div className="relative mb-4">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#AD9C92]"
-            size={18}
-          />
-          <Input
-            type="text"
-            placeholder="Rechercher par nom, marque, notes olfactives..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 border-[#D4C2A1] bg-white focus:border-[#CE8F8A] text-[#805050]"
-          />
-        </div>
-
-        {/* Filter section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <p className="text-sm font-montserrat text-[#805050] mb-2 flex items-center">
-              <Filter size={16} className="mr-2" /> Genre
-            </p>
-            <Select
-              value={selectedGenre || ""}
-              onValueChange={(value) =>
-                setSelectedGenre(value === "all" ? null : value)
-              }
-            >
-              <SelectTrigger className="border-[#D4C2A1] focus:border-[#CE8F8A]">
-                <SelectValue placeholder="Tous les genres" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les genres</SelectItem>
-                <SelectItem value="homme">Homme</SelectItem>
-                <SelectItem value="femme">Femme</SelectItem>
-                <SelectItem value="mixte">Mixte</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <p className="text-sm font-montserrat text-[#805050] mb-2 flex items-center">
-              <Filter size={16} className="mr-2" /> Saison
-            </p>
-            <Select
-              value={selectedSaison || ""}
-              onValueChange={(value) =>
-                setSelectedSaison(value === "all" ? null : value)
-              }
-            >
-              <SelectTrigger className="border-[#D4C2A1] focus:border-[#CE8F8A]">
-                <SelectValue placeholder="Toutes les saisons" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les saisons</SelectItem>
-                <SelectItem value="été">Été</SelectItem>
-                <SelectItem value="hiver">Hiver</SelectItem>
-                <SelectItem value="toutes saisons">Toutes saisons</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <p className="text-sm font-montserrat text-[#805050] mb-2 flex items-center">
-              <Filter size={16} className="mr-2" /> Famille Olfactive
-            </p>
-            <Select
-              value={selectedFamille || ""}
-              onValueChange={(value) =>
-                setSelectedFamille(value === "all" ? null : value)
-              }
-            >
-              <SelectTrigger className="border-[#D4C2A1] focus:border-[#CE8F8A]">
-                <SelectValue placeholder="Toutes les familles" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les familles</SelectItem>
-                {uniqueFamilies.map((famille) => (
-                  <SelectItem key={famille} value={famille}>
-                    {famille}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Active filters */}
-        {(selectedGenre || selectedSaison || selectedFamille || searchTerm) && (
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="text-sm text-[#805050]">Filtres actifs:</span>
-            {selectedGenre && (
-              <Badge className="bg-[#CE8F8A] hover:bg-[#CE8F8A]/90">
-                Genre: {selectedGenre}
-              </Badge>
-            )}
-            {selectedSaison && (
-              <Badge className="bg-[#CE8F8A] hover:bg-[#CE8F8A]/90">
-                Saison: {selectedSaison}
-              </Badge>
-            )}
-            {selectedFamille && (
-              <Badge className="bg-[#CE8F8A] hover:bg-[#CE8F8A]/90">
-                Famille: {selectedFamille}
-              </Badge>
-            )}
-            {searchTerm && (
-              <Badge className="bg-[#CE8F8A] hover:bg-[#CE8F8A]/90">
-                Recherche: {searchTerm}
-              </Badge>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="text-[#805050] hover:text-[#CE8F8A] hover:bg-transparent"
-            >
-              Effacer tous les filtres
-            </Button>
-          </div>
-        )}
+      {/* Search bar */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Input
+          placeholder="Rechercher un parfum..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 border-[#D4C2A1] bg-white focus:border-[#CE8F8A] text-[#805050]"
+        />
       </div>
+
+      {/* Filter section */}
+      <div className="flex flex-wrap gap-4 mb-4">
+        {/* Genre filter */}
+        <div>
+          <Label>Genre</Label>
+          <Select
+            value={selectedGenre || "all"}
+            onValueChange={(value) =>
+              setSelectedGenre(value === "all" ? null : value)
+            }
+          >
+            <SelectTrigger className="border-[#D4C2A1]">
+              <SelectValue placeholder="Tous les genres" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les genres</SelectItem>
+              <SelectItem value="homme">Homme</SelectItem>
+              <SelectItem value="femme">Femme</SelectItem>
+              <SelectItem value="mixte">Mixte</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Saison filter */}
+        <div>
+          <Label>Saison</Label>
+          <Select
+            value={selectedSaison || "all"}
+            onValueChange={(value) =>
+              setSelectedSaison(value === "all" ? null : value)
+            }
+          >
+            <SelectTrigger className="border-[#D4C2A1]">
+              <SelectValue placeholder="Toutes les saisons" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les saisons</SelectItem>
+              <SelectItem value="été">Été</SelectItem>
+              <SelectItem value="hiver">Hiver</SelectItem>
+              <SelectItem value="toutes saisons">Toutes saisons</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Famille Olfactive filter */}
+        <div>
+          <Label>Famille Olfactive</Label>
+          <Select
+            value={selectedFamille || "all"}
+            onValueChange={(value) =>
+              setSelectedFamille(value === "all" ? null : value)
+            }
+          >
+            <SelectTrigger className="border-[#D4C2A1]">
+              <SelectValue placeholder="Toutes les familles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les familles</SelectItem>
+              {uniqueFamilies.map((famille) => (
+                <SelectItem key={famille} value={famille}>
+                  {famille}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Active filters */}
+      {(selectedGenre || selectedSaison || selectedFamille || searchTerm) && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>Filtres actifs:</span>
+          {selectedGenre && <Badge>Genre: {selectedGenre}</Badge>}
+          {selectedSaison && <Badge>Saison: {selectedSaison}</Badge>}
+          {selectedFamille && <Badge>Famille: {selectedFamille}</Badge>}
+          {searchTerm && <Badge>Recherche: {searchTerm}</Badge>}
+          <Button
+            variant="outline"
+            className="ml-2"
+            onClick={clearFilters}
+          >
+            Effacer tous les filtres
+          </Button>
+        </div>
+      )}
 
       {/* Results count and pagination info */}
-      <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <p className="text-sm text-[#805050]">
-          {filteredPerfumes.length} parfums trouvés
-          {totalPages > 1 && (
-            <span className="ml-2 text-[#AD9C92]">
-              (Page {currentPage} sur {totalPages})
-            </span>
-          )}
-        </p>
+      <div className="flex items-center justify-between mb-4">
+        <span>{filteredPerfumes.length} parfums trouvés</span>
         {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="border-[#CE8F8A] text-[#805050]"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="text-sm text-[#805050] px-2">
-              {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="border-[#CE8F8A] text-[#805050]"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
+          <span>
+            Page {currentPage} sur {totalPages}
+          </span>
         )}
       </div>
 
+      {totalPages > 1 && (
+        <div className="flex items-center gap-2 mb-4">
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="border-[#CE8F8A] text-[#805050]"
+          >
+            <ChevronLeft />
+          </Button>
+          <span>
+            {currentPage} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="border-[#CE8F8A] text-[#805050]"
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+      )}
+
       {/* Perfume grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {currentPerfumes.length > 0 ? (
-          currentPerfumes.map((perfume) => (
+      {currentPerfumes.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {currentPerfumes.map((perfume) => (
             <PerfumeCard
               key={perfume.codeProduit}
-              codeProduit={perfume.codeProduit}
-              imageURL={perfume.imageURL}
-              nomLolly={perfume.nomLolly}
-              nomParfumInspire={perfume.nomParfumInspire}
-              marqueInspire={perfume.marqueInspire}
-              genre={perfume.genre}
-              saison={perfume.saison}
-              familleOlfactive={perfume.familleOlfactive}
-              active={perfume.active}
-              allowInactiveClick={includeInactive}
+              perfume={perfume}
               onClick={() => onPerfumeSelect(perfume)}
             />
-          ))
-        ) : (
-          <div className="col-span-full text-center py-10">
-            <p className="text-lg text-[#805050]">
-              Aucun parfum ne correspond à votre recherche
-            </p>
-            <Button
-              onClick={clearFilters}
-              className="mt-4 bg-[#CE8F8A] hover:bg-[#CE8F8A]/90 text-white"
-            >
-              Réinitialiser les filtres
-            </Button>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center">
+          <p>Aucun parfum ne correspond à votre recherche</p>
+          <Button variant="link" onClick={clearFilters}>
+            Réinitialiser les filtres
+          </Button>
+        </div>
+      )}
 
       {/* Bottom pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8">
+        <div className="flex items-center justify-center gap-2 mt-6">
           <Button
             variant="outline"
             onClick={() => handlePageChange(1)}
@@ -452,48 +409,42 @@ const PerfumeCatalog = ({
             disabled={currentPage === 1}
             className="border-[#CE8F8A] text-[#805050]"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft />
           </Button>
-
           {/* Page numbers */}
-          <div className="flex gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handlePageChange(pageNum)}
-                  className={
-                    currentPage === pageNum
-                      ? "bg-[#CE8F8A] hover:bg-[#CE8F8A]/90 text-white"
-                      : "border-[#CE8F8A] text-[#805050]"
-                  }
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
-          </div>
-
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+            return (
+              <Button
+                key={pageNum}
+                variant="outline"
+                onClick={() => handlePageChange(pageNum as number)}
+                className={
+                  currentPage === pageNum
+                    ? "bg-[#CE8F8A] hover:bg-[#CE8F8A]/90 text-white"
+                    : "border-[#CE8F8A] text-[#805050]"
+                }
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
           <Button
             variant="outline"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
             className="border-[#CE8F8A] text-[#805050]"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight />
           </Button>
           <Button
             variant="outline"
