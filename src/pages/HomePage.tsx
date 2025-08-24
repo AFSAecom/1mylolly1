@@ -78,7 +78,7 @@ const HomePage = () => {
         muted
         playsInline
       />
-      <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat z-10">
+      <nav className="absolute top-4 left-0 w-full flex justify-between px-4 text-xs font-montserrat z-50">
         <Link to="/advisor" className="px-3 py-2 rounded bg-advisor text-admin">
           Espace Conseillère
         </Link>
@@ -87,7 +87,7 @@ const HomePage = () => {
         </Link>
       </nav>
 
-      <div className="pt-24 flex flex-col items-center relative z-10">
+      <div className="pointer-events-none pt-24 flex flex-col items-center relative z-10">
         <h1 className="text-3xl text-cream mb-8 font-playfair text-center">
           Le Compas Olfactif
         </h1>
