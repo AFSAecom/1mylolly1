@@ -3784,7 +3784,17 @@ const AdminSpace = () => {
                   </div>
                   <PerfumeCatalog
                     includeInactive
-                    key={`catalog-${products.length}-${Date.now()}`}
+                    perfumes={products.map((p) => ({
+                      codeProduit: p.codeArticle,
+                      nomLolly: p.name,
+                      nomParfumInspire: p.nomParfumInspire,
+                      marqueInspire: p.marqueInspire,
+                      genre: p.genre,
+                      saison: p.saison,
+                      familleOlfactive: p.familleOlfactive,
+                      imageURL: p.imageURL,
+                      active: p.active,
+                    }))}
                     onPerfumeSelect={(perfume) => {
                       // Find the actual product from our products array
                       const actualProduct = products.find(
@@ -4755,8 +4765,32 @@ const AdminSpace = () => {
                       return;
                     }
 
-                    // Reload data
-                    await loadData();
+                    // Update local product state immediately
+                    const updatedAdminProduct = {
+                      ...selectedProduct,
+                      codeArticle: updatedProduct.code_produit,
+                      name: updatedProduct.nom_lolly,
+                      nomParfumInspire: updatedProduct.nom_parfum_inspire,
+                      marqueInspire: updatedProduct.marque_inspire,
+                      imageURL: updatedProduct.image_url,
+                      genre: updatedProduct.genre,
+                      saison: updatedProduct.saison,
+                      familleOlfactive: updatedProduct.famille_olfactive,
+                      description: updatedProduct.description,
+                      noteTete: updatedProduct.note_tete,
+                      noteCoeur: updatedProduct.note_coeur,
+                      noteFond: updatedProduct.note_fond,
+                    };
+                    setProducts((prev) =>
+                      prev.map((p) =>
+                        p.id === selectedProduct.id ? updatedAdminProduct : p,
+                      ),
+                    );
+                    setSelectedProduct(updatedAdminProduct);
+                    // Refresh data in background
+                    loadData().catch((e) =>
+                      console.error("Failed to refresh products", e),
+                    );
 
                     // Persist update locally and notify catalog
                     if (typeof window !== "undefined") {
