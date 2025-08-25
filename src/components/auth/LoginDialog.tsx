@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { handleSignIn } from "@/features/auth/signIn";
 import { handleSignUp } from "@/features/auth/signUp";
 
 interface LoginDialogProps {
@@ -19,6 +18,7 @@ interface LoginDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   hideRegistration?: boolean;
+  login: (email: string, password: string) => Promise<any>;
 }
 
 const LoginDialog: React.FC<LoginDialogProps> = ({
@@ -26,6 +26,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({
   onOpenChange,
   onSuccess,
   hideRegistration = false,
+  login,
 }) => {
   /* -------- Connexion -------- */
   const [loginEmail, setLoginEmail] = useState("");
@@ -39,7 +40,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({
     setLoginBusy(true);
     setLoginMsg(null);
 
-    const res = await handleSignIn(loginEmail.trim(), loginPassword);
+    const res = await login(loginEmail.trim(), loginPassword);
 
     setLoginBusy(false);
     if (!res.ok) {

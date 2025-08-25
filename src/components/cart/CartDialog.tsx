@@ -25,7 +25,7 @@ interface CartDialogProps {
 const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
   const { items, removeFromCart, updateQuantity, getTotalPrice, clearCart } =
     useCart();
-  const { isAuthenticated, user, updateUser } = useAuth() as any;
+  const { isAuthenticated, user, updateUser, login } = useAuth() as any;
   const [showLogin, setShowLogin] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -391,6 +391,7 @@ const CartDialog: React.FC<CartDialogProps> = ({ open, onOpenChange }) => {
         open={showLogin}
         onOpenChange={setShowLogin}
         onSuccess={handleLoginSuccess}
+        login={login}
       />
 
       {/* Checkout Preview Dialog */}

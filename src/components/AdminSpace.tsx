@@ -62,13 +62,18 @@ import PerfumeDetail from "./catalog/PerfumeDetail";
 import { supabase } from "../lib/supabaseClient";
 
 const AdminSpace = () => {
-  const { register } = useAuth();
+  const {
+    user: authUser,
+    isAuthenticated: authIsAuthenticated,
+    login,
+    signOut,
+    loading: authLoading,
+  } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
-  const [showLogin, setShowLogin] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogin, setShowLogin] = useState(!authIsAuthenticated);
   const [showNewProduct, setShowNewProduct] = useState(false);
   const [noteTete, setNoteTete] = useState("");
   const [noteCoeur, setNoteCoeur] = useState("");
@@ -97,6 +102,15 @@ const AdminSpace = () => {
     role: "client",
     password: "",
   });
+
+  // If offline admin flag is present, hide the login modal on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (localStorage.getItem("offlineAdmin") === "true") {
+        setShowLogin(false);
+      }
+    }
+  }, []);
 
   // Preview states
   const [previewFile, setPreviewFile] = useState(null);
@@ -422,11 +436,11 @@ const AdminSpace = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (authIsAuthenticated) {
       console.log("🚀 Initial data load triggered by authentication");
       loadData();
     }
-  }, [isAuthenticated]);
+  }, [authIsAuthenticated]);
 
   // Add effect to listen for user import events
   useEffect(() => {
@@ -656,10 +670,8 @@ const AdminSpace = () => {
   };
 
   // Check authentication and role
-  const { user: authUser, isAuthenticated: authIsAuthenticated } = useAuth();
-
-  React.useEffect(() => {
-    console.log("🔍 Admin space useEffect triggered:", {
+  useEffect(() => {
+    console.log("🔍 Admin space auth change:", {
       authIsAuthenticated,
       authUser: authUser
         ? { email: authUser.email, role: authUser.role }
@@ -667,21 +679,12 @@ const AdminSpace = () => {
     });
 
     if (authIsAuthenticated && authUser) {
-      console.log("🔍 Admin space access check:", {
-        email: authUser.email,
-        role: authUser.role,
-        isAdmin: authUser.role === "admin",
-      });
-
-      // Force admin access for development admin user
       if (
         authUser.email === "admin@lecompasolfactif.com" ||
         authUser.role === "admin"
       ) {
-        setIsAuthenticated(true);
         setShowLogin(false);
         console.log("✅ Admin access granted for:", authUser.email);
-        return; // Important: return early to prevent further execution
       } else {
         console.log(
           "❌ Access denied for user:",
@@ -692,20 +695,20 @@ const AdminSpace = () => {
         alert(
           `Accès non autorisé. Votre rôle actuel: ${authUser.role}. Seuls les administrateurs peuvent accéder à cet espace.`,
         );
+        setShowLogin(true);
+        signOut();
         setTimeout(() => {
           window.location.href = "/";
         }, 100);
-        return;
       }
-    } else if (!authIsAuthenticated) {
+    } else {
       console.log("🔐 User not authenticated, showing login");
-      setIsAuthenticated(false);
       setShowLogin(true);
     }
-  }, [authIsAuthenticated, authUser]);
+  }, [authIsAuthenticated, authUser, signOut]);
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    signOut();
     setShowLogin(true);
   };
 
@@ -2617,15 +2620,16 @@ const AdminSpace = () => {
         onOpenChange={setShowLogin}
         onSuccess={() => {
           console.log("🔐 Login successful, checking user role...");
-          // The useEffect will handle the role check after login
+          // The auth context effect will handle the role check after login
         }}
         hideRegistration={true}
+        login={login}
       />
     );
   }
 
   // Show loading while checking authentication or loading data
-  if ((authIsAuthenticated && authUser && !isAuthenticated) || loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#FBF0E9] flex items-center justify-center">
         <div className="text-center">
