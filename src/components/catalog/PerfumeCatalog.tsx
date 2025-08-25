@@ -75,7 +75,11 @@ const PerfumeCatalog = ({
    * state. If the query fails or times out the defaultPerfumes array will
    * populate the catalogue.
    */
-  const loadProductsFromSupabase = async (page = 1, showSpinner = true) => {
+  const loadProductsFromSupabase = async (
+    page = 1,
+    showSpinner = true,
+    hasLocal = false,
+  ) => {
     if (showSpinner) setLoading(true);
     console.log(`🔄 Loading products directly from Supabase (page ${page})...`);
     try {
@@ -100,6 +104,7 @@ const PerfumeCatalog = ({
       const error = result?.error;
       if (error || !productsData) {
         console.error("Error loading products from Supabase:", error);
+        if (hasLocal) return;
         const stored =
           typeof window !== "undefined" &&
           window.localStorage.getItem(STORAGE_KEY);
@@ -141,6 +146,12 @@ const PerfumeCatalog = ({
           );
         }
       } else {
+        if (hasLocal) {
+          console.log(
+            "No products found in Supabase, retaining existing catalogue",
+          );
+          return;
+        }
         console.log("No products found in Supabase, using default perfumes");
         const stored =
           typeof window !== "undefined" &&
@@ -157,6 +168,7 @@ const PerfumeCatalog = ({
       }
     } catch (error) {
       console.error("Timeout or error loading products from Supabase:", error);
+      if (hasLocal) return;
       const stored =
         typeof window !== "undefined" &&
         window.localStorage.getItem(STORAGE_KEY);
@@ -184,9 +196,11 @@ const PerfumeCatalog = ({
         const stored = window.localStorage.getItem(STORAGE_KEY);
         if (stored) {
           try {
-            setCatalogPerfumes(JSON.parse(stored));
+            const parsed = JSON.parse(stored);
+            setCatalogPerfumes(parsed);
             setLoading(false);
-            loadProductsFromSupabase(1, false);
+            // Attempt a background refresh but keep local data on failure
+            loadProductsFromSupabase(1, false, true);
             return;
           } catch (e) {
             console.error("Failed to parse stored catalog", e);
