@@ -3,6 +3,7 @@ import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { handleSignIn } from '@/features/auth/signIn';
 import { handleSignUp } from '@/features/auth/signUp';
 import { supabase } from '@/lib/supabaseClient';
+import { normalizeRole } from '@/lib/utils';
 
 interface User extends SupabaseUser {
   role?: string;
@@ -65,7 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
       role = data?.role ?? undefined;
     }
-    return { ...u, role: role ?? 'client' } as User;
+    const normalized = normalizeRole(role) || 'client'
+    return { ...u, role: normalized } as User;
   };
 
   useEffect(() => {

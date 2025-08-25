@@ -49,11 +49,13 @@ export async function handleSignIn(email: string, password: string) {
       .or(`id.eq.${user.id},uid.eq.${user.id}`)
       .maybeSingle();
     if (selErr) {
-      throw new Error(selErr.message);
+      console.error('Erreur lors de la récupération du profil:', selErr);
+      return { ok: false, step: 'profile', error: selErr.message };
     }
 
     // Création du profil s'il n'existe pas encore
     if (!profile) {
+      console.warn(`Profil introuvable pour l'utilisateur ${user.id}, création...`);
       const { error: insertErr } = await supabase.from('users').insert({
         id: user.id,
         uid: user.id,
@@ -69,7 +71,8 @@ export async function handleSignIn(email: string, password: string) {
         nom: '',
       });
       if (insertErr) {
-        throw new Error(insertErr.message);
+        console.error('Erreur lors de la création du profil:', insertErr);
+        return { ok: false, step: 'profile', error: insertErr.message };
       }
     } else {
       // Mise à jour éventuelle du rôle ou de l'email si manquants
@@ -84,7 +87,8 @@ export async function handleSignIn(email: string, password: string) {
           .update(updates)
           .or(`id.eq.${user.id},uid.eq.${user.id}`);
         if (updErr) {
-          throw new Error(updErr.message);
+          console.error('Erreur lors de la mise à jour du profil:', updErr);
+          return { ok: false, step: 'profile', error: updErr.message };
         }
       }
     }
