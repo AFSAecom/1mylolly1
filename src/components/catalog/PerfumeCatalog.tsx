@@ -67,14 +67,16 @@ const PerfumeCatalog = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 20;
 
+  const STORAGE_KEY = "catalogPerfumes";
+
   /**
    * Load perfume data directly from Supabase. A timeout is applied so that
    * unresponsive network calls do not leave the UI in a perpetual loading
    * state. If the query fails or times out the defaultPerfumes array will
    * populate the catalogue.
    */
-  const loadProductsFromSupabase = async (page = 1) => {
-    setLoading(true);
+  const loadProductsFromSupabase = async (page = 1, showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     console.log(`🔄 Loading products directly from Supabase (page ${page})...`);
     try {
       // Build the base query selecting only the fields needed for the client.
@@ -98,6 +100,17 @@ const PerfumeCatalog = ({
       const error = result?.error;
       if (error || !productsData) {
         console.error("Error loading products from Supabase:", error);
+        const stored =
+          typeof window !== "undefined" &&
+          window.localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            setCatalogPerfumes(JSON.parse(stored));
+            return;
+          } catch (e) {
+            console.error("Failed to parse stored catalog", e);
+          }
+        }
         setCatalogPerfumes(defaultPerfumes);
         return;
       }
@@ -121,15 +134,43 @@ const PerfumeCatalog = ({
         );
         console.log(`✅ Loaded ${formattedPerfumes.length} products from Supabase`);
         setCatalogPerfumes(formattedPerfumes);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(formattedPerfumes),
+          );
+        }
       } else {
         console.log("No products found in Supabase, using default perfumes");
-        setCatalogPerfumes(defaultPerfumes);
+        const stored =
+          typeof window !== "undefined" &&
+          window.localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            setCatalogPerfumes(JSON.parse(stored));
+          } catch {
+            setCatalogPerfumes(defaultPerfumes);
+          }
+        } else {
+          setCatalogPerfumes(defaultPerfumes);
+        }
       }
     } catch (error) {
       console.error("Timeout or error loading products from Supabase:", error);
-      setCatalogPerfumes(defaultPerfumes);
+      const stored =
+        typeof window !== "undefined" &&
+        window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          setCatalogPerfumes(JSON.parse(stored));
+        } catch {
+          setCatalogPerfumes(defaultPerfumes);
+        }
+      } else {
+        setCatalogPerfumes(defaultPerfumes);
+      }
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
@@ -139,6 +180,19 @@ const PerfumeCatalog = ({
       setCatalogPerfumes(perfumes);
       setLoading(false);
     } else {
+      if (typeof window !== "undefined") {
+        const stored = window.localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            setCatalogPerfumes(JSON.parse(stored));
+            setLoading(false);
+            loadProductsFromSupabase(1, false);
+            return;
+          } catch (e) {
+            console.error("Failed to parse stored catalog", e);
+          }
+        }
+      }
       loadProductsFromSupabase();
     }
   }, [perfumes, includeInactive]);

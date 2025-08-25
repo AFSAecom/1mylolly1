@@ -138,6 +138,24 @@ const AdminSpace = () => {
     });
   }, [orders, dateFilter.start, dateFilter.end]);
 
+  // Persist catalogue products so refreshed catalogues don't fall back to defaults
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const serialized = products.map((p: any) => ({
+        codeProduit: p.codeArticle,
+        nomLolly: p.name,
+        nomParfumInspire: p.nomParfumInspire,
+        marqueInspire: p.marqueInspire,
+        genre: p.genre,
+        saison: p.saison,
+        familleOlfactive: p.familleOlfactive,
+        imageURL: p.imageURL,
+        active: p.active,
+      }));
+      localStorage.setItem("catalogPerfumes", JSON.stringify(serialized));
+    }
+  }, [products]);
+
   // Enhanced data loading with RLS diagnostics
   const loadData = async () => {
     console.log("🚀 Starting data refresh with RLS diagnostics...");
