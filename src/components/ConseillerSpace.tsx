@@ -35,6 +35,7 @@ const ConseillerSpace = () => {
   const authContext = useAuth();
   const user = authContext?.user;
   const isAuthenticated = authContext?.isAuthenticated || false;
+  const login = authContext?.login;
 
   // Component state
   const [showLogin, setShowLogin] = useState(false);
@@ -359,6 +360,7 @@ const ConseillerSpace = () => {
             setShowLogin(false);
           }}
           hideRegistration={true}
+          login={login}
         />
       </div>
     );

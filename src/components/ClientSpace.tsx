@@ -164,7 +164,7 @@ const ClientSpace = () => {
   const [editedUser, setEditedUser] = useState<any>(null);
   const { getTotalItems } = useCart();
   const { favorites, removeFromFavorites } = useFavorites();
-  const { isAuthenticated, user, updateUser, signOut } = useAuth();
+  const { isAuthenticated, user, updateUser, signOut, login } = useAuth();
 
   // Check role-based access - only allow clients and admins
   React.useEffect(() => {
@@ -798,7 +798,7 @@ const ClientSpace = () => {
       </div>
 
       <CartDialog open={showCart} onOpenChange={setShowCart} />
-      <LoginDialog open={showLogin} onOpenChange={setShowLogin} />
+      <LoginDialog open={showLogin} onOpenChange={setShowLogin} login={login} />
     </div>
   );
 };
