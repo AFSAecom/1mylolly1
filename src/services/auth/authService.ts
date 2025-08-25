@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { logger } from "@/lib/logger";
+import { normalizeRole } from "@/lib/utils";
 
 export interface User {
   id: string;
@@ -113,7 +114,7 @@ export async function login(
       whatsapp: userRecord.whatsapp || undefined,
       dateNaissance: userRecord.date_naissance || undefined,
       adresse: userRecord.adresse || undefined,
-      role: userRecord.role as "client" | "conseillere" | "admin",
+      role: normalizeRole(userRecord.role) as "client" | "conseillere" | "admin",
       codeClient: userRecord.code_client || undefined,
     };
   } catch (err) {
@@ -135,8 +136,9 @@ export async function register(
       role = "client",
       codeClient: providedCodeClient,
     } = userData;
+    const normalizedRole = normalizeRole(role) as "client" | "conseillere" | "admin";
     const rolePrefix =
-      role === "conseillere" ? "CNS" : role === "admin" ? "ADM" : "C";
+      normalizedRole === "conseillere" ? "CNS" : normalizedRole === "admin" ? "ADM" : "C";
     const codeClient =
       providedCodeClient || `${rolePrefix}${Date.now().toString().slice(-3)}`;
 
@@ -162,7 +164,7 @@ export async function register(
         whatsapp: userData.whatsapp || null,
         date_naissance: userData.dateNaissance || null,
         adresse: userData.adresse || null,
-        role,
+        role: normalizedRole,
         code_client: codeClient,
       })
       .select()
@@ -183,7 +185,7 @@ export async function register(
       whatsapp: userData.whatsapp,
       dateNaissance: userData.dateNaissance,
       adresse: userData.adresse,
-      role,
+      role: normalizedRole,
       codeClient: insertedUser.code_client || codeClient,
     };
   } catch (err) {
