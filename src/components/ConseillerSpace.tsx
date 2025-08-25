@@ -36,6 +36,7 @@ const ConseillerSpace = () => {
   const user = authContext?.user;
   const isAuthenticated = authContext?.isAuthenticated || false;
   const login = authContext?.login;
+  const signOut = authContext?.signOut;
 
   // Component state
   const [showLogin, setShowLogin] = useState(false);
@@ -47,6 +48,11 @@ const ConseillerSpace = () => {
   const [showClientLogin, setShowClientLogin] = useState(false);
   const [currentClient, setCurrentClient] = useState<any>(null);
   const [showFavorites, setShowFavorites] = useState(false);
+
+  const handleLogout = () => {
+    signOut?.();
+    setShowLogin(true);
+  };
 
   // Initialize data
   const [salesData, setSalesData] = useState(() => {
@@ -417,6 +423,14 @@ const ConseillerSpace = () => {
               >
                 <Home className="w-4 h-4 mr-2" />
                 Accueil
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                className="border-[#CE8F8A] text-[#805050] hover:bg-[#CE8F8A]/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Déconnexion
               </Button>
             </div>
           </div>
