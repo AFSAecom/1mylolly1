@@ -3791,7 +3791,17 @@ const AdminSpace = () => {
                   </div>
                   <PerfumeCatalog
                     includeInactive
-                    key={`catalog-${products.length}-${Date.now()}`}
+                    perfumes={products.map((p) => ({
+                      codeProduit: p.codeArticle,
+                      nomLolly: p.name,
+                      nomParfumInspire: p.nomParfumInspire,
+                      marqueInspire: p.marqueInspire,
+                      genre: p.genre,
+                      saison: p.saison,
+                      familleOlfactive: p.familleOlfactive,
+                      imageURL: p.imageURL,
+                      active: p.active,
+                    }))}
                     onPerfumeSelect={(perfume) => {
                       // Find the actual product from our products array
                       const actualProduct = products.find(
@@ -4810,10 +4820,29 @@ const AdminSpace = () => {
                     return;
                   }
 
-                  // Reload data
-                  await loadData();
+                  const updatedProduct = {
+                    ...selectedProduct,
+                    genre: editFormData.genre ?? selectedProduct.genre,
+                    saison: editFormData.saison ?? selectedProduct.saison,
+                    familleOlfactive:
+                      editFormData.familleOlfactive ??
+                      selectedProduct.familleOlfactive,
+                    description:
+                      editFormData.description ?? selectedProduct.description,
+                    noteTete: editFormData.noteTete ?? selectedProduct.noteTete,
+                    noteCoeur:
+                      editFormData.noteCoeur ?? selectedProduct.noteCoeur,
+                    noteFond: editFormData.noteFond ?? selectedProduct.noteFond,
+                    imageURL: editFormData.imageURL ?? selectedProduct.imageURL,
+                  };
 
-                  // Dispatch event to update other components
+                  setProducts((prev) =>
+                    prev.map((p) =>
+                      p.id === selectedProduct.id ? { ...p, ...updatedProduct } : p,
+                    ),
+                  );
+                  setSelectedProduct(updatedProduct);
+
                   const productUpdateEvent = new CustomEvent(
                     "productUpdated",
                     {
