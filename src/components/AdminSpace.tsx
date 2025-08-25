@@ -138,24 +138,6 @@ const AdminSpace = () => {
     });
   }, [orders, dateFilter.start, dateFilter.end]);
 
-  // Persist catalogue products so refreshed catalogues don't fall back to defaults
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const serialized = products.map((p: any) => ({
-        codeProduit: p.codeArticle,
-        nomLolly: p.name,
-        nomParfumInspire: p.nomParfumInspire,
-        marqueInspire: p.marqueInspire,
-        genre: p.genre,
-        saison: p.saison,
-        familleOlfactive: p.familleOlfactive,
-        imageURL: p.imageURL,
-        active: p.active,
-      }));
-      localStorage.setItem("catalogPerfumes", JSON.stringify(serialized));
-    }
-  }, [products]);
-
   // Enhanced data loading with RLS diagnostics
   const loadData = async () => {
     console.log("🚀 Starting data refresh with RLS diagnostics...");
@@ -2883,13 +2865,6 @@ const AdminSpace = () => {
                                     imageURL:
                                       product.imageURL ||
                                       "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
-                                    genre: product.genre,
-                                    saison: product.saison,
-                                    familleOlfactive: product.familleOlfactive,
-                                    description: product.description,
-                                    noteTete: product.noteTete,
-                                    noteCoeur: product.noteCoeur,
-                                    noteFond: product.noteFond,
                                   });
                                   setImagePreview(
                                     product.imageURL ||
@@ -3809,17 +3784,7 @@ const AdminSpace = () => {
                   </div>
                   <PerfumeCatalog
                     includeInactive
-                    perfumes={products.map((p) => ({
-                      codeProduit: p.codeArticle,
-                      nomLolly: p.name,
-                      nomParfumInspire: p.nomParfumInspire,
-                      marqueInspire: p.marqueInspire,
-                      genre: p.genre,
-                      saison: p.saison,
-                      familleOlfactive: p.familleOlfactive,
-                      imageURL: p.imageURL,
-                      active: p.active,
-                    }))}
+                    key={`catalog-${products.length}-${Date.now()}`}
                     onPerfumeSelect={(perfume) => {
                       // Find the actual product from our products array
                       const actualProduct = products.find(
@@ -4542,9 +4507,9 @@ const AdminSpace = () => {
           </DialogHeader>
           {selectedProduct && (
             <>
-            <div className="space-y-6 flex-1 overflow-y-auto pr-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              <div className="flex-1 overflow-y-auto space-y-6 p-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
                   <div>
                     <Label>Image du Produit</Label>
                     <div className="space-y-2">
@@ -4641,15 +4606,7 @@ const AdminSpace = () => {
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <Label>Genre</Label>
-                      <Select
-                        value={editFormData.genre || ""}
-                        onValueChange={(value) =>
-                          setEditFormData((prev) => ({
-                            ...prev,
-                            genre: value,
-                          }))
-                        }
-                      >
+                      <Select defaultValue="mixte">
                         <SelectTrigger className="border-[#D4C2A1]">
                           <SelectValue />
                         </SelectTrigger>
@@ -4662,15 +4619,7 @@ const AdminSpace = () => {
                     </div>
                     <div>
                       <Label>Saison</Label>
-                      <Select
-                        value={editFormData.saison || ""}
-                        onValueChange={(value) =>
-                          setEditFormData((prev) => ({
-                            ...prev,
-                            saison: value,
-                          }))
-                        }
-                      >
+                      <Select defaultValue="toutes saisons">
                         <SelectTrigger className="border-[#D4C2A1]">
                           <SelectValue />
                         </SelectTrigger>
@@ -4686,13 +4635,7 @@ const AdminSpace = () => {
                     <div>
                       <Label>Famille Olfactive</Label>
                       <Input
-                        value={editFormData.familleOlfactive || ""}
-                        onChange={(e) =>
-                          setEditFormData((prev) => ({
-                            ...prev,
-                            familleOlfactive: e.target.value,
-                          }))
-                        }
+                        defaultValue="Oriental"
                         className="border-[#D4C2A1]"
                       />
                     </div>
@@ -4700,13 +4643,7 @@ const AdminSpace = () => {
                   <div>
                     <Label>Description</Label>
                     <Textarea
-                      value={editFormData.description || ""}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
+                      defaultValue="Une fragrance élégante et raffinée qui capture l'essence de la sophistication moderne."
                       className="border-[#D4C2A1]"
                     />
                   </div>
@@ -4718,39 +4655,21 @@ const AdminSpace = () => {
                   <div>
                     <Label className="text-sm">Notes de Tête</Label>
                     <Input
-                      value={editFormData.noteTete || ""}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          noteTete: e.target.value,
-                        }))
-                      }
+                      defaultValue="Bergamote, Citron"
                       className="border-[#D4C2A1]"
                     />
                   </div>
                   <div>
                     <Label className="text-sm">Notes de Cœur</Label>
                     <Input
-                      value={editFormData.noteCoeur || ""}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          noteCoeur: e.target.value,
-                        }))
-                      }
+                      defaultValue="Jasmin, Rose"
                       className="border-[#D4C2A1]"
                     />
                   </div>
                   <div>
                     <Label className="text-sm">Notes de Fond</Label>
                     <Input
-                      value={editFormData.noteFond || ""}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          noteFond: e.target.value,
-                        }))
-                      }
+                      defaultValue="Musc, Vanille"
                       className="border-[#D4C2A1]"
                     />
                   </div>
@@ -4786,7 +4705,7 @@ const AdminSpace = () => {
                 </div>
               </div>
             </div>
-            <DialogFooter className="flex gap-2 pt-4">
+            <DialogFooter className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -4799,91 +4718,58 @@ const AdminSpace = () => {
                 type="button"
                 className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
                 onClick={async () => {
-                  // Update product in Supabase
-                  const { error } = await supabase
-                    .from("products")
-                    .update({
-                      code_produit:
-                        editFormData.codeArticle ||
-                        selectedProduct.codeArticle,
-                      nom_lolly: editFormData.name || selectedProduct.name,
-                      nom_parfum_inspire:
-                        editFormData.nomParfumInspire ||
-                        selectedProduct.nomParfumInspire,
-                      marque_inspire:
-                        editFormData.marqueInspire ||
-                        selectedProduct.marqueInspire,
-                      genre: editFormData.genre || selectedProduct.genre,
-                      saison: editFormData.saison || selectedProduct.saison,
-                      famille_olfactive:
-                        editFormData.familleOlfactive ||
-                        selectedProduct.familleOlfactive,
-                      description:
-                        editFormData.description ||
-                        selectedProduct.description,
-                      note_tete:
-                        editFormData.noteTete || selectedProduct.noteTete,
-                      note_coeur:
-                        editFormData.noteCoeur || selectedProduct.noteCoeur,
-                      note_fond:
-                        editFormData.noteFond || selectedProduct.noteFond,
-                      image_url:
-                        editFormData.imageURL || selectedProduct.imageURL,
-                    })
-                    .eq("id", selectedProduct.id);
+                    // Update product in Supabase
+                    const { error } = await supabase
+                      .from("products")
+                      .update({
+                        code_produit:
+                          editFormData.codeArticle ||
+                          selectedProduct.codeArticle,
+                        nom_lolly: editFormData.name || selectedProduct.name,
+                        nom_parfum_inspire:
+                          editFormData.nomParfumInspire ||
+                          selectedProduct.nomParfumInspire,
+                        marque_inspire:
+                          editFormData.marqueInspire ||
+                          selectedProduct.marqueInspire,
+                        image_url:
+                          editFormData.imageURL || selectedProduct.imageURL,
+                      })
+                      .eq("id", selectedProduct.id);
 
-                  if (error) {
-                    console.error("Error updating product:", error);
-                    alert("Erreur lors de la mise à jour du produit");
-                    return;
-                  }
+                    if (error) {
+                      console.error("Error updating product:", error);
+                      alert("Erreur lors de la mise à jour du produit");
+                      return;
+                    }
 
-                  const updatedProduct = {
-                    ...selectedProduct,
-                    genre: editFormData.genre ?? selectedProduct.genre,
-                    saison: editFormData.saison ?? selectedProduct.saison,
-                    familleOlfactive:
-                      editFormData.familleOlfactive ??
-                      selectedProduct.familleOlfactive,
-                    description:
-                      editFormData.description ?? selectedProduct.description,
-                    noteTete: editFormData.noteTete ?? selectedProduct.noteTete,
-                    noteCoeur:
-                      editFormData.noteCoeur ?? selectedProduct.noteCoeur,
-                    noteFond: editFormData.noteFond ?? selectedProduct.noteFond,
-                    imageURL: editFormData.imageURL ?? selectedProduct.imageURL,
-                  };
+                    // Reload data
+                    await loadData();
 
-                  setProducts((prev) =>
-                    prev.map((p) =>
-                      p.id === selectedProduct.id ? { ...p, ...updatedProduct } : p,
-                    ),
-                  );
-                  setSelectedProduct(updatedProduct);
-
-                  const productUpdateEvent = new CustomEvent(
-                    "productUpdated",
-                    {
-                      detail: {
-                        productId: selectedProduct.id,
-                        updatedData: editFormData,
+                    // Dispatch event to update other components
+                    const productUpdateEvent = new CustomEvent(
+                      "productUpdated",
+                      {
+                        detail: {
+                          productId: selectedProduct.id,
+                          updatedData: editFormData,
+                        },
                       },
-                    },
-                  );
-                  window.dispatchEvent(productUpdateEvent);
+                    );
+                    window.dispatchEvent(productUpdateEvent);
 
-                  alert(
-                    "✅ Produit modifié avec succès!\n\nLes modifications sont maintenant visibles:\n- Dans le catalogue\n- Dans les fiches produit\n- Dans tous les espaces",
-                  );
-                  setShowEditProduct(false);
-                  setEditFormData({});
-                  setImagePreview("");
-                  setSelectedImageFile(null);
-                }}
-              >
-                Sauvegarder
-              </Button>
-            </DialogFooter>
+                    alert(
+                      "✅ Produit modifié avec succès!\n\nLes modifications sont maintenant visibles:\n- Dans le catalogue\n- Dans les fiches produit\n- Dans tous les espaces",
+                    );
+                    setShowEditProduct(false);
+                    setEditFormData({});
+                    setImagePreview("");
+                    setSelectedImageFile(null);
+                  }}
+                >
+                  Sauvegarder
+                </Button>
+              </DialogFooter>
             </>
           )}
         </DialogContent>
