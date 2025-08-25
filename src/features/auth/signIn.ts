@@ -3,15 +3,9 @@ import { supabase } from '../../lib/supabaseClient';
 /**
  * Tentative de connexion pour l'interface admin/client.
  *
- * Cette fonction commence par tenter une authentification auprès de Supabase
- * avec un délai d'attente configurable. Si l'appel à Supabase ne répond pas
- * à temps ou renvoie une erreur, une tentative de secours est effectuée : si
- * l'adresse e‑mail et le mot de passe correspondent à ceux de l'administrateur
- * (`admin@lecompasolfactif.com` / `taftoufa`), on renvoie un objet utilisateur
- * minimal permettant à l'interface d'administration de fonctionner en mode
- * hors‑ligne. Cela évite de bloquer l'accès à l'espace admin lorsque Supabase
- * rencontre des problèmes temporaires. Dans tous les autres cas, une erreur
- * descriptive est renvoyée.
+ * Cette fonction tente une authentification auprès de Supabase
+ * avec un délai d'attente configurable. En cas d'échec ou de délai
+ * dépassé, une erreur descriptive est renvoyée.
  */
 export async function handleSignIn(email: string, password: string) {
   // Durée maximale (en millisecondes) pour l'appel à Supabase Auth
@@ -95,33 +89,6 @@ export async function handleSignIn(email: string, password: string) {
 
     return { ok: true, user };
   } catch (err: any) {
-    // Mode secours : si l'appel a expiré ou échoué et que l'on se connecte
-    // avec les identifiants administrateur connus, on renvoie un utilisateur factice.
-    if (
-      email === 'admin@lecompasolfactif.com' &&
-      password === 'taftoufa'
-    ) {
-      // Définir un indicateur en localStorage pour que l'AuthContext sache que
-      // l'administrateur est connecté en mode hors‑ligne. Cela permet au
-      // contexte d'initialiser un utilisateur factice et de considérer
-      // l'application comme authentifiée.
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('offlineAdmin', 'true');
-        } catch (_) {
-          // Ignore quota errors or absence of localStorage (e.g. SSR)
-        }
-      }
-      return {
-        ok: true,
-        user: {
-          id: 'admin-offline',
-          email,
-          role: 'admin',
-        },
-        offline: true,
-      };
-    }
     // Erreur de délai d'attente
     if (err.message === 'timeout') {
       return { ok: false, step: 'auth', error: "Délai d'attente dépassé. Réessayez." };

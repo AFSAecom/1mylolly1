@@ -22,20 +22,11 @@ export type AuthCtx = {
 };
 
 /*
- * AuthContext with offline admin support.
+ * AuthContext
  *
  * This context is responsible for providing authentication state
  * throughout the application. It wraps Supabase's auth client and
- * exposes methods for logging in and out. In addition to the default
- * Supabase session handling, this version also supports a simple
- * "offline" mode for the administrator account. When the login
- * function determines that the Supabase Auth service is unavailable
- * but the credentials match the admin user, it stores a flag in
- * localStorage (`offlineAdmin`). The AuthProvider reads this flag on
- * mount and, if present, populates the context with a minimal admin
- * user object. It also adjusts `isAuthenticated` so that the rest of
- * the application treats this offline admin as authenticated. When
- * signing out, the flag is cleared.
+ * exposes methods for logging in and out.
  */
 const Ctx = createContext<AuthCtx>({
   user: null,
@@ -71,21 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Check if the admin has logged in via the offline fallback
-    const offline = typeof window !== 'undefined' && localStorage.getItem('offlineAdmin') === 'true';
-    if (offline) {
-      // Bypass Supabase session retrieval and set offline admin user
-      setSession(null);
-      setUser({
-        id: 'admin-offline',
-        email: 'admin@lecompasolfactif.com',
-        role: 'admin',
-      } as User);
-      setLoading(false);
-      return;
-    }
-
-    // If not in offline mode, proceed with Supabase auth listener and session fetch
     let mounted = true;
     (async () => {
       const { data } = await supabase.auth.getSession();
@@ -108,21 +84,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AuthCtx>(() => {
-    const offline = typeof window !== 'undefined' && localStorage.getItem('offlineAdmin') === 'true';
     return {
       user,
       session,
       loading,
-      // Consider the offline admin as authenticated even without a session
-      isAuthenticated: !!session || (offline && user?.role === 'admin'),
+      isAuthenticated: !!session,
       updateUser: (u: Partial<User>) => {
         setUser((prev) => (prev ? { ...prev, ...u } as User : prev));
       },
       signOut: async () => {
-        // Clear offline admin flag and sign out from Supabase
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('offlineAdmin');
-        }
         await supabase.auth.signOut();
         setSession(null);
         setUser(null);
