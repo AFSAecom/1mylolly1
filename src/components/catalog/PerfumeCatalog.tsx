@@ -192,22 +192,33 @@ const PerfumeCatalog = ({
       setCatalogPerfumes(perfumes);
       setLoading(false);
     } else {
+      let initialized = false;
       if (typeof window !== "undefined") {
         const stored = window.localStorage.getItem(STORAGE_KEY);
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
             setCatalogPerfumes(parsed);
-            setLoading(false);
-            // Attempt a background refresh but keep local data on failure
-            loadProductsFromSupabase(1, false, true);
-            return;
+            initialized = true;
           } catch (e) {
             console.error("Failed to parse stored catalog", e);
           }
         }
+        if (!initialized) {
+          setCatalogPerfumes(defaultPerfumes);
+          window.localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(defaultPerfumes),
+          );
+          initialized = true;
+        }
       }
-      loadProductsFromSupabase();
+      if (!initialized) {
+        setCatalogPerfumes(defaultPerfumes);
+      }
+      setLoading(false);
+      // Attempt a background refresh but keep local data on failure
+      loadProductsFromSupabase(1, false, true);
     }
   }, [perfumes, includeInactive]);
 
