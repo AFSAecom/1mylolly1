@@ -33,6 +33,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "./ui/dialog";
 import {
   Package,
@@ -4498,14 +4499,15 @@ const AdminSpace = () => {
 
       {/* Edit Product Dialog */}
       <Dialog open={showEditProduct} onOpenChange={setShowEditProduct}>
-        <DialogContent className="sm:max-w-[900px] bg-[#FBF0E9] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[900px] bg-[#FBF0E9] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[#805050] font-playfair">
               Modifier le Produit Complet
             </DialogTitle>
           </DialogHeader>
           {selectedProduct && (
-            <div className="space-y-6">
+            <>
+            <div className="space-y-6 flex-1 overflow-y-auto pr-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
@@ -4702,70 +4704,73 @@ const AdminSpace = () => {
                   ))}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowEditProduct(false)}
-                  className="flex-1"
-                >
-                  Annuler
-                </Button>
-                <Button
-                  className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
-                  onClick={async () => {
-                    // Update product in Supabase
-                    const { error } = await supabase
-                      .from("products")
-                      .update({
-                        code_produit:
-                          editFormData.codeArticle ||
-                          selectedProduct.codeArticle,
-                        nom_lolly: editFormData.name || selectedProduct.name,
-                        nom_parfum_inspire:
-                          editFormData.nomParfumInspire ||
-                          selectedProduct.nomParfumInspire,
-                        marque_inspire:
-                          editFormData.marqueInspire ||
-                          selectedProduct.marqueInspire,
-                        image_url:
-                          editFormData.imageURL || selectedProduct.imageURL,
-                      })
-                      .eq("id", selectedProduct.id);
-
-                    if (error) {
-                      console.error("Error updating product:", error);
-                      alert("Erreur lors de la mise à jour du produit");
-                      return;
-                    }
-
-                    // Reload data
-                    await loadData();
-
-                    // Dispatch event to update other components
-                    const productUpdateEvent = new CustomEvent(
-                      "productUpdated",
-                      {
-                        detail: {
-                          productId: selectedProduct.id,
-                          updatedData: editFormData,
-                        },
-                      },
-                    );
-                    window.dispatchEvent(productUpdateEvent);
-
-                    alert(
-                      "✅ Produit modifié avec succès!\n\nLes modifications sont maintenant visibles:\n- Dans le catalogue\n- Dans les fiches produit\n- Dans tous les espaces",
-                    );
-                    setShowEditProduct(false);
-                    setEditFormData({});
-                    setImagePreview("");
-                    setSelectedImageFile(null);
-                  }}
-                >
-                  Sauvegarder
-                </Button>
-              </div>
             </div>
+            <DialogFooter className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditProduct(false)}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
+                onClick={async () => {
+                  // Update product in Supabase
+                  const { error } = await supabase
+                    .from("products")
+                    .update({
+                      code_produit:
+                        editFormData.codeArticle ||
+                        selectedProduct.codeArticle,
+                      nom_lolly: editFormData.name || selectedProduct.name,
+                      nom_parfum_inspire:
+                        editFormData.nomParfumInspire ||
+                        selectedProduct.nomParfumInspire,
+                      marque_inspire:
+                        editFormData.marqueInspire ||
+                        selectedProduct.marqueInspire,
+                      image_url:
+                        editFormData.imageURL || selectedProduct.imageURL,
+                    })
+                    .eq("id", selectedProduct.id);
+
+                  if (error) {
+                    console.error("Error updating product:", error);
+                    alert("Erreur lors de la mise à jour du produit");
+                    return;
+                  }
+
+                  // Reload data
+                  await loadData();
+
+                  // Dispatch event to update other components
+                  const productUpdateEvent = new CustomEvent(
+                    "productUpdated",
+                    {
+                      detail: {
+                        productId: selectedProduct.id,
+                        updatedData: editFormData,
+                      },
+                    },
+                  );
+                  window.dispatchEvent(productUpdateEvent);
+
+                  alert(
+                    "✅ Produit modifié avec succès!\n\nLes modifications sont maintenant visibles:\n- Dans le catalogue\n- Dans les fiches produit\n- Dans tous les espaces",
+                  );
+                  setShowEditProduct(false);
+                  setEditFormData({});
+                  setImagePreview("");
+                  setSelectedImageFile(null);
+                }}
+              >
+                Sauvegarder
+              </Button>
+            </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>
