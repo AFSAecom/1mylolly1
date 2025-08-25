@@ -211,6 +211,34 @@ const PerfumeCatalog = ({
     }
   }, [perfumes, includeInactive]);
 
+  // Listen for product updates from the admin interface
+  useEffect(() => {
+    const handleProductUpdated = (e: any) => {
+      const updated = e.detail;
+      setCatalogPerfumes((prev) => {
+        const idx = prev.findIndex(
+          (p) => p.codeProduit === updated.codeProduit,
+        );
+        const next = [...prev];
+        if (idx !== -1) {
+          next[idx] = { ...prev[idx], ...updated };
+        } else {
+          next.push(updated);
+        }
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        }
+        return next;
+      });
+    };
+    window.addEventListener("productUpdated", handleProductUpdated as EventListener);
+    return () =>
+      window.removeEventListener(
+        "productUpdated",
+        handleProductUpdated as EventListener,
+      );
+  }, []);
+
   // Derived arrays for filtering and pagination
   const allPerfumes = perfumes || catalogPerfumes;
   const visiblePerfumes = includeInactive
