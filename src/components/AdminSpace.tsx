@@ -2865,6 +2865,13 @@ const AdminSpace = () => {
                                     imageURL:
                                       product.imageURL ||
                                       "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80",
+                                    genre: product.genre,
+                                    saison: product.saison,
+                                    familleOlfactive: product.familleOlfactive,
+                                    description: product.description,
+                                    noteTete: product.noteTete,
+                                    noteCoeur: product.noteCoeur,
+                                    noteFond: product.noteFond,
                                   });
                                   setImagePreview(
                                     product.imageURL ||
@@ -4606,7 +4613,15 @@ const AdminSpace = () => {
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <Label>Genre</Label>
-                      <Select defaultValue="mixte">
+                      <Select
+                        value={editFormData.genre || ""}
+                        onValueChange={(value) =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            genre: value,
+                          }))
+                        }
+                      >
                         <SelectTrigger className="border-[#D4C2A1]">
                           <SelectValue />
                         </SelectTrigger>
@@ -4619,7 +4634,15 @@ const AdminSpace = () => {
                     </div>
                     <div>
                       <Label>Saison</Label>
-                      <Select defaultValue="toutes saisons">
+                      <Select
+                        value={editFormData.saison || ""}
+                        onValueChange={(value) =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            saison: value,
+                          }))
+                        }
+                      >
                         <SelectTrigger className="border-[#D4C2A1]">
                           <SelectValue />
                         </SelectTrigger>
@@ -4635,7 +4658,13 @@ const AdminSpace = () => {
                     <div>
                       <Label>Famille Olfactive</Label>
                       <Input
-                        defaultValue="Oriental"
+                        value={editFormData.familleOlfactive || ""}
+                        onChange={(e) =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            familleOlfactive: e.target.value,
+                          }))
+                        }
                         className="border-[#D4C2A1]"
                       />
                     </div>
@@ -4643,7 +4672,13 @@ const AdminSpace = () => {
                   <div>
                     <Label>Description</Label>
                     <Textarea
-                      defaultValue="Une fragrance élégante et raffinée qui capture l'essence de la sophistication moderne."
+                      value={editFormData.description || ""}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       className="border-[#D4C2A1]"
                     />
                   </div>
@@ -4655,21 +4690,39 @@ const AdminSpace = () => {
                   <div>
                     <Label className="text-sm">Notes de Tête</Label>
                     <Input
-                      defaultValue="Bergamote, Citron"
+                      value={editFormData.noteTete || ""}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          noteTete: e.target.value,
+                        }))
+                      }
                       className="border-[#D4C2A1]"
                     />
                   </div>
                   <div>
                     <Label className="text-sm">Notes de Cœur</Label>
                     <Input
-                      defaultValue="Jasmin, Rose"
+                      value={editFormData.noteCoeur || ""}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          noteCoeur: e.target.value,
+                        }))
+                      }
                       className="border-[#D4C2A1]"
                     />
                   </div>
                   <div>
                     <Label className="text-sm">Notes de Fond</Label>
                     <Input
-                      defaultValue="Musc, Vanille"
+                      value={editFormData.noteFond || ""}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          noteFond: e.target.value,
+                        }))
+                      }
                       className="border-[#D4C2A1]"
                     />
                   </div>
@@ -4732,6 +4785,20 @@ const AdminSpace = () => {
                       marque_inspire:
                         editFormData.marqueInspire ||
                         selectedProduct.marqueInspire,
+                      genre: editFormData.genre || selectedProduct.genre,
+                      saison: editFormData.saison || selectedProduct.saison,
+                      famille_olfactive:
+                        editFormData.familleOlfactive ||
+                        selectedProduct.familleOlfactive,
+                      description:
+                        editFormData.description ||
+                        selectedProduct.description,
+                      note_tete:
+                        editFormData.noteTete || selectedProduct.noteTete,
+                      note_coeur:
+                        editFormData.noteCoeur || selectedProduct.noteCoeur,
+                      note_fond:
+                        editFormData.noteFond || selectedProduct.noteFond,
                       image_url:
                         editFormData.imageURL || selectedProduct.imageURL,
                     })
