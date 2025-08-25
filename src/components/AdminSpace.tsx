@@ -103,15 +103,6 @@ const AdminSpace = () => {
     password: "",
   });
 
-  // If offline admin flag is present, hide the login modal on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (localStorage.getItem("offlineAdmin") === "true") {
-        setShowLogin(false);
-      }
-    }
-  }, []);
-
   // Preview states
   const [previewFile, setPreviewFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
