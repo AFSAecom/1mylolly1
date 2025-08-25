@@ -33,6 +33,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "./ui/dialog";
 import {
   Package,
@@ -3783,7 +3784,17 @@ const AdminSpace = () => {
                   </div>
                   <PerfumeCatalog
                     includeInactive
-                    key={`catalog-${products.length}-${Date.now()}`}
+                    perfumes={products.map((p) => ({
+                      codeProduit: p.codeArticle,
+                      nomLolly: p.name,
+                      nomParfumInspire: p.nomParfumInspire,
+                      marqueInspire: p.marqueInspire,
+                      genre: p.genre,
+                      saison: p.saison,
+                      familleOlfactive: p.familleOlfactive,
+                      imageURL: p.imageURL,
+                      active: p.active,
+                    }))}
                     onPerfumeSelect={(perfume) => {
                       // Find the actual product from our products array
                       const actualProduct = products.find(
@@ -4498,16 +4509,17 @@ const AdminSpace = () => {
 
       {/* Edit Product Dialog */}
       <Dialog open={showEditProduct} onOpenChange={setShowEditProduct}>
-        <DialogContent className="sm:max-w-[900px] bg-[#FBF0E9] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[900px] bg-[#FBF0E9] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[#805050] font-playfair">
               Modifier le Produit Complet
             </DialogTitle>
           </DialogHeader>
           {selectedProduct && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <>
+              <div className="flex-1 overflow-y-auto space-y-6 p-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
                   <div>
                     <Label>Image du Produit</Label>
                     <div className="space-y-2">
@@ -4702,34 +4714,49 @@ const AdminSpace = () => {
                   ))}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowEditProduct(false)}
-                  className="flex-1"
-                >
-                  Annuler
-                </Button>
-                <Button
-                  className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
-                  onClick={async () => {
+            </div>
+            <DialogFooter className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditProduct(false)}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 bg-[#805050] hover:bg-[#704040] text-white"
+                onClick={async () => {
+                    // Build object with updated fields
+                    const updatedProduct = {
+                      code_produit:
+                        editFormData.codeArticle ||
+                        selectedProduct.codeArticle,
+                      nom_lolly: editFormData.name || selectedProduct.name,
+                      nom_parfum_inspire:
+                        editFormData.nomParfumInspire ||
+                        selectedProduct.nomParfumInspire,
+                      marque_inspire:
+                        editFormData.marqueInspire ||
+                        selectedProduct.marqueInspire,
+                      image_url:
+                        editFormData.imageURL || selectedProduct.imageURL,
+                      genre: editFormData.genre || selectedProduct.genre,
+                      saison: editFormData.saison || selectedProduct.saison,
+                      famille_olfactive:
+                        editFormData.familleOlfactive ||
+                        selectedProduct.familleOlfactive,
+                      description:
+                        editFormData.description || selectedProduct.description,
+                      note_tete: editFormData.noteTete || selectedProduct.noteTete,
+                      note_coeur: editFormData.noteCoeur || selectedProduct.noteCoeur,
+                      note_fond: editFormData.noteFond || selectedProduct.noteFond,
+                    };
                     // Update product in Supabase
                     const { error } = await supabase
                       .from("products")
-                      .update({
-                        code_produit:
-                          editFormData.codeArticle ||
-                          selectedProduct.codeArticle,
-                        nom_lolly: editFormData.name || selectedProduct.name,
-                        nom_parfum_inspire:
-                          editFormData.nomParfumInspire ||
-                          selectedProduct.nomParfumInspire,
-                        marque_inspire:
-                          editFormData.marqueInspire ||
-                          selectedProduct.marqueInspire,
-                        image_url:
-                          editFormData.imageURL || selectedProduct.imageURL,
-                      })
+                      .update(updatedProduct)
                       .eq("id", selectedProduct.id);
 
                     if (error) {
@@ -4738,20 +4765,76 @@ const AdminSpace = () => {
                       return;
                     }
 
-                    // Reload data
-                    await loadData();
-
-                    // Dispatch event to update other components
-                    const productUpdateEvent = new CustomEvent(
-                      "productUpdated",
-                      {
-                        detail: {
-                          productId: selectedProduct.id,
-                          updatedData: editFormData,
-                        },
-                      },
+                    // Update local product state immediately
+                    const updatedAdminProduct = {
+                      ...selectedProduct,
+                      codeArticle: updatedProduct.code_produit,
+                      name: updatedProduct.nom_lolly,
+                      nomParfumInspire: updatedProduct.nom_parfum_inspire,
+                      marqueInspire: updatedProduct.marque_inspire,
+                      imageURL: updatedProduct.image_url,
+                      genre: updatedProduct.genre,
+                      saison: updatedProduct.saison,
+                      familleOlfactive: updatedProduct.famille_olfactive,
+                      description: updatedProduct.description,
+                      noteTete: updatedProduct.note_tete,
+                      noteCoeur: updatedProduct.note_coeur,
+                      noteFond: updatedProduct.note_fond,
+                    };
+                    setProducts((prev) =>
+                      prev.map((p) =>
+                        p.id === selectedProduct.id ? updatedAdminProduct : p,
+                      ),
                     );
-                    window.dispatchEvent(productUpdateEvent);
+                    setSelectedProduct(updatedAdminProduct);
+                    // Refresh data in background
+                    loadData().catch((e) =>
+                      console.error("Failed to refresh products", e),
+                    );
+
+                    // Persist update locally and notify catalog
+                    if (typeof window !== "undefined") {
+                      try {
+                        const stored = window.localStorage.getItem(
+                          "catalogPerfumes",
+                        );
+                        const list = stored ? JSON.parse(stored) : [];
+                        const idx = list.findIndex(
+                          (p: any) =>
+                            p.codeProduit === updatedProduct.code_produit,
+                        );
+                        const merged = {
+                          ...(idx !== -1 ? list[idx] : {}),
+                          codeProduit: updatedProduct.code_produit,
+                          nomLolly: updatedProduct.nom_lolly,
+                          nomParfumInspire: updatedProduct.nom_parfum_inspire,
+                          marqueInspire: updatedProduct.marque_inspire,
+                          genre: updatedProduct.genre,
+                          saison: updatedProduct.saison,
+                          familleOlfactive: updatedProduct.famille_olfactive,
+                          imageURL: updatedProduct.image_url,
+                          description: updatedProduct.description,
+                          noteTete: updatedProduct.note_tete,
+                          noteCoeur: updatedProduct.note_coeur,
+                          noteFond: updatedProduct.note_fond,
+                          active: idx !== -1 ? list[idx].active : true,
+                        };
+                        if (idx !== -1) {
+                          list[idx] = merged;
+                        } else {
+                          list.push(merged);
+                        }
+                        window.localStorage.setItem(
+                          "catalogPerfumes",
+                          JSON.stringify(list),
+                        );
+                        window.dispatchEvent(
+                          new CustomEvent("productUpdated", { detail: merged }),
+                        );
+                      } catch (e) {
+                        console.error("Failed to sync local catalog", e);
+                      }
+                    }
 
                     alert(
                       "✅ Produit modifié avec succès!\n\nLes modifications sont maintenant visibles:\n- Dans le catalogue\n- Dans les fiches produit\n- Dans tous les espaces",
@@ -4764,8 +4847,8 @@ const AdminSpace = () => {
                 >
                   Sauvegarder
                 </Button>
-              </div>
-            </div>
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>
